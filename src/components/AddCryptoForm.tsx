@@ -25,9 +25,19 @@ export function AddCryptoForm() {
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
+
+    const cryptoData = {
+      name: formData.name,
+      symbol: formData.name.substring(0, 3).toUpperCase(), // Gera um símbolo a partir do nome
+      amount: parseFloat(formData.amount),
+      buyPrice: parseFloat(formData.price),
+      currentPrice: parseFloat(formData.price)
+    }
+
+    console.log('Enviando dados:', cryptoData)
 
     try {
       const response = await fetch('/api/crypto', {
@@ -35,18 +45,19 @@ export function AddCryptoForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: formData.name,
-          amount: formData.amount,
-          price: formData.price,
-        }),
+        body: JSON.stringify(cryptoData),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to add crypto')
+        const errorData = await response.text()
+        console.error('Erro na resposta:', errorData)
+        throw new Error('Falha ao adicionar criptomoeda')
       }
 
-      // Limpar formulário após sucesso
+      const data = await response.json()
+      console.log('Resposta do servidor:', data)
+      
+      // Limpa o formulário
       setFormData({
         name: '',
         amount: '',
@@ -56,7 +67,7 @@ export function AddCryptoForm() {
       // Recarregar a página para atualizar a lista
       window.location.reload()
     } catch (error) {
-      console.error('Error adding crypto:', error)
+      console.error('Erro ao adicionar:', error)
       alert('Erro ao adicionar criptomoeda')
     } finally {
       setLoading(false)

@@ -18,15 +18,15 @@ model Crypto {
   name         String
   symbol       String
   amount       Float
-  buyPrice     Float     // Preço de compra
-  currentPrice Float     // Preço atual
-  portfolio    Portfolio @relation(fields: [portfolioId], references: [id])
+  buyPrice     Float
+  currentPrice Float
   portfolioId  Int
+  portfolio    Portfolio @relation(fields: [portfolioId], references: [id])
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  profit       Float?    // Lucro/Prejuízo calculado
-  imageUrl     String?   // URL do ícone da crypto
-  notes        String?   // Notas ou observações
+  profit       Float?
+  imageUrl     String?
+  notes        String?
 }
 
 model Portfolio {
@@ -38,5 +38,5 @@ model Portfolio {
   totalProfit   Float    @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  userId        String?  // Para futura implementação de autenticação
+  userId        String?
 }

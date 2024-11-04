@@ -3,18 +3,24 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
+    console.log('Iniciando busca de criptomoedas...')
+    
     const cryptos = await prisma.crypto.findMany({
-      include: {
-        portfolio: true
-      },
       orderBy: {
         createdAt: 'desc'
       }
     })
+    
+    console.log('Criptomoedas encontradas:', cryptos.length)
     return NextResponse.json(cryptos)
   } catch (error) {
-    console.error('Database error:', error)
-    return NextResponse.json([], { status: 500 })
+    console.error('Erro ao buscar criptomoedas:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    })
+    
+    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
   }
 }
 
@@ -22,51 +28,58 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     
-    // Busca ou cria um portfolio padrão
-    let portfolio = await prisma.portfolio.findFirst()
-    
+    // Primeiro, verifica se existe um portfolio com id 1
+    let portfolio = await prisma.portfolio.findUnique({
+      where: { id: 1 }
+    })
+
+    // Se não existir, cria o portfolio padrão
     if (!portfolio) {
       portfolio = await prisma.portfolio.create({
         data: {
-          name: 'Portfolio Principal',
-          totalValue: 0
+          id: 1,
+          name: "Portfolio Padrão",
+          description: "Portfolio principal"
         }
       })
     }
 
-    const buyPrice = parseFloat(body.price)
-    const amount = parseFloat(body.amount)
-    
+    // Agora cria a crypto associada ao portfolio
     const crypto = await prisma.crypto.create({
       data: {
         name: body.name,
-        symbol: body.symbol || body.name.toUpperCase(),
-        amount: amount,
-        buyPrice: buyPrice,
-        currentPrice: buyPrice,
-        portfolioId: portfolio.id,
-        profit: 0,
-        imageUrl: body.imageUrl || null,
-        notes: body.notes || null
-      }
-    })
-
-    // Atualiza o valor total do portfolio
-    await prisma.portfolio.update({
-      where: { id: portfolio.id },
-      data: {
-        totalValue: {
-          increment: buyPrice * amount
-        }
+        symbol: body.symbol,
+        amount: body.amount,
+        buyPrice: body.buyPrice,
+        currentPrice: body.currentPrice || body.buyPrice, // Usa buyPrice como currentPrice se não fornecido
+        portfolioId: portfolio.id
       }
     })
     
+    console.log('Crypto criada com sucesso:', crypto)
     return NextResponse.json(crypto)
   } catch (error) {
-    console.error('Failed to create crypto:', error)
-    return NextResponse.json(
-      { error: 'Failed to create crypto' },
-      { status: 500 }
-    )
+    console.error('Erro detalhado ao criar criptomoeda:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    })
+    return NextResponse.json({ error: 'Erro ao criar criptomoeda' }, { status: 500 })
+  }
+}
+
+export async function PUT() {
+  try {
+    const portfolio = await prisma.portfolio.create({
+      data: {
+        id: 1,
+        name: "Portfolio Padrão",
+        description: "Portfolio principal"
+      }
+    })
+    return NextResponse.json(portfolio)
+  } catch (error) {
+    console.error('Erro ao criar portfolio:', error)
+    return NextResponse.json({ error: 'Erro ao criar portfolio' }, { status: 500 })
   }
 }

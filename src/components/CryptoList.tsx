@@ -14,13 +14,19 @@ export function CryptoList() {
     async function fetchCryptos() {
       try {
         setIsLoading(true)
+        console.log('Iniciando fetch de criptomoedas...')
         const response = await fetch('/api/crypto')
+        console.log('Status da resposta:', response.status)
         if (!response.ok) {
+          const errorText = await response.text()
+          console.error('Resposta de erro:', errorText)
           throw new Error('Falha ao carregar criptomoedas')
         }
         const data = await response.json()
+        console.log('Dados recebidos:', data)
         setCryptos(Array.isArray(data) ? data : [])
       } catch (err) {
+        console.error('Erro completo:', err)
         setError(err instanceof Error ? err.message : 'Erro ao carregar dados')
         setCryptos([])
       } finally {
