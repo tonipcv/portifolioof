@@ -12,42 +12,45 @@ export async function GET() {
       }
     })
 
-    if (!portfolio || !portfolio.cryptos.length) {
-      return NextResponse.json({
-        totalInvested: 0,
-        currentValue: 0,
-        totalProfit: 0,
-        profitPercentage: 0
-      })
-    }
-
-    const stats = portfolio.cryptos.reduce((acc, crypto) => {
-      const invested = crypto.amount * crypto.buyPrice
-      const current = crypto.amount * crypto.currentPrice
-      const profit = current - invested
-
-      return {
-        totalInvested: acc.totalInvested + invested,
-        currentValue: acc.currentValue + current,
-        totalProfit: acc.totalProfit + profit,
-      }
-    }, {
+    // Valores padrão se não houver portfolio ou criptomoedas
+    const defaultStats = {
       totalInvested: 0,
       currentValue: 0,
       totalProfit: 0,
-    })
+      profitPercentage: 0
+    }
 
-    const profitPercentage = (stats.totalProfit / stats.totalInvested) * 100
+    if (!portfolio || !portfolio.cryptos.length) {
+      return NextResponse.json(defaultStats)
+    }
+
+    // Calcula os totais
+    const totalInvested = portfolio.cryptos.reduce((sum, crypto) => 
+      sum + (crypto.investedAmount || 0), 0
+    )
+
+    const currentValue = portfolio.cryptos.reduce((sum, crypto) => 
+      sum + (crypto.amount * crypto.currentPrice), 0
+    )
+
+    const totalProfit = currentValue - totalInvested
+    const profitPercentage = totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0
 
     return NextResponse.json({
-      ...stats,
+      totalInvested,
+      currentValue,
+      totalProfit,
       profitPercentage
     })
   } catch (error) {
     console.error('Error calculating stats:', error)
-    return NextResponse.json(
-      { error: 'Failed to calculate portfolio statistics' },
-      { status: 500 }
-    )
+    return NextResponse.json({
+      totalInvested: 0,
+      currentValue: 0,
+      totalProfit: 0,
+      profitPercentage: 0
+    })
+  } finally {
+    await prisma.$disconnect()
   }
 }

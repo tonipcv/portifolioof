@@ -1,86 +1,114 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient()
-
-async function fetchCryptoData() {
+export async function POST(request: Request) {
   try {
-    const response = await fetch(
-      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=brl&order=market_cap_desc&per_page=100&page=1&sparkline=false'
-    );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch crypto data');
+    const body = await request.json();
+    const { coinId, symbol, name, amount, investedValue, portfolioId } = body;
+
+    if (!coinId || !symbol || !name || !amount || !investedValue || !portfolioId) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
     }
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching crypto data:', error);
-    throw error;
-  }
-}
 
-export async function GET() {
-  try {
-    const cryptoData = await fetchCryptoData();
-    return NextResponse.json(cryptoData);
+    const portfolio = await prisma.portfolio.findUnique({
+      where: { id: portfolioId }
+    });
+
+    if (!portfolio) {
+      return NextResponse.json(
+        { error: 'Portfolio not found' },
+        { status: 404 }
+      );
+    }
+
+    console.log('Creating crypto with data:', {
+      coinId,
+      symbol,
+      name,
+      amount,
+      investedValue,
+      portfolioId
+    });
+
+    const crypto = await prisma.crypto.create({
+      data: {
+        coinId,
+        symbol,
+        name,
+        amount: parseFloat(amount.toString()),
+        investedValue: Math.round(parseFloat(investedValue.toString()) * 100), // Store in cents
+        portfolioId,
+      },
+    });
+
+    return NextResponse.json(crypto);
   } catch (error) {
+    console.error('Detailed error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch cryptocurrency data' },
+      { error: 'Failed to add crypto' },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const portfolioId = searchParams.get('portfolioId');
+
+  if (!portfolioId) {
+    return NextResponse.json(
+      { error: 'Portfolio ID is required' },
+      { status: 400 }
+    );
+  }
+
   try {
-    const body = await request.json()
-    
-    let portfolio = await prisma.portfolio.findUnique({
-      where: { id: 1 }
-    })
+    const cryptos = await prisma.crypto.findMany({
+      where: {
+        portfolioId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
-    if (!portfolio) {
-      portfolio = await prisma.portfolio.create({
-        data: {
-          id: 1,
-          name: "Portfolio Padrão",
-          description: "Portfolio principal"
-        }
-      })
-    }
-
-    const crypto = await prisma.crypto.create({
-      data: {
-        name: body.name,
-        symbol: body.symbol,
-        amount: body.amount,
-        buyPrice: body.buyPrice,
-        currentPrice: body.currentPrice,
-        portfolioId: portfolio.id
-      }
-    })
-    
-    return NextResponse.json(crypto)
+    return NextResponse.json(cryptos);
   } catch (error) {
-    console.error('Erro ao criar criptomoeda:', error)
-    return NextResponse.json({ error: 'Erro ao criar criptomoeda' }, { status: 500 })
+    console.error('Error fetching cryptos:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch cryptos' },
+      { status: 500 }
+    );
   }
 }
 
-export async function PUT() {
+export async function DELETE(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Crypto ID is required' },
+      { status: 400 }
+    );
+  }
+
   try {
-    const portfolio = await prisma.portfolio.create({
-      data: {
-        id: 1,
-        name: "Portfolio Padrão",
-        description: "Portfolio principal"
-      }
-    })
-    return NextResponse.json(portfolio)
+    await prisma.crypto.delete({
+      where: {
+        id,
+      },
+    });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Erro ao criar portfolio:', error)
-    return NextResponse.json({ error: 'Erro ao criar portfolio' }, { status: 500 })
+    console.error('Error deleting crypto:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete crypto' },
+      { status: 500 }
+    );
   }
 }

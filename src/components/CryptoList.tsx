@@ -214,7 +214,7 @@ export function CryptoList() {
                   <div className="space-y-1 text-sm text-gray-300">
                     <p>Criptomoeda: {selectedCrypto.name}</p>
                     <p>Quantidade: {cryptoAmount || '0'} {selectedCrypto.symbol.toUpperCase()}</p>
-                    <p>Valor Total: R$ {investmentAmount ? parseFloat(investmentAmount).toLocaleString('pt-BR', {
+                    <p>Valor Investido: R$ {investmentAmount ? parseFloat(investmentAmount).toLocaleString('pt-BR', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2
                     }) : '0,00'}</p>
@@ -222,6 +222,70 @@ export function CryptoList() {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2
                     })}</p>
+                    <div className="mt-2 pt-2 border-t border-gray-600">
+                      <p className="font-medium text-base mb-1">Projeção de Valorização</p>
+                      <div className="space-y-1">
+                        <p>
+                          +5%: R$ {(parseFloat(investmentAmount || '0') * 1.05).toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </p>
+                        <p>
+                          +10%: R$ {(parseFloat(investmentAmount || '0') * 1.10).toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </p>
+                        <p>
+                          +25%: R$ {(parseFloat(investmentAmount || '0') * 1.25).toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </p>
+                        <p>
+                          +50%: R$ {(parseFloat(investmentAmount || '0') * 1.50).toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </p>
+                        <p>
+                          +100%: R$ {(parseFloat(investmentAmount || '0') * 2).toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-gray-600">
+                      <p className="font-medium text-base mb-1">Projeção de Desvalorização</p>
+                      <div className="space-y-1">
+                        <p className="text-red-400">
+                          -5%: R$ {(parseFloat(investmentAmount || '0') * 0.95).toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </p>
+                        <p className="text-red-400">
+                          -10%: R$ {(parseFloat(investmentAmount || '0') * 0.90).toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </p>
+                        <p className="text-red-400">
+                          -25%: R$ {(parseFloat(investmentAmount || '0') * 0.75).toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </p>
+                        <p className="text-red-400">
+                          -50%: R$ {(parseFloat(investmentAmount || '0') * 0.50).toLocaleString('pt-BR', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

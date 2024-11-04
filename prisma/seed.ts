@@ -3,17 +3,17 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  // Cria um portfolio padrão se não existir
-  const portfolio = await prisma.portfolio.upsert({
-    where: { id: 1 },
+  // Create initial user
+  const user = await prisma.user.upsert({
+    where: { email: 'test@example.com' },
     update: {},
     create: {
-      id: 1,
-      name: 'Portfolio Principal'
+      email: 'test@example.com',
+      name: 'Test User',
     },
   })
-  
-  console.log({ portfolio })
+
+  console.log({ user })
 }
 
 main()

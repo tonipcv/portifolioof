@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,31 +10,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Crypto {
-  id           Int       @id @default(autoincrement())
-  name         String
-  symbol       String
-  amount       Float
-  buyPrice     Float
-  currentPrice Float
-  portfolioId  Int
-  portfolio    Portfolio @relation(fields: [portfolioId], references: [id])
-  investedAmount Float
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  profit       Float?
-  imageUrl     String?
-  notes        String?
+model Portfolio {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  cryptos     Crypto[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
-model Portfolio {
-  id            Int      @id @default(autoincrement())
+model Crypto {
+  id            String     @id @default(cuid())
+  coinId        String     // CoinGecko ID
+  symbol        String
   name          String
-  description   String?
-  cryptos       Crypto[]
-  totalValue    Float    @default(0)
-  totalProfit   Float    @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  userId        String?
+  amount        Float
+  investedValue Float      // Value in cents
+  portfolio     Portfolio  @relation(fields: [portfolioId], references: [id])
+  portfolioId   String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([portfolioId])
+  @@index([coinId])
 }
