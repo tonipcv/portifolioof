@@ -20,8 +20,8 @@ const MyPortfolio = dynamic(() => import('@/components/MyPortfolio'), {
 
 export default function Portfolio({ portfolioId }: PortfolioProps) {
   return (
-    <div className="bg-gray-800 rounded-lg shadow-xl p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-xl font-semibold text-white">Visão Geral do Portfólio</h2>
         <AddCryptoButton portfolioId={portfolioId} />
       </div>
