@@ -1,26 +1,35 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+async function fetchCryptoData() {
+  try {
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=brl&order=market_cap_desc&per_page=100&page=1&sparkline=false'
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch crypto data');
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching crypto data:', error);
+    throw error;
+  }
+}
 
 export async function GET() {
   try {
-    console.log('Iniciando busca de criptomoedas...')
-    
-    const cryptos = await prisma.crypto.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
-    
-    console.log('Criptomoedas encontradas:', cryptos.length)
-    return NextResponse.json(cryptos)
+    const cryptoData = await fetchCryptoData();
+    return NextResponse.json(cryptoData);
   } catch (error) {
-    console.error('Erro ao buscar criptomoedas:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : 'No stack trace'
-    })
-    
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch cryptocurrency data' },
+      { status: 500 }
+    );
   }
 }
 
@@ -28,12 +37,10 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     
-    // Primeiro, verifica se existe um portfolio com id 1
     let portfolio = await prisma.portfolio.findUnique({
       where: { id: 1 }
     })
 
-    // Se não existir, cria o portfolio padrão
     if (!portfolio) {
       portfolio = await prisma.portfolio.create({
         data: {
@@ -44,26 +51,20 @@ export async function POST(request: Request) {
       })
     }
 
-    // Agora cria a crypto associada ao portfolio
     const crypto = await prisma.crypto.create({
       data: {
         name: body.name,
         symbol: body.symbol,
         amount: body.amount,
         buyPrice: body.buyPrice,
-        currentPrice: body.currentPrice || body.buyPrice, // Usa buyPrice como currentPrice se não fornecido
+        currentPrice: body.currentPrice,
         portfolioId: portfolio.id
       }
     })
     
-    console.log('Crypto criada com sucesso:', crypto)
     return NextResponse.json(crypto)
   } catch (error) {
-    console.error('Erro detalhado ao criar criptomoeda:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : 'No stack trace'
-    })
+    console.error('Erro ao criar criptomoeda:', error)
     return NextResponse.json({ error: 'Erro ao criar criptomoeda' }, { status: 500 })
   }
 }

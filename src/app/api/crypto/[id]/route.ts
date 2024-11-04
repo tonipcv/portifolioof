@@ -1,42 +1,48 @@
-import { NextResponse, NextRequest } from 'next/server'
+import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-// GET handler
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const id = request.nextUrl.pathname.split('/').pop();
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${params.id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch crypto data');
     }
 
-    const crypto = await prisma.crypto.findUnique({
-      where: {
-        id: parseInt(id)
-      }
-    })
-    return NextResponse.json(crypto)
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch crypto' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch cryptocurrency data' },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE handler
-export async function DELETE(request: NextRequest) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const id = request.nextUrl.pathname.split('/').pop();
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
-    }
-
-    const crypto = await prisma.crypto.delete({
+    await prisma.crypto.delete({
       where: {
-        id: parseInt(id)
+        id: parseInt(params.id)
       }
     })
-    return NextResponse.json(crypto)
+    
+    return NextResponse.json({ success: true })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete crypto' }, { status: 500 })
+    console.error('Error deleting crypto:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete cryptocurrency' },
+      { status: 500 }
+    )
   }
-} 
+}

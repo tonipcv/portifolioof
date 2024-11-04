@@ -1,36 +1,53 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export async function GET() {
   try {
-    console.log('Iniciando busca de estatísticas...')
-    
-    // Busca todas as cryptos diretamente
-    const cryptos = await prisma.crypto.findMany()
-    console.log('Cryptos encontradas:', cryptos.length)
-    
-    // Calcula as estatísticas
-    const stats = {
-      totalValue: cryptos.reduce((acc, crypto) => acc + (crypto.amount * crypto.currentPrice), 0),
-      totalCryptos: cryptos.length,
-      totalProfit: cryptos.reduce((acc, crypto) => 
-        acc + (crypto.amount * (crypto.currentPrice - crypto.buyPrice)), 0
-      )
-    }
-    
-    console.log('Estatísticas calculadas:', stats)
-    return NextResponse.json(stats)
-  } catch (error) {
-    console.error('Erro detalhado:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : 'No stack trace'
+    const portfolio = await prisma.portfolio.findUnique({
+      where: { id: 1 },
+      include: {
+        cryptos: true
+      }
     })
-    
+
+    if (!portfolio || !portfolio.cryptos.length) {
+      return NextResponse.json({
+        totalInvested: 0,
+        currentValue: 0,
+        totalProfit: 0,
+        profitPercentage: 0
+      })
+    }
+
+    const stats = portfolio.cryptos.reduce((acc, crypto) => {
+      const invested = crypto.amount * crypto.buyPrice
+      const current = crypto.amount * crypto.currentPrice
+      const profit = current - invested
+
+      return {
+        totalInvested: acc.totalInvested + invested,
+        currentValue: acc.currentValue + current,
+        totalProfit: acc.totalProfit + profit,
+      }
+    }, {
+      totalInvested: 0,
+      currentValue: 0,
+      totalProfit: 0,
+    })
+
+    const profitPercentage = (stats.totalProfit / stats.totalInvested) * 100
+
     return NextResponse.json({
-      totalValue: 0,
-      totalCryptos: 0,
-      totalProfit: 0
-    }, { status: 500 })
+      ...stats,
+      profitPercentage
+    })
+  } catch (error) {
+    console.error('Error calculating stats:', error)
+    return NextResponse.json(
+      { error: 'Failed to calculate portfolio statistics' },
+      { status: 500 }
+    )
   }
 }

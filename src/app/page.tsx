@@ -1,7 +1,7 @@
-import { CryptoList } from '@/components/CryptoList'
+import { MyPortfolio } from '@/components/MyPortfolio'
 import { CryptoStats } from '@/components/CryptoStats'
-import { AddCryptoForm } from '@/components/AddCryptoForm'
-import { PlusCircleIcon, ChartBarIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import { PlusCircleIcon, CurrencyDollarIcon, ChartBarIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link'
 
 export default function Home() {
   return (
@@ -16,7 +16,7 @@ export default function Home() {
         </div>
         
         {/* Stats Section */}
-        <div className="mb-12 bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm border border-gray-700/50">
+        <div className="mb-8 bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm border border-gray-700/50">
           <div className="flex items-center space-x-2 mb-6">
             <ChartBarIcon className="h-6 w-6 text-indigo-500" />
             <h2 className="text-xl font-light">Estatísticas Gerais</h2>
@@ -24,22 +24,22 @@ export default function Home() {
           <CryptoStats />
         </div>
         
-        {/* Add Crypto Form Section */}
-        <div className="mb-12 bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm border border-gray-700/50">
-          <div className="flex items-center space-x-2 mb-6">
-            <PlusCircleIcon className="h-6 w-6 text-indigo-500" />
-            <h2 className="text-xl font-light">Adicionar Nova Criptomoeda</h2>
+        {/* Portfolio Section */}
+        <div className="bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm border border-gray-700/50 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-2">
+              <CurrencyDollarIcon className="h-6 w-6 text-indigo-500" />
+              <h2 className="text-xl font-light">Minhas Criptomoedas</h2>
+            </div>
+            <Link 
+              href="/add-crypto"
+              className="flex items-center space-x-2 bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg text-white transition-colors"
+            >
+              <PlusCircleIcon className="h-5 w-5" />
+              <span>Adicionar Criptomoeda</span>
+            </Link>
           </div>
-          <AddCryptoForm />
-        </div>
-        
-        {/* Crypto List Section */}
-        <div className="bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm border border-gray-700/50">
-          <div className="flex items-center space-x-2 mb-6">
-            <CurrencyDollarIcon className="h-6 w-6 text-indigo-500" />
-            <h2 className="text-xl font-light">Minhas Criptomoedas</h2>
-          </div>
-          <CryptoList />
+          <MyPortfolio />
         </div>
       </div>
     </div>
