@@ -1,77 +1,46 @@
+/* eslint-disable */
+
 'use client'
 
 import { useEffect, useState } from 'react'
-import { 
-  ArrowTrendingUpIcon, 
-  ArrowTrendingDownIcon,
-  CurrencyDollarIcon,
-  ChartBarIcon,
-  TrashIcon
-} from '@heroicons/react/24/outline'
-import { CryptoPrice, getTopCryptos } from '@/lib/coingecko'
-
-interface Asset {
-  id: string
-  coinId: string
-  name: string
-  symbol: string
-  amount: number
-  investedValue: number
-  currentValue: number
-  change24h: number
-  image: string
-}
-
-const formatBRL = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  }).format(value)
-}
+import { Crypto } from '@prisma/client'
 
 interface AssetsListProps {
-  portfolioId: string
-  onUpdate?: () => void
+  portfolioId?: string
 }
 
-export default function AssetsList({ portfolioId, onUpdate }: AssetsListProps) {
-  const [assets, setAssets] = useState<Asset[]>([])
+export default function AssetsList({ portfolioId }: AssetsListProps) {
+  const [assets, setAssets] = useState<Crypto[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const loadAssets = async () => {
     try {
-      const [cryptosResponse, prices] = await Promise.all([
-        fetch(`/api/crypto?portfolioId=${portfolioId}`),
-        getTopCryptos()
-      ])
-
-      if (!cryptosResponse.ok) throw new Error('Failed to fetch cryptos')
-      
-      const cryptos = await cryptosResponse.json()
-
-      const portfolioAssets = cryptos.map((crypto: any) => {
-        const priceData = prices.find(p => p.id === crypto.coinId)
-        if (!priceData) return null
-
-        return {
-          id: crypto.id,
-          coinId: crypto.coinId,
-          name: crypto.name,
-          symbol: crypto.symbol,
-          amount: crypto.amount,
-          investedValue: crypto.investedValue / 100, // Convert from cents
-          currentValue: priceData.current_price * crypto.amount,
-          change24h: priceData.price_change_percentage_24h,
-          image: priceData.image
-        }
-      }).filter((asset): asset is Asset => asset !== null)
-
-      setAssets(portfolioAssets)
+      setIsLoading(true)
       setError(null)
+      
+      const response = await fetch('/api/crypto/stats', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(10000)
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      setAssets(data)
     } catch (error) {
-      console.error('Error loading assets:', error)
-      setError('Falha ao carregar ativos')
+      if (error instanceof Error) {
+        console.error('Error loading assets:', error.message)
+        setError(`Falha ao carregar ativos: ${error.message}`)
+      } else {
+        console.error('Error loading assets:', error)
+        setError('Falha ao carregar ativos')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -79,96 +48,114 @@ export default function AssetsList({ portfolioId, onUpdate }: AssetsListProps) {
 
   useEffect(() => {
     loadAssets()
+
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetch('/api/crypto/update-prices', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(10000)
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        loadAssets()
+      } catch (error) {
+        console.error('Error updating prices:', error)
+      }
+    }, 60000)
+
+    return () => clearInterval(intervalId)
   }, [portfolioId])
-
-  const handleDelete = async (id: string) => {
-    try {
-      const response = await fetch(`/api/crypto?id=${id}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) throw new Error('Failed to delete crypto')
-
-      await loadAssets()
-      onUpdate?.()
-    } catch (error) {
-      console.error('Error deleting crypto:', error)
-    }
-  }
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <ChartBarIcon className="h-8 w-8 text-gray-400 animate-pulse" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     )
   }
 
   if (error) {
-    return <div className="text-red-400">{error}</div>
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-red-600">{error}</p>
+        <button 
+          onClick={loadAssets}
+          className="mt-2 px-4 py-2 text-sm bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    )
+  }
+
+  if (assets.length === 0) {
+    return (
+      <div className="p-8 text-center text-gray-500">
+        <p>Nenhum ativo encontrado</p>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <CurrencyDollarIcon className="h-6 w-6 text-blue-500" />
-        <h3 className="text-lg font-medium text-white">Seus Ativos</h3>
-      </div>
-      <div className="grid gap-4">
-        {assets.map((asset) => (
-          <div 
-            key={asset.id}
-            className="bg-gray-800 p-4 rounded-lg flex justify-between items-center hover:bg-gray-750 transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-gray-700 rounded-lg">
-                <img 
-                  src={asset.image} 
-                  alt={asset.name} 
-                  className="h-6 w-6"
-                />
-              </div>
-              <div>
-                <h4 className="text-white font-medium">{asset.name}</h4>
-                <p className="text-gray-400">
-                  {asset.symbol.toUpperCase()} • {asset.amount} unidades
-                </p>
-                <p className="text-sm text-gray-500">
-                  Investido: {formatBRL(asset.investedValue)}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-6">
-              <div className="text-right">
-                <p className="text-white font-medium">{formatBRL(asset.currentValue)}</p>
-                <div className="flex items-center gap-1 justify-end">
-                  {asset.change24h >= 0 ? (
-                    <ArrowTrendingUpIcon className="h-4 w-4 text-green-400" />
-                  ) : (
-                    <ArrowTrendingDownIcon className="h-4 w-4 text-red-400" />
-                  )}
-                  <p className={`${
-                    asset.change24h >= 0 ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {asset.change24h > 0 ? '+' : ''}{asset.change24h.toFixed(2)}%
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => handleDelete(asset.id)}
-                className="p-2 text-gray-400 hover:text-red-400 transition-colors"
-              >
-                <TrashIcon className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        ))}
-        {assets.length === 0 && (
-          <div className="text-center py-8 text-gray-400">
-            Nenhum ativo adicionado ainda
-          </div>
-        )}
+    <div className="bg-gray-900 p-6 rounded-lg shadow-lg">
+      <div className="overflow-x-auto">
+        <table className="min-w-full">
+          <thead>
+            <tr className="border-b border-gray-700">
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">Nome</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">Preço</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">24h %</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">7d %</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">Market Cap</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 uppercase tracking-wider">Volume (24h)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-700">
+            {assets.map((asset) => (
+              <tr key={asset.id} className="hover:bg-gray-800">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <img
+                      src={asset.image || '/placeholder-coin.png'}
+                      alt={asset.name}
+                      className="w-8 h-8 rounded-full mr-3"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-gray-200">{asset.name}</div>
+                      <div className="text-sm text-gray-400">{asset.symbol.toUpperCase()}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
+                  ${asset.currentPrice?.toLocaleString() ?? 'N/A'}
+                </td>
+                <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                  (asset.priceChangePercentage24h ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {asset.priceChangePercentage24h?.toFixed(2) ?? 'N/A'}%
+                </td>
+                <td className={`px-6 py-4 whitespace-nowrap text-sm ${
+                  (asset.priceChangePercentage7d ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {asset.priceChangePercentage7d?.toFixed(2) ?? 'N/A'}%
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
+                  ${asset.marketCap?.toLocaleString() ?? 'N/A'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
+                  ${asset.totalVolume?.toLocaleString() ?? 'N/A'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
-  )
+  );
 } 

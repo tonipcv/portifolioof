@@ -4,6 +4,7 @@ import { Fragment, useState, useEffect } from 'react'
 import { Dialog, Transition, Combobox } from '@headlessui/react'
 import { XMarkIcon, CurrencyDollarIcon, CheckIcon, ChevronUpDownIcon } from '@heroicons/react/24/outline'
 import { CryptoPrice, getTopCryptos } from '@/lib/coingecko'
+import Image from 'next/image';
 
 interface AddCryptoModalProps {
   isOpen: boolean
@@ -205,10 +206,12 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId }: AddCryp
                                         {({ selected, active }) => (
                                           <>
                                             <div className="flex items-center">
-                                              <img
-                                                src={crypto.image}
+                                              <Image 
+                                                src={crypto.image} 
                                                 alt={crypto.name}
-                                                className="h-6 w-6 mr-3"
+                                                width={24} 
+                                                height={24}
+                                                className="mr-2"
                                               />
                                               <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
                                                 {crypto.name} ({crypto.symbol.toUpperCase()})
@@ -236,10 +239,12 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId }: AddCryp
 
                         {selectedCrypto && (
                           <div className="bg-gray-700/50 rounded-lg p-4 flex items-center gap-4">
-                            <img
-                              src={selectedCrypto.image}
+                            <Image 
+                              src={selectedCrypto.image} 
                               alt={selectedCrypto.name}
-                              className="h-10 w-10"
+                              width={24} 
+                              height={24}
+                              className="mr-2"
                             />
                             <div>
                               <h4 className="text-white font-medium">{selectedCrypto.name}</h4>

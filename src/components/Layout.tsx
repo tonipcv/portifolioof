@@ -30,6 +30,15 @@ export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
 
+  const Logo = () => (
+    <div className="flex items-center gap-2">
+      <div className="bg-blue-500 p-1.5 rounded">
+        <span className="text-lg font-bold text-white">K17</span>
+      </div>
+      <span className="text-lg font-semibold text-white">Assets</span>
+    </div>
+  )
+
   return (
     <div>
       {/* Mobile sidebar */}
@@ -46,17 +55,17 @@ export default function Layout({ children }: LayoutProps) {
             <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
               <button
                 type="button"
-                className="-m-2.5 p-2.5"
+                className="-m-2.5 p-2.5 text-white"
                 onClick={() => setSidebarOpen(false)}
               >
                 <span className="sr-only">Close sidebar</span>
-                <XMarkIcon className="h-6 w-6 text-white" aria-hidden="true" />
+                <XMarkIcon className="h-6 w-6" aria-hidden="true" />
               </button>
             </div>
 
             <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-800 px-6 pb-4 ring-1 ring-white/10">
               <div className="flex h-16 shrink-0 items-center">
-                <h1 className="text-xl font-bold text-white">Crypto Portfolio</h1>
+                <Logo />
               </div>
               <nav className="flex flex-1 flex-col">
                 <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -73,6 +82,7 @@ export default function Layout({ children }: LayoutProps) {
                                 : 'text-gray-400 hover:text-white hover:bg-gray-700'
                               }
                             `}
+                            onClick={() => setSidebarOpen(false)}
                           >
                             <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
                             {item.name}
@@ -92,7 +102,7 @@ export default function Layout({ children }: LayoutProps) {
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-800 px-6 pb-4">
           <div className="flex h-16 shrink-0 items-center">
-            <h1 className="text-xl font-bold text-white">Crypto Portfolio</h1>
+            <Logo />
           </div>
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -124,7 +134,8 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Main content */}
       <div className="lg:pl-72">
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-700 bg-gray-800 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+        {/* Mobile header */}
+        <div className="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b border-gray-700 bg-gray-800 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
             className="-m-2.5 p-2.5 text-gray-400 lg:hidden"
@@ -134,18 +145,15 @@ export default function Layout({ children }: LayoutProps) {
             <Bars3Icon className="h-6 w-6" aria-hidden="true" />
           </button>
 
-          {/* Separator */}
-          <div className="h-6 w-px bg-gray-700 lg:hidden" aria-hidden="true" />
-
-          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="flex flex-1"></div>
-            <div className="flex items-center gap-x-4 lg:gap-x-6">
-              {/* Profile dropdown can be added here */}
+          {/* Mobile logo */}
+          <div className="flex flex-1 items-center gap-x-4 lg:gap-x-6">
+            <div className="lg:hidden">
+              <Logo />
             </div>
           </div>
         </div>
 
-        <main className="min-h-screen bg-gray-900 p-4 sm:p-6 lg:p-8">
+        <main className="min-h-screen bg-gray-900 py-4 px-4 sm:px-6 lg:px-8">
           {children}
         </main>
       </div>

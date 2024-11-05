@@ -4,6 +4,7 @@ import React from 'react'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import Image from 'next/image';
 
 interface CryptoData {
   id: string;
@@ -139,7 +140,13 @@ export function CryptoList() {
                     setCryptoAmount('')
                   }}
                 >
-                  <img src={crypto.image} alt={crypto.name} className="w-6 h-6" />
+                  <Image 
+                    src={crypto.image} 
+                    alt={crypto.name}
+                    width={32} 
+                    height={32}
+                    className="mr-3"
+                  />
                   <div>
                     <div className="font-medium">{crypto.name}</div>
                     <div className="text-sm text-gray-400">{crypto.symbol.toUpperCase()}</div>
@@ -160,10 +167,12 @@ export function CryptoList() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="p-4 bg-gray-700/50 rounded-lg">
               <div className="flex items-center space-x-3 mb-6">
-                <img
-                  src={selectedCrypto.image}
+                <Image 
+                  src={selectedCrypto.image} 
                   alt={selectedCrypto.name}
-                  className="w-8 h-8"
+                  width={24} 
+                  height={24}
+                  className="mr-2"
                 />
                 <div>
                   <h3 className="font-medium">{selectedCrypto.name}</h3>

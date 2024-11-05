@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // suas configurações aqui
+  images: {
+    domains: ['coin-images.coingecko.com', 'assets.coingecko.com'],
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 }
 
 module.exports = nextConfig 

@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export async function POST() {
   try {
@@ -13,14 +11,14 @@ export async function POST() {
       try {
         // Busca o preço atual da API
         const response = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${crypto.name.toLowerCase()}&vs_currencies=brl`
+          `https://api.coingecko.com/api/v3/simple/price?ids=${crypto.coinId.toLowerCase()}&vs_currencies=brl`
         )
         const data = await response.json()
-        const currentPrice = data[crypto.name.toLowerCase()]?.brl || crypto.currentPrice
+        const currentPrice = data[crypto.coinId.toLowerCase()]?.brl || 0
 
         // Calcula o novo lucro/prejuízo
         const currentValue = crypto.amount * currentPrice
-        const profit = currentValue - crypto.investedAmount
+        const profit = currentValue - crypto.investedValue
 
         // Atualiza a criptomoeda
         await prisma.crypto.update({
@@ -41,16 +39,33 @@ export async function POST() {
       sum + (crypto.amount * crypto.currentPrice), 0
     )
     const totalProfit = updatedCryptos.reduce((sum, crypto) => 
-      sum + (crypto.profit || 0), 0
+      sum + crypto.profit, 0
     )
 
-    await prisma.portfolio.update({
-      where: { id: 1 },
-      data: {
-        totalValue,
-        totalProfit
-      }
+    // Busca todos os portfolios e atualiza cada um
+    const portfolios = await prisma.portfolio.findMany({
+      include: { cryptos: true }
     })
+
+    for (const portfolio of portfolios) {
+      const portfolioCryptos = portfolio.cryptos
+      const portfolioTotalValue = portfolioCryptos.reduce(
+        (sum, crypto) => sum + (crypto.amount * crypto.currentPrice), 
+        0
+      )
+      const portfolioTotalProfit = portfolioCryptos.reduce(
+        (sum, crypto) => sum + crypto.profit,
+        0
+      )
+
+      await prisma.portfolio.update({
+        where: { id: portfolio.id },
+        data: {
+          totalValue: portfolioTotalValue,
+          totalProfit: portfolioTotalProfit
+        }
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
