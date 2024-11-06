@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
 import { Wallet, LineChart } from 'lucide-react'
+import Image from 'next/image'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -26,8 +27,14 @@ export default function RootLayout({
           <nav className="bg-[#161616] border-b border-[#222222]">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="flex h-14 items-center justify-between">
-                <Link href="/portfolios" className="text-xl font-semibold text-blue-400">
-                  Crypto
+                <Link href="/portfolios" className="flex items-center">
+                  <Image
+                    src="/logo.png" // Coloque sua logo aqui
+                    alt="Logo"
+                    width={32}
+                    height={32}
+                    className="h-8 w-auto"
+                  />
                 </Link>
                 <div className="flex space-x-1">
                   <Link

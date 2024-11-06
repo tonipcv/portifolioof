@@ -34,7 +34,7 @@ export default function CreatePortfolioButton() {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-400 transition-colors"
+        className="px-4 py-2 bg-transparent text-white border border-white rounded-md hover:bg-white hover:text-[#111111] transition-all duration-200"
       >
         Criar Portfolio
       </button>
@@ -50,7 +50,7 @@ export default function CreatePortfolioButton() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full p-2 bg-[#222222] rounded border border-[#333333] text-white focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                  className="w-full p-2 bg-[#222222] rounded border border-[#333333] text-white focus:ring-2 focus:ring-white focus:border-transparent"
                   required
                 />
               </div>
@@ -59,7 +59,7 @@ export default function CreatePortfolioButton() {
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full p-2 bg-[#222222] rounded border border-[#333333] text-white focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                  className="w-full p-2 bg-[#222222] rounded border border-[#333333] text-white focus:ring-2 focus:ring-white focus:border-transparent"
                   rows={3}
                 />
               </div>
@@ -73,7 +73,7 @@ export default function CreatePortfolioButton() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-400 transition-colors"
+                  className="px-4 py-2 bg-transparent text-white border border-white rounded hover:bg-white hover:text-[#111111] transition-all duration-200"
                 >
                   Criar
                 </button>
