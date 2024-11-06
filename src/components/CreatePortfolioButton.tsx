@@ -34,14 +34,14 @@ export default function CreatePortfolioButton() {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-400 transition-colors"
       >
         Criar Portfolio
       </button>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-900 p-6 rounded-lg w-full max-w-md">
+        <div className="fixed inset-0 bg-[#111111]/80 flex items-center justify-center p-4 z-50">
+          <div className="bg-[#161616] p-6 rounded-lg w-full max-w-md">
             <h2 className="text-xl font-bold mb-4 text-white">Criar Novo Portfolio</h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
@@ -50,7 +50,7 @@ export default function CreatePortfolioButton() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full p-2 bg-gray-800 rounded border border-gray-700 text-white"
+                  className="w-full p-2 bg-[#222222] rounded border border-[#333333] text-white focus:ring-2 focus:ring-blue-400 focus:border-transparent"
                   required
                 />
               </div>
@@ -59,7 +59,7 @@ export default function CreatePortfolioButton() {
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full p-2 bg-gray-800 rounded border border-gray-700 text-white"
+                  className="w-full p-2 bg-[#222222] rounded border border-[#333333] text-white focus:ring-2 focus:ring-blue-400 focus:border-transparent"
                   rows={3}
                 />
               </div>
@@ -73,7 +73,7 @@ export default function CreatePortfolioButton() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-400 transition-colors"
                 >
                   Criar
                 </button>

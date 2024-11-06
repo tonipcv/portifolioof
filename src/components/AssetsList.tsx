@@ -120,18 +120,18 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
         <div className="flex justify-end">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-400 transition-colors"
           >
             Adicionar Criptomoeda
           </button>
         </div>
       )}
 
-      <div className="bg-gray-950 p-6 rounded-lg shadow-lg border border-gray-800">
+      <div className="bg-[#161616] rounded-lg shadow-lg border border-[#222222]">
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
-              <tr className="border-b border-gray-800">
+              <tr className="border-b border-[#222222]">
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">Nome</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">Preço</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">24h %</th>
@@ -152,9 +152,9 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-[#222222]">
               {assets.map((asset) => (
-                <tr key={asset.id} className="hover:bg-gray-900/50 transition-colors">
+                <tr key={asset.id} className="hover:bg-[#222222] transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <img

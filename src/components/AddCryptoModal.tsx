@@ -134,7 +134,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          <div className="fixed inset-0 bg-[#111111]/80 transition-opacity" />
         </Transition.Child>
 
         <div className="fixed inset-0 z-10 overflow-y-auto">
@@ -148,7 +148,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-[#161616] px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
                 <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
                   <button
                     type="button"
@@ -250,7 +250,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                         </div>
 
                         {selectedCrypto && (
-                          <div className="bg-gray-700/50 rounded-lg p-4 flex items-center gap-4">
+                          <div className="bg-[#222222] rounded-lg p-4 flex items-center gap-4">
                             <Image 
                               src={selectedCrypto.image} 
                               alt={selectedCrypto.name}
