@@ -10,9 +10,10 @@ interface AddCryptoModalProps {
   isOpen: boolean
   onClose: () => void
   portfolioId: string
+  onSuccess?: () => void
 }
 
-export default function AddCryptoModal({ isOpen, onClose, portfolioId }: AddCryptoModalProps) {
+export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess }: AddCryptoModalProps) {
   const [query, setQuery] = useState('')
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoPrice | null>(null)
   const [cryptos, setCryptos] = useState<CryptoPrice[]>([])
@@ -86,10 +87,21 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId }: AddCryp
       setAmount('')
       setInvestedValue('')
       setQuery('')
+      
+      if (onSuccess) {
+        onSuccess()
+      }
     } catch (error) {
       console.error('Error adding crypto:', error)
       setError('Falha ao adicionar criptomoeda')
     }
+  }
+
+  const formatUSD = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(value)
   }
 
   const formatBRL = (value: string) => {
@@ -249,7 +261,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId }: AddCryp
                             <div>
                               <h4 className="text-white font-medium">{selectedCrypto.name}</h4>
                               <p className="text-gray-400">
-                                {formatBRL(selectedCrypto.current_price.toString())}
+                                {formatUSD(selectedCrypto.current_price)}
                               </p>
                             </div>
                           </div>

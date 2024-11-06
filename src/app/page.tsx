@@ -1,9 +1,5 @@
-import PortfolioList from '@/components/PortfolioList'
+import { redirect } from 'next/navigation'
 
 export default function Home() {
-  return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      <PortfolioList />
-    </div>
-  )
+  redirect('/portfolios')
 }
