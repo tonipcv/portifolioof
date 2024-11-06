@@ -17,7 +17,7 @@ export default async function PortfoliosPage() {
   });
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8">
+    <div className="px-4 sm:px-6 lg:px-8 bg-[#111111]">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-semibold leading-6 text-white flex items-center">
@@ -34,7 +34,7 @@ export default async function PortfoliosPage() {
       </div>
       
       {portfolios.length === 0 ? (
-        <div className="text-center mt-12">
+        <div className="text-center mt-12 bg-[#161616] p-8 rounded-lg border border-[#222222]">
           <FolderPlus className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-semibold text-white">Nenhum portfolio</h3>
           <p className="mt-1 text-sm text-gray-400">Comece criando seu primeiro portfolio.</p>

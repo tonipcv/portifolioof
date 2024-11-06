@@ -4,7 +4,7 @@ export default function PortfoliosLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-[#111111]">
       {children}
     </div>
   );
