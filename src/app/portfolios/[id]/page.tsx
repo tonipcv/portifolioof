@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import AssetsList from '@/components/AssetsList';
 import Link from 'next/link';
+import { ArrowLeft, Wallet2, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface PageProps {
   params: {
@@ -9,7 +10,6 @@ interface PageProps {
   };
 }
 
-// Função para formatar valores em BRL
 const formatBRL = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -31,10 +31,7 @@ export default async function PortfolioPage({ params }: PageProps) {
     notFound();
   }
 
-  // Taxa de conversão USD para BRL (você pode buscar isso de uma API de câmbio)
-  const usdToBRL = 5.00; // Valor fixo para exemplo, idealmente buscar de uma API
-
-  // Converter valores para BRL
+  const usdToBRL = 5.00;
   const totalValueBRL = portfolio.totalValue * usdToBRL;
   const totalProfitBRL = portfolio.totalProfit * usdToBRL;
 
@@ -43,25 +40,38 @@ export default async function PortfolioPage({ params }: PageProps) {
       <div className="mb-8">
         <Link 
           href="/portfolios"
-          className="text-gray-400 hover:text-green-400 transition-colors mb-4 inline-block"
+          className="text-gray-400 hover:text-blue-400 transition-colors mb-4 inline-flex items-center"
         >
-          ← Voltar para Portfolios
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar para Portfolios
         </Link>
         
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mt-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">{portfolio.name}</h1>
+            <h1 className="text-2xl font-bold text-white flex items-center">
+              <Wallet2 className="w-8 h-8 mr-2 text-blue-400" />
+              {portfolio.name}
+            </h1>
             {portfolio.description && (
               <p className="text-gray-400 mt-1">{portfolio.description}</p>
             )}
           </div>
           <div className="text-right">
-            <p className="text-gray-400">
-              Total: <span className="text-green-400">{formatBRL(totalValueBRL)}</span>
-            </p>
-            <p className={totalProfitBRL >= 0 ? 'text-green-400' : 'text-red-400'}>
-              Lucro: {formatBRL(totalProfitBRL)}
-            </p>
+            <div className="flex items-center justify-end mb-2">
+              <span className="text-gray-400 mr-2">Total:</span>
+              <span className="text-blue-400 font-medium">{formatBRL(totalValueBRL)}</span>
+            </div>
+            <div className="flex items-center justify-end">
+              <span className="text-gray-400 mr-2">Lucro:</span>
+              <span className={`font-medium flex items-center ${totalProfitBRL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {totalProfitBRL >= 0 ? (
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                ) : (
+                  <TrendingDown className="w-4 h-4 mr-1" />
+                )}
+                {formatBRL(totalProfitBRL)}
+              </span>
+            </div>
           </div>
         </div>
       </div>

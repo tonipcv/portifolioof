@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import CreatePortfolioButton from '@/components/CreatePortfolioButton';
+import { FolderPlus, TrendingUp, TrendingDown, Wallet2 } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Portfolios | Crypto Tracker',
@@ -16,47 +17,76 @@ export default async function PortfoliosPage() {
   });
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Meus Portfolios</h1>
-        <CreatePortfolioButton />
+    <div className="px-4 sm:px-6 lg:px-8">
+      <div className="sm:flex sm:items-center">
+        <div className="sm:flex-auto">
+          <h1 className="text-2xl font-semibold leading-6 text-white flex items-center">
+            <Wallet2 className="w-8 h-8 mr-2 text-blue-400" />
+            Meus Portfolios
+          </h1>
+          <p className="mt-2 text-sm text-gray-400">
+            Gerencie seus investimentos em criptomoedas de forma organizada
+          </p>
+        </div>
+        <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+          <CreatePortfolioButton />
+        </div>
       </div>
       
       {portfolios.length === 0 ? (
-        <div className="text-center py-12 bg-gray-900 rounded-lg border border-gray-800">
-          <h3 className="text-xl text-gray-400 mb-4">Nenhum portfolio encontrado</h3>
-          <p className="text-gray-500 mb-6">Comece criando seu primeiro portfolio</p>
-          <CreatePortfolioButton />
+        <div className="text-center mt-12">
+          <FolderPlus className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-semibold text-white">Nenhum portfolio</h3>
+          <p className="mt-1 text-sm text-gray-400">Comece criando seu primeiro portfolio.</p>
+          <div className="mt-6">
+            <CreatePortfolioButton />
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {portfolios.map((portfolio) => (
             <Link 
-              href={`/portfolios/${portfolio.id}`}
               key={portfolio.id}
-              className="bg-gray-900 rounded-lg shadow-lg p-6 border border-gray-800 hover:border-green-500/50 transition-all"
+              href={`/portfolios/${portfolio.id}`}
+              className="relative group block overflow-hidden rounded-lg bg-[#161616] border border-[#222222] p-6 hover:border-blue-500/50 transition-all duration-300"
             >
-              <h2 className="text-xl font-semibold mb-2 text-white">
-                {portfolio.name}
-              </h2>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors">
+                  {portfolio.name}
+                </h3>
+                <span className="inline-flex items-center rounded-md bg-[#222222] px-2 py-1 text-xs font-medium text-gray-300">
+                  {portfolio.cryptos.length} ativos
+                </span>
+              </div>
               {portfolio.description && (
-                <p className="text-gray-400 mb-4">{portfolio.description}</p>
+                <p className="mt-2 text-sm text-gray-400 line-clamp-2">{portfolio.description}</p>
               )}
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">
-                  Ativos: {portfolio.cryptos.length}
-                </span>
-                <span className="text-green-400">
-                  Total: ${portfolio.totalValue.toLocaleString()}
-                </span>
+              <div className="mt-4 border-t border-[#222222] pt-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Total:</span>
+                  <span className="font-medium text-blue-400">
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(portfolio.totalValue * 5)}
+                  </span>
+                </div>
+                <div className="mt-1 flex justify-between text-sm items-center">
+                  <span className="text-gray-400">Lucro:</span>
+                  <span className={`font-medium flex items-center ${portfolio.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {portfolio.totalProfit >= 0 ? (
+                      <TrendingUp className="w-4 h-4 mr-1" />
+                    ) : (
+                      <TrendingDown className="w-4 h-4 mr-1" />
+                    )}
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL'
+                    }).format(portfolio.totalProfit * 5)}
+                  </span>
+                </div>
               </div>
-              <div className="mt-2 text-sm">
-                <span className={`${
-                  portfolio.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'
-                }`}>
-                  Lucro: ${portfolio.totalProfit.toLocaleString()}
-                </span>
-              </div>
+              <div className="absolute inset-0 rounded-lg ring-1 ring-inset ring-black/10 group-hover:ring-blue-500/20"></div>
             </Link>
           ))}
         </div>

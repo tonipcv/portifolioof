@@ -2,8 +2,12 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
+import { Wallet, LineChart } from 'lucide-react'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: 'Crypto Portfolio',
@@ -16,30 +20,41 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className="h-full bg-black">
-      <body className={`${inter.className} h-full bg-black text-gray-100`}>
-        <nav className="bg-gray-950 border-b border-gray-800 p-4">
-          <div className="container mx-auto flex justify-between items-center">
-            <Link href="/portfolios" className="text-white font-bold hover:text-green-400 transition-colors">
-              Crypto Portfolio
-            </Link>
-            <div className="flex gap-4">
-              <Link 
-                href="/portfolios" 
-                className="text-gray-400 hover:text-green-400 transition-colors"
-              >
-                Meus Portfolios
-              </Link>
-              <Link 
-                href="/market" 
-                className="text-gray-400 hover:text-green-400 transition-colors"
-              >
-                Mercado
-              </Link>
+    <html lang="pt-BR" className="h-full bg-[#111111]">
+      <body className={`${inter.className} h-full bg-[#111111] text-gray-100`}>
+        <div className="min-h-full">
+          <nav className="bg-[#161616] border-b border-[#222222]">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="flex h-14 items-center justify-between">
+                <Link href="/portfolios" className="text-xl font-semibold text-blue-400">
+                  Crypto
+                </Link>
+                <div className="flex space-x-1">
+                  <Link
+                    href="/portfolios"
+                    className="text-gray-400 hover:text-blue-400 rounded-md px-3 py-2 text-sm font-medium inline-flex items-center"
+                  >
+                    <Wallet className="w-4 h-4 mr-2" />
+                    Portfolios
+                  </Link>
+                  <Link
+                    href="/market"
+                    className="text-gray-400 hover:text-blue-400 rounded-md px-3 py-2 text-sm font-medium inline-flex items-center"
+                  >
+                    <LineChart className="w-4 h-4 mr-2" />
+                    Mercado
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
-        </nav>
-        {children}
+          </nav>
+
+          <main className="bg-[#111111]">
+            <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+              {children}
+            </div>
+          </main>
+        </div>
       </body>
     </html>
   )
