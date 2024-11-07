@@ -22,7 +22,7 @@ export default async function PortfoliosPage() {
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-semibold leading-6 text-white flex items-center">
-            <Wallet2 className="w-8 h-8 mr-2 text-blue-400" />
+            <Wallet2 className="w-8 h-8 mr-2 text-gray-400" />
             Meus Portfolios
           </h1>
           <p className="mt-2 text-sm text-gray-400">
