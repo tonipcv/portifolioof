@@ -41,7 +41,7 @@ export default function DeletePortfolioButton({ portfolioId }: DeletePortfolioBu
     <button
       onClick={handleDelete}
       disabled={isDeleting}
-      className="absolute top-2 right-2 p-2 rounded-full bg-[#222222] hover:bg-red-500/20 text-gray-400 hover:text-red-500 transition-colors z-10"
+      className="absolute top-2 right-2 p-2 rounded-full bg-[#222222] opacity-0 group-hover:opacity-100 hover:bg-red-500/20 text-gray-400 hover:text-red-500 transition-all duration-200 z-10"
       title="Excluir portfólio"
     >
       <Trash2 className="w-4 h-4" />

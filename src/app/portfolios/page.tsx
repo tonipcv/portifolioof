@@ -46,11 +46,11 @@ export default async function PortfoliosPage() {
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {portfolios.map((portfolio) => (
-            <div key={portfolio.id} className="relative">
+            <div key={portfolio.id} className="relative group">
               <DeletePortfolioButton portfolioId={portfolio.id} />
               <Link 
                 href={`/portfolios/${portfolio.id}`}
-                className="relative group block overflow-hidden rounded-lg bg-[#161616] border border-[#222222] p-6 hover:border-blue-500/50 transition-all duration-300"
+                className="relative block overflow-hidden rounded-lg bg-[#161616] border border-[#222222] p-6 hover:border-blue-500/50 transition-all duration-300"
               >
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors">
