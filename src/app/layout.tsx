@@ -8,8 +8,11 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Crypto Portfolio',
-  description: 'Gerencie seu portfólio de criptomoedas',
+  title: 'K17',
+  description: 'Sua carteira de Criptomoedas',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
