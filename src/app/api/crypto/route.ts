@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from "next-auth/next"
 
 export async function POST(request: Request) {
   try {
@@ -94,35 +95,23 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const portfolioId = searchParams.get('portfolioId');
-
-  if (!portfolioId) {
-    return NextResponse.json(
-      { error: 'Portfolio ID is required' },
-      { status: 400 }
-    );
+export async function GET() {
+  const session = await getServerSession()
+  
+  if (!session?.user) {
+    return new Response('Unauthorized', { status: 401 })
   }
 
-  try {
-    const cryptos = await prisma.crypto.findMany({
-      where: {
-        portfolioId,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+  const portfolios = await prisma.portfolio.findMany({
+    where: {
+      userId: session.user.id
+    },
+    include: {
+      cryptos: true
+    }
+  })
 
-    return NextResponse.json(cryptos);
-  } catch (error) {
-    console.error('Error fetching cryptos:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch cryptos' },
-      { status: 500 }
-    );
-  }
+  return new Response(JSON.stringify(portfolios))
 }
 
 export async function DELETE(request: Request) {

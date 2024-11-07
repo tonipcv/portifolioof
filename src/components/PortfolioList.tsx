@@ -1,153 +1,103 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { FolderIcon, PlusIcon } from '@heroicons/react/24/outline'
-import CreatePortfolioModal from './CreatePortfolioModal'
-import Portfolio from './Portfolio'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { DeletePortfolioButton } from './DeletePortfolioButton'
 
 interface Portfolio {
   id: string
   name: string
   description: string | null
-  cryptos: Array<{
-    id: string
-    name: string
-    amount: number
-  }>
+  totalValue: number
+  totalProfit: number
+  cryptos: any[]
 }
 
-export default function PortfolioList() {
+export function PortfolioList() {
   const [portfolios, setPortfolios] = useState<Portfolio[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedPortfolio, setSelectedPortfolio] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
-  const fetchPortfolios = async () => {
+  async function loadPortfolios() {
     try {
-      setIsLoading(true)
-      setError(null)
-      
-      console.log('Fetching portfolios...')
-      const response = await fetch('/api/portfolios')
-      
+      setLoading(true)
+      const response = await fetch('/api/portfolio', {
+        cache: 'no-store'
+      })
       if (!response.ok) {
-        const errorData = await response.json()
-        console.error('Response error:', errorData)
-        throw new Error(`HTTP error! status: ${response.status}. Message: ${errorData.error}`)
+        throw new Error('Failed to fetch portfolios')
       }
-      
       const data = await response.json()
-      console.log('Portfolios fetched:', data)
       setPortfolios(data)
     } catch (error) {
-      console.error('Error details:', error)
-      setError('Falha ao carregar portfólios. Tente novamente.')
+      console.error('Error loading portfolios:', error)
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchPortfolios()
+    loadPortfolios()
+
+    const interval = setInterval(loadPortfolios, 5000)
+    return () => clearInterval(interval)
   }, [])
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-10 bg-gray-700 rounded w-1/4"></div>
-        <div className="space-y-3">
-          <div className="h-20 bg-gray-700 rounded"></div>
-          <div className="h-20 bg-gray-700 rounded"></div>
-        </div>
+      <div className="text-center py-4">
+        <p className="text-gray-400">Carregando portfolios...</p>
       </div>
     )
   }
 
-  if (selectedPortfolio) {
+  if (portfolios.length === 0) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setSelectedPortfolio(null)}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
-            ← Voltar aos portfólios
-          </button>
-        </div>
-        <Portfolio portfolioId={selectedPortfolio} />
+      <div className="text-center py-4">
+        <p className="text-gray-400">Nenhum portfolio encontrado.</p>
+        <p className="text-gray-500 text-sm mt-2">
+          Crie seu primeiro portfolio usando o botão acima.
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-xl font-semibold text-white">Seus Portfólios</h2>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {portfolios.map((portfolio) => (
+        <div
+          key={portfolio.id}
+          className="bg-[#161616] p-6 rounded-lg border border-[#222222] hover:border-[#333333] transition-colors cursor-pointer relative"
+          onClick={() => router.push(`/portfolios/${portfolio.id}`)}
         >
-          <PlusIcon className="h-5 w-5" />
-          Novo Portfólio
-        </button>
-      </div>
-
-      {error ? (
-        <div className="text-center py-8 bg-gray-800 rounded-lg">
-          <div className="text-red-400 mb-4">{error}</div>
-          <button
-            onClick={fetchPortfolios}
-            className="text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      ) : portfolios.length === 0 ? (
-        <div className="text-center py-12 bg-gray-800 rounded-lg">
-          <FolderIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-semibold text-white">Nenhum portfólio</h3>
-          <p className="mt-1 text-sm text-gray-400">Comece criando um novo portfólio</p>
-          <div className="mt-6">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
-            >
-              <PlusIcon className="h-5 w-5" />
-              Novo Portfólio
-            </button>
+          <DeletePortfolioButton 
+            portfolioId={portfolio.id} 
+            onDelete={loadPortfolios}
+          />
+          <h2 className="text-xl font-semibold mb-2">{portfolio.name}</h2>
+          {portfolio.description && (
+            <p className="text-gray-400 text-sm mb-4">{portfolio.description}</p>
+          )}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Valor Total:</span>
+              <span className="text-white">
+                ${portfolio.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Lucro/Prejuízo:</span>
+              <span className={portfolio.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}>
+                ${portfolio.totalProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-400">Ativos:</span>
+              <span className="text-white">{portfolio.cryptos.length}</span>
+            </div>
           </div>
         </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {portfolios.map((portfolio) => (
-            <div
-              key={portfolio.id}
-              onClick={() => setSelectedPortfolio(portfolio.id)}
-              className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <FolderIcon className="h-6 w-6 text-blue-400" />
-                <h3 className="text-lg font-medium text-white">{portfolio.name}</h3>
-              </div>
-              {portfolio.description && (
-                <p className="mt-1 text-sm text-gray-400">{portfolio.description}</p>
-              )}
-              <div className="mt-4 text-sm text-gray-400">
-                {portfolio.cryptos.length} criptomoedas
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <CreatePortfolioModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-          fetchPortfolios() // Refresh the list after creating
-        }}
-      />
+      ))}
     </div>
   )
 } 
