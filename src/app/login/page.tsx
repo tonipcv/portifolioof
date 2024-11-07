@@ -38,29 +38,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-[#111111]">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <Image
-            src="/logo.png"
-            alt="Logo"
-            width={48}
-            height={48}
-            className="h-12 w-auto"
-          />
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-          Entre na sua conta
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-400">
-          Ou{' '}
-          <Link href="/register" className="font-medium text-blue-500 hover:text-blue-400">
-            crie uma nova conta
-          </Link>
-        </p>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4">
+      <div className="mb-8">
+        <Image
+          src="/logo.png" 
+          alt="Logo"
+          width={140}
+          height={37}
+          priority
+          className="w-auto h-auto"
+        />
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+      <div className="w-full sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-[#161616] py-8 px-4 shadow-xl ring-1 ring-gray-900/10 sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
@@ -113,7 +103,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-400 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

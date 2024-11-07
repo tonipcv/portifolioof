@@ -1,11 +1,13 @@
+import { ReactNode } from 'react'
+
 export default function PortfoliosLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-[#111111]">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
       {children}
     </div>
-  );
+  )
 } 
