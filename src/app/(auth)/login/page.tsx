@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Mail, Lock } from 'lucide-react'
-import Link from 'next/link'
 import Image from 'next/image'
 
 export default function LoginPage() {
@@ -38,7 +37,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-[#111111]">
+    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <Image
@@ -49,15 +48,6 @@ export default function LoginPage() {
             className="h-12 w-auto"
           />
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-          Entre na sua conta
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-400">
-          Ou{' '}
-          <Link href="/register" className="font-medium text-blue-500 hover:text-blue-400">
-            crie uma nova conta
-          </Link>
-        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
