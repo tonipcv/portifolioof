@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { Providers } from '@/providers/Providers'
 import './globals.css'
 
 const inter = Inter({ 
@@ -21,9 +22,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className="h-full bg-[#111111]">
-      <body className={`${inter.className} h-full bg-[#111111] text-gray-100`}>
-        {children}
+    <html lang="en" className="bg-[#111111]">
+      <body className={`${inter.className} min-h-screen bg-[#111111]`}>
+        <Providers>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   )

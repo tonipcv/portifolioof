@@ -13,6 +13,40 @@ interface AddCryptoModalProps {
   onSuccess?: () => void
 }
 
+interface CoinGeckoListItem {
+  id: string;
+  symbol: string;
+  name: string;
+}
+
+interface EnrichedCrypto extends CryptoPrice {
+  isCustom?: boolean;
+  market_cap?: number;
+  price_change_24h?: number;
+  price_change_percentage_24h?: number;
+  total_volume?: number;
+}
+
+const CUSTOM_COINS = [
+  { id: 'popcat', symbol: 'POPCAT', name: 'Popcat (SOL)' },
+  { id: 'dog', symbol: 'DOG', name: 'Dog (Runes)' },
+  { id: 'ethena', symbol: 'ENA', name: 'Ethena' },
+  { id: 'seal-2', symbol: 'SEAL', name: 'Seal' },
+  { id: 'cat-in-a-dogs-world', symbol: 'MEW', name: 'Cat in a dogs world' },
+  { id: 'kangamoon', symbol: 'KANG', name: 'Kangamoon' },
+  { id: 'slerf', symbol: 'SLERF', name: 'SLERF' },
+  { id: 'goldfinch', symbol: 'GFI', name: 'Goldfinch' },
+  { id: 'ankr', symbol: 'ANKR', name: 'Ankr' },
+  { id: 'mantra-dao', symbol: 'OM', name: 'MANTRA' },
+  { id: 'ubxs-token', symbol: 'UBXS', name: 'UBXS Token' },
+  { id: 'realio-network', symbol: 'RIO', name: 'Realio Network' },
+  { id: 'wen', symbol: 'WEN', name: 'Wen' },
+  { id: 'lido-dao', symbol: 'LDO', name: 'Lido DAO' },
+  { id: 'polytrade', symbol: 'TRADE', name: 'Polytrade' },
+  { id: 'core', symbol: 'CORE', name: 'Core' },
+  { id: 'centrifuge', symbol: 'CFG', name: 'Centrifuge' }
+] as const;
+
 export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess }: AddCryptoModalProps) {
   const [query, setQuery] = useState('')
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoPrice | null>(null)
@@ -27,8 +61,119 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
       if (isOpen) {
         setIsLoading(true)
         try {
-          const data = await getTopCryptos()
-          setCryptos(data)
+          // 1. Primeiro, buscar a lista completa de moedas
+          const listResponse = await fetch(
+            'https://pro-api.coingecko.com/api/v3/coins/list',
+            {
+              headers: {
+                'accept': 'application/json',
+                'x-cg-pro-api-key': 'CG-hpbLQhyhxzcJJyUkjQdBjkPc'
+              }
+            }
+          )
+
+          if (!listResponse.ok) {
+            throw new Error('Falha ao carregar lista de criptomoedas')
+          }
+
+          const allCoins: CoinGeckoListItem[] = await listResponse.json()
+
+          // 2. Buscar dados de mercado para as top 400
+          const topCoinsResponse = await fetch(
+            'https://pro-api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=400&page=1&sparkline=false&price_change_percentage=24h&locale=en',
+            {
+              headers: {
+                'accept': 'application/json',
+                'x-cg-pro-api-key': 'CG-hpbLQhyhxzcJJyUkjQdBjkPc'
+              }
+            }
+          )
+
+          if (!topCoinsResponse.ok) {
+            throw new Error('Falha ao carregar dados de mercado')
+          }
+
+          const topCoinsData = await topCoinsResponse.json()
+          
+          // Criar mapa com os dados das top coins
+          const topCoinsMap = new Map(
+            topCoinsData.map((coin: any) => [
+              coin.id,
+              {
+                id: coin.id,
+                symbol: coin.symbol,
+                name: coin.name,
+                image: coin.image,
+                current_price: coin.current_price,
+                isCustom: false
+              }
+            ])
+          )
+
+          // 3. Buscar dados específicos para as moedas customizadas
+          const customCoinsPromises = CUSTOM_COINS.map(async (customCoin) => {
+            try {
+              const response = await fetch(
+                `https://pro-api.coingecko.com/api/v3/coins/${customCoin.id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`,
+                {
+                  headers: {
+                    'accept': 'application/json',
+                    'x-cg-pro-api-key': 'CG-hpbLQhyhxzcJJyUkjQdBjkPc'
+                  }
+                }
+              )
+              
+              if (!response.ok) {
+                // Se não encontrar, usar dados básicos
+                return {
+                  id: customCoin.id,
+                  symbol: customCoin.symbol,
+                  name: customCoin.name,
+                  image: '',
+                  current_price: 0,
+                  isCustom: true
+                }
+              }
+
+              const data = await response.json()
+              return {
+                id: data.id,
+                symbol: data.symbol,
+                name: data.name,
+                image: data.image?.small || '',
+                current_price: data.market_data?.current_price?.usd || 0,
+                isCustom: true
+              }
+            } catch (error) {
+              console.error(`Erro ao buscar dados para ${customCoin.name}:`, error)
+              // Retornar versão básica em caso de erro
+              return {
+                id: customCoin.id,
+                symbol: customCoin.symbol,
+                name: customCoin.name,
+                image: '',
+                current_price: 0,
+                isCustom: true
+              }
+            }
+          })
+
+          const customCoinsData = await Promise.all(customCoinsPromises)
+
+          // 4. Combinar todas as moedas
+          const allEnrichedCoins = [
+            ...customCoinsData,
+            ...Array.from(topCoinsMap.values())
+          ] as EnrichedCrypto[]
+
+          // 5. Ordenar: primeiro as customizadas, depois por nome
+          const sortedCoins = allEnrichedCoins.sort((a: EnrichedCrypto, b: EnrichedCrypto) => {
+            if (a.isCustom && !b.isCustom) return -1
+            if (!a.isCustom && b.isCustom) return 1
+            return a.name.localeCompare(b.name)
+          })
+
+          setCryptos(sortedCoins)
         } catch (err) {
           setError('Falha ao carregar criptomoedas')
           console.error(err)
@@ -44,8 +189,9 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
   const filteredCryptos = query === ''
     ? cryptos
     : cryptos.filter((crypto) => {
-        return crypto.name.toLowerCase().includes(query.toLowerCase()) ||
-               crypto.symbol.toLowerCase().includes(query.toLowerCase())
+        const searchLower = query.toLowerCase()
+        return crypto.name.toLowerCase().includes(searchLower) ||
+               crypto.symbol.toLowerCase().includes(searchLower)
       })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,15 +199,8 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
     if (!selectedCrypto) return
 
     try {
-      console.log('Submitting crypto:', {
-        coinId: selectedCrypto.id,
-        symbol: selectedCrypto.symbol,
-        name: selectedCrypto.name,
-        amount: parseFloat(amount),
-        investedValue: parseFloat(investedValue) / 100,
-        portfolioId
-      })
-
+      const valueInBRL = parseFloat(investedValue) / 100
+      
       const response = await fetch('/api/crypto', {
         method: 'POST',
         headers: {
@@ -72,8 +211,9 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
           symbol: selectedCrypto.symbol,
           name: selectedCrypto.name,
           amount: parseFloat(amount),
-          investedValue: parseFloat(investedValue) / 100,
-          portfolioId: portfolioId
+          investedValue: valueInBRL,
+          portfolioId: portfolioId,
+          image: selectedCrypto.image
         }),
       })
 
@@ -106,7 +246,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
 
   const formatBRL = (value: string) => {
     const onlyNumbers = value.replace(/\D/g, '')
-    if (!onlyNumbers) return 'R$ 0,00'
+    if (!onlyNumbers) return '0,00'
     
     const numberValue = Number(onlyNumbers) / 100
     return new Intl.NumberFormat('pt-BR', {
@@ -180,7 +320,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                             <div className="relative">
                               <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-gray-700 text-left focus:outline-none sm:text-sm">
                                 <Combobox.Input
-                                  className="w-full border-none bg-gray-700 py-2.5 pl-3 pr-10 text-white focus:ring-2 focus:ring-blue-600 rounded-lg"
+                                  className="w-full border-none bg-gray-700 py-2.5 pl-3 pr-10 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-600 rounded-lg"
                                   displayValue={(crypto: CryptoPrice) => crypto?.name || ''}
                                   onChange={(event) => setQuery(event.target.value)}
                                   placeholder="Digite para buscar..."
@@ -199,8 +339,12 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                                 leaveTo="opacity-0"
                                 afterLeave={() => setQuery('')}
                               >
-                                <Combobox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-gray-700 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                  {filteredCryptos.length === 0 && query !== '' ? (
+                                <Combobox.Options className="absolute mt-1 max-h-[400px] w-full overflow-auto rounded-md bg-gray-700 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-50">
+                                  {isLoading ? (
+                                    <div className="relative cursor-default select-none px-4 py-2 text-gray-300">
+                                      Carregando...
+                                    </div>
+                                  ) : filteredCryptos.length === 0 ? (
                                     <div className="relative cursor-default select-none px-4 py-2 text-gray-300">
                                       Nada encontrado.
                                     </div>
@@ -209,7 +353,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                                       <Combobox.Option
                                         key={crypto.id}
                                         className={({ active }) =>
-                                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                                          `relative cursor-default select-none py-3 pl-10 pr-4 ${
                                             active ? 'bg-blue-600 text-white' : 'text-gray-300'
                                           }`
                                         }
@@ -217,16 +361,34 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                                       >
                                         {({ selected, active }) => (
                                           <>
-                                            <div className="flex items-center">
-                                              <Image 
-                                                src={crypto.image} 
-                                                alt={crypto.name}
-                                                width={24} 
-                                                height={24}
-                                                className="mr-2"
-                                              />
-                                              <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
-                                                {crypto.name} ({crypto.symbol.toUpperCase()})
+                                            <div className="flex items-center justify-between">
+                                              <div className="flex items-center">
+                                                {crypto.image ? (
+                                                  <Image
+                                                    src={crypto.image}
+                                                    alt={crypto.name}
+                                                    width={24}
+                                                    height={24}
+                                                    className="rounded-full mr-3"
+                                                  />
+                                                ) : (
+                                                  <div className="w-6 h-6 bg-gray-600 rounded-full mr-3 flex items-center justify-center">
+                                                    <span className="text-xs text-gray-300">
+                                                      {crypto.symbol.slice(0, 2).toUpperCase()}
+                                                    </span>
+                                                  </div>
+                                                )}
+                                                <div>
+                                                  <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                                                    {crypto.name}
+                                                  </span>
+                                                  <span className="text-sm text-gray-400">
+                                                    {crypto.symbol.toUpperCase()}
+                                                  </span>
+                                                </div>
+                                              </div>
+                                              <span className="text-sm text-gray-400 ml-4">
+                                                {formatUSD(crypto.current_price)}
                                               </span>
                                             </div>
                                             {selected ? (
@@ -251,13 +413,11 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
 
                         {selectedCrypto && (
                           <div className="bg-[#222222] rounded-lg p-4 flex items-center gap-4">
-                            <Image 
-                              src={selectedCrypto.image} 
-                              alt={selectedCrypto.name}
-                              width={24} 
-                              height={24}
-                              className="mr-2"
-                            />
+                            <div className="w-6 h-6 bg-gray-600 rounded-full mr-2 flex items-center justify-center">
+                              <span className="text-xs text-gray-300">
+                                {selectedCrypto.symbol.slice(0, 2).toUpperCase()}
+                              </span>
+                            </div>
                             <div>
                               <h4 className="text-white font-medium">{selectedCrypto.name}</h4>
                               <p className="text-gray-400">
@@ -279,7 +439,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                               <input
                                 type="text"
                                 id="investedValue"
-                                className="block w-full rounded-md border-0 bg-gray-700 py-2.5 pl-10 text-white shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-600 sm:text-sm"
+                                className="block w-full rounded-md border-0 bg-gray-700 py-2.5 pl-10 text-white placeholder-gray-400 shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-600 sm:text-sm"
                                 value={formatBRL(investedValue)}
                                 onChange={(e) => handleValueChange(e.target.value)}
                                 placeholder="0,00"
@@ -296,7 +456,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                               type="number"
                               id="amount"
                               step="any"
-                              className="mt-2 block w-full rounded-md border-0 bg-gray-700 py-2.5 px-3 text-white shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-600 sm:text-sm"
+                              className="mt-2 block w-full rounded-md border-0 bg-gray-700 py-2.5 px-3 text-white placeholder-gray-400 shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-600 sm:text-sm"
                               value={amount}
                               onChange={(e) => setAmount(e.target.value)}
                               placeholder="0.00"
