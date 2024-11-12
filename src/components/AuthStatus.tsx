@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession, signOut } from 'next-auth/react'
-import Link from 'next/link'
+import { LogOut, User } from 'lucide-react'
 
 export function AuthStatus() {
   const { data: session, status } = useSession()
@@ -10,36 +10,25 @@ export function AuthStatus() {
     return <div className="text-gray-400">Carregando...</div>
   }
 
-  if (status === 'authenticated') {
-    return (
-      <div className="flex items-center gap-4">
-        <span className="text-sm text-gray-400">
-          {session.user?.email}
-        </span>
-        <button
-          onClick={() => signOut()}
-          className="text-sm text-red-400 hover:text-red-300"
-        >
-          Sair
-        </button>
-      </div>
-    )
+  if (status === 'unauthenticated') {
+    return null
   }
 
   return (
-    <div className="flex gap-4">
-      <Link
-        href="/login"
-        className="text-sm text-blue-400 hover:text-blue-300"
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <User className="h-5 w-5 text-gray-400" />
+        <span className="hidden sm:inline text-sm text-gray-400">
+          {session?.user?.name || 'Usuário'}
+        </span>
+      </div>
+      <button
+        onClick={() => signOut()}
+        className="text-gray-400 hover:text-red-400 transition-colors"
+        title="Sair"
       >
-        Login
-      </Link>
-      <Link
-        href="/register"
-        className="text-sm text-green-400 hover:text-green-300"
-      >
-        Registrar
-      </Link>
+        <LogOut className="h-5 w-5" />
+      </button>
     </div>
   )
 } 
