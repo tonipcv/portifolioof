@@ -5,15 +5,17 @@
 import { useEffect, useState } from 'react'
 import { Crypto } from '@prisma/client'
 import AddCryptoModal from './AddCryptoModal'
+import Image from 'next/image'
+import CryptoDetailsModal from './CryptoDetailsModal'
 
 interface AssetsListProps {
   portfolioId?: string
 }
 
-const formatBRL = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
+const formatUSD = (value: number) => {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'BRL',
+    currency: 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(value);
@@ -24,6 +26,8 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedCrypto, setSelectedCrypto] = useState<Crypto | null>(null)
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
 
   const loadAssets = async () => {
     try {
@@ -154,14 +158,21 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
             </thead>
             <tbody className="divide-y divide-[#222222]">
               {assets.map((asset) => (
-                <tr key={asset.id} className="hover:bg-[#222222] transition-colors">
+                <tr 
+                  key={asset.id} 
+                  className="hover:bg-[#222222] transition-colors cursor-pointer"
+                  onClick={() => {
+                    setSelectedCrypto(asset)
+                    setIsDetailsModalOpen(true)
+                  }}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <img
-                        src={asset.image || '/placeholder-coin.png'}
-                        alt={asset.name}
-                        className="w-8 h-8 rounded-full mr-3"
-                      />
+                      <div className="w-8 h-8 rounded-full mr-3 flex items-center justify-center bg-gray-700">
+                        <span className="text-xs text-gray-300">
+                          {asset.symbol.slice(0, 2).toUpperCase()}
+                        </span>
+                      </div>
                       <div>
                         <div className="text-sm font-medium text-gray-200">{asset.name}</div>
                         <div className="text-sm text-gray-500">{asset.symbol.toUpperCase()}</div>
@@ -169,7 +180,7 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                    {formatBRL(asset.currentPrice * 5.00)}
+                    {formatUSD(asset.currentPrice)}
                   </td>
                   <td className={`px-6 py-4 whitespace-nowrap text-sm ${
                     (asset.priceChangePercentage24h ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
@@ -187,12 +198,12 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
                         {asset.amount.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {formatBRL(asset.investedValue * 5.00)}
+                        {formatUSD(asset.investedValue)}
                       </td>
                       <td className={`px-6 py-4 whitespace-nowrap text-sm ${
                         asset.profit >= 0 ? 'text-green-400' : 'text-red-400'
                       }`}>
-                        {formatBRL(asset.profit * 5.00)}
+                        {formatUSD(asset.profit)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button
@@ -222,12 +233,19 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
       </div>
 
       {portfolioId && (
-        <AddCryptoModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          portfolioId={portfolioId}
-          onSuccess={loadAssets}
-        />
+        <>
+          <AddCryptoModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            portfolioId={portfolioId}
+            onSuccess={loadAssets}
+          />
+          <CryptoDetailsModal
+            isOpen={isDetailsModalOpen}
+            onClose={() => setIsDetailsModalOpen(false)}
+            crypto={selectedCrypto}
+          />
+        </>
       )}
     </div>
   )

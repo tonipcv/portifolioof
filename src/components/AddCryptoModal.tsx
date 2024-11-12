@@ -29,7 +29,7 @@ interface EnrichedCrypto extends CryptoPrice {
 
 const CUSTOM_COINS = [
   { id: 'popcat', symbol: 'POPCAT', name: 'Popcat (SOL)' },
-  { id: 'dog', symbol: 'DOG', name: 'Dog (Runes)' },
+  { id: 'dog-go-to-the-moon-rune', symbol: 'dog', name: 'DOG•GO•TO•THE•MOON (Runes)' },
   { id: 'ethena', symbol: 'ENA', name: 'Ethena' },
   { id: 'seal-sol', symbol: 'SEAL', name: 'Seal' },
   { id: 'cat-in-a-dogs-world', symbol: 'MEW', name: 'Cat in a dogs world' },
@@ -103,7 +103,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                 id: coin.id,
                 symbol: coin.symbol,
                 name: coin.name,
-                image: coin.image,
+                image: coin.image || coin.thumb || coin.small || '',
                 current_price: coin.current_price,
                 isCustom: false
               }
@@ -124,7 +124,6 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
               )
               
               if (!response.ok) {
-                // Se não encontrar, usar dados básicos
                 return {
                   id: customCoin.id,
                   symbol: customCoin.symbol,
@@ -136,17 +135,18 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
               }
 
               const data = await response.json()
+              const imageUrl = data.image?.large || data.image?.small || data.image?.thumb || ''
+              
               return {
                 id: data.id,
                 symbol: data.symbol,
                 name: data.name,
-                image: data.image?.small || '',
+                image: imageUrl,
                 current_price: data.market_data?.current_price?.usd || 0,
                 isCustom: true
               }
             } catch (error) {
               console.error(`Erro ao buscar dados para ${customCoin.name}:`, error)
-              // Retornar versão básica em caso de erro
               return {
                 id: customCoin.id,
                 symbol: customCoin.symbol,
@@ -199,7 +199,17 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
     if (!selectedCrypto) return
 
     try {
-      const valueInBRL = parseFloat(investedValue) / 100
+      const valueInUSD = parseFloat(investedValue) / 100
+      
+      console.log('Sending crypto data:', {
+        coinId: selectedCrypto.id,
+        symbol: selectedCrypto.symbol,
+        name: selectedCrypto.name,
+        amount: parseFloat(amount),
+        investedValue: valueInUSD,
+        portfolioId: portfolioId,
+        image: selectedCrypto.image
+      })
       
       const response = await fetch('/api/crypto', {
         method: 'POST',
@@ -211,7 +221,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
           symbol: selectedCrypto.symbol,
           name: selectedCrypto.name,
           amount: parseFloat(amount),
-          investedValue: valueInBRL,
+          investedValue: valueInUSD,
           portfolioId: portfolioId,
           image: selectedCrypto.image
         }),
@@ -244,14 +254,14 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
     }).format(value)
   }
 
-  const formatBRL = (value: string) => {
+  const formatInvestedValue = (value: string) => {
     const onlyNumbers = value.replace(/\D/g, '')
-    if (!onlyNumbers) return '0,00'
+    if (!onlyNumbers) return '$0.00'
     
     const numberValue = Number(onlyNumbers) / 100
-    return new Intl.NumberFormat('pt-BR', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'BRL',
+      currency: 'USD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(numberValue)
@@ -341,11 +351,11 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                               >
                                 <Combobox.Options className="absolute mt-1 max-h-[400px] w-full overflow-auto rounded-md bg-gray-700 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-50">
                                   {isLoading ? (
-                                    <div className="relative cursor-default select-none px-4 py-2 text-gray-300">
+                                    <div key="loading" className="relative cursor-default select-none px-4 py-2 text-gray-300">
                                       Carregando...
                                     </div>
                                   ) : filteredCryptos.length === 0 ? (
-                                    <div className="relative cursor-default select-none px-4 py-2 text-gray-300">
+                                    <div key="not-found" className="relative cursor-default select-none px-4 py-2 text-gray-300">
                                       Nada encontrado.
                                     </div>
                                   ) : (
@@ -434,15 +444,15 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                             </label>
                             <div className="relative mt-2 rounded-md shadow-sm">
                               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                <span className="text-gray-400 sm:text-sm">R$</span>
+                                <span className="text-gray-400 sm:text-sm">$</span>
                               </div>
                               <input
                                 type="text"
                                 id="investedValue"
                                 className="block w-full rounded-md border-0 bg-gray-700 py-2.5 pl-10 text-white placeholder-gray-400 shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-600 sm:text-sm"
-                                value={formatBRL(investedValue)}
+                                value={formatInvestedValue(investedValue)}
                                 onChange={(e) => handleValueChange(e.target.value)}
-                                placeholder="0,00"
+                                placeholder="0.00"
                                 required
                               />
                             </div>
