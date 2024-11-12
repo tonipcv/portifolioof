@@ -11,6 +11,7 @@ interface Portfolio {
   description: string | null
   totalValue: number
   totalProfit: number
+  totalInvested: number
   cryptos: any[]
 }
 
@@ -24,11 +25,16 @@ export function PortfolioList() {
     try {
       setIsRefreshing(true)
       const response = await fetch('/api/portfolio', {
-        cache: 'no-store'
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
       })
+      
       if (!response.ok) {
         throw new Error('Failed to fetch portfolios')
       }
+      
       const data = await response.json()
       setPortfolios(data)
     } catch (error) {
@@ -39,8 +45,15 @@ export function PortfolioList() {
     }
   }
 
+  // Carregar dados iniciais
   useEffect(() => {
     loadPortfolios()
+  }, [])
+
+  // Atualizar dados a cada 2 minutos
+  useEffect(() => {
+    const intervalId = setInterval(loadPortfolios, 120000) // 2 minutos
+    return () => clearInterval(intervalId)
   }, [])
 
   if (loading) {
@@ -58,32 +71,33 @@ export function PortfolioList() {
     <div className="space-y-6">
       <div className="sticky top-0 z-10 bg-[#111111] py-2">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-medium text-gray-200 sm:text-xl">
+          <h1 className="text-lg font-medium text-gray-200 sm:text-xl flex items-center">
             Seus Portfolios
             <span className="ml-2 text-sm text-gray-400">
               ({portfolios.length})
             </span>
-          </h2>
-          <button
-            onClick={loadPortfolios}
-            disabled={isRefreshing}
-            className="inline-flex items-center gap-x-1.5 rounded-md bg-[#222222] px-2.5 py-1.5 text-sm font-semibold text-gray-300 shadow-sm hover:bg-[#333333] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50"
-            title="Atualizar portfolios"
-          >
-            <RefreshCw 
-              className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-              aria-hidden="true"
-            />
-            {isRefreshing ? 'Atualizando...' : 'Atualizar'}
-          </button>
+          </h1>
+          <div className="flex gap-2">
+            <button
+              onClick={loadPortfolios}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-x-1.5 rounded-md bg-transparent border-2 border-white/20 px-2.5 py-1.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50"
+              title="Atualizar portfolios"
+            >
+              <RefreshCw 
+                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                aria-hidden="true"
+              />
+              {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+            </button>
+          </div>
         </div>
       </div>
 
       {portfolios.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed border-gray-700 p-12">
           <div className="text-center">
-            <Wallet className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-semibold text-gray-200">Nenhum portfolio</h3>
+            <h2 className="text-sm font-semibold text-gray-200">Nenhum portfolio</h2>
             <p className="mt-1 text-sm text-gray-400">Comece criando seu primeiro portfolio.</p>
           </div>
         </div>
@@ -97,9 +111,9 @@ export function PortfolioList() {
             >
               <div className="flex-1 p-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-200 group-hover:text-blue-400">
+                  <h2 className="text-lg font-semibold text-gray-200 group-hover:text-blue-400">
                     {portfolio.name}
-                  </h3>
+                  </h2>
                   <DeletePortfolioButton 
                     portfolioId={portfolio.id} 
                     onDelete={loadPortfolios}
@@ -115,12 +129,24 @@ export function PortfolioList() {
                 <div className="mt-4 border-t border-gray-800 pt-4">
                   <dl className="grid grid-cols-1 gap-3">
                     <div className="flex justify-between">
+                      <dt className="text-sm text-gray-400">Valor Investido:</dt>
+                      <dd className="text-sm font-medium text-gray-200">
+                        ${portfolio.totalInvested.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between">
                       <dt className="text-sm text-gray-400">Valor Total:</dt>
                       <dd className="text-sm font-medium text-gray-200">
                         ${portfolio.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </dd>
                     </div>
                     <div className="flex justify-between">
+                      <dt className="text-sm text-gray-400">Preço Médio:</dt>
+                      <dd className="text-sm font-medium text-gray-200">
+                        ${(portfolio.totalValue / portfolio.cryptos.reduce((sum, crypto) => sum + crypto.amount, 0) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between border-t border-gray-800 pt-3">
                       <dt className="text-sm text-gray-400">Lucro/Prejuízo:</dt>
                       <dd className="flex items-center text-sm font-medium">
                         {portfolio.totalProfit >= 0 ? (
@@ -133,7 +159,7 @@ export function PortfolioList() {
                         </span>
                       </dd>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between border-t border-gray-800 pt-3">
                       <dt className="text-sm text-gray-400">Ativos:</dt>
                       <dd className="text-sm font-medium text-gray-200">
                         {portfolio.cryptos.length}

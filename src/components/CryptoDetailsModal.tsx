@@ -4,6 +4,7 @@ import { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { Crypto } from '@prisma/client'
+import Image from 'next/image'
 
 interface CryptoDetailsModalProps {
   isOpen: boolean
@@ -69,11 +70,22 @@ export default function CryptoDetailsModal({ isOpen, onClose, crypto }: CryptoDe
 
                     <div className="bg-[#222222] rounded-lg p-6 space-y-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
-                          <span className="text-lg text-gray-300">
-                            {crypto.symbol.slice(0, 2).toUpperCase()}
-                          </span>
-                        </div>
+                        {crypto.image ? (
+                          <Image
+                            src={crypto.image}
+                            alt={crypto.name}
+                            width={48}
+                            height={48}
+                            className="rounded-full"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center">
+                            <span className="text-lg text-gray-300">
+                              {crypto.symbol.slice(0, 2).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
                         <div>
                           <h4 className="text-lg font-medium text-white">{crypto.name}</h4>
                           <p className="text-gray-400">{crypto.symbol.toUpperCase()}</p>

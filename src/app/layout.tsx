@@ -1,33 +1,31 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { Providers } from '@/providers/Providers'
 import './globals.css'
+import { Navbar } from '@/components/Navbar'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { Providers } from './providers'
 
-const inter = Inter({ 
-  subsets: ['latin'],
-  variable: '--font-inter',
-})
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'K17',
-  description: 'Sua carteira de Criptomoedas',
-  icons: {
-    icon: '/favicon.ico',
-  },
+  title: 'Crypto Portfolio',
+  description: 'Gerencie seu portfólio de criptomoedas',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const session = await getServerSession(authOptions)
+
   return (
-    <html lang="en" className="bg-[#111111]">
-      <body className={`${inter.className} min-h-screen bg-[#111111]`}>
+    <html lang="pt-BR">
+      <body className={`${inter.className} bg-[#111111] min-h-screen`}>
         <Providers>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {children}
-          </div>
+          {session && <Navbar />}
+          {children}
         </Providers>
       </body>
     </html>

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
+import { useState } from 'react'
 
 interface DeletePortfolioButtonProps {
   portfolioId: string
@@ -9,10 +9,12 @@ interface DeletePortfolioButtonProps {
 }
 
 export function DeletePortfolioButton({ portfolioId, onDelete }: DeletePortfolioButtonProps) {
+  const [showConfirm, setShowConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [showConfirmation, setShowConfirmation] = useState(false)
 
-  const handleDelete = async () => {
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation()
+    
     try {
       setIsDeleting(true)
       const response = await fetch(`/api/portfolio/${portfolioId}`, {
@@ -26,45 +28,57 @@ export function DeletePortfolioButton({ portfolioId, onDelete }: DeletePortfolio
       onDelete()
     } catch (error) {
       console.error('Error deleting portfolio:', error)
-      alert('Erro ao excluir portfolio')
     } finally {
       setIsDeleting(false)
-      setShowConfirmation(false)
+      setShowConfirm(false)
     }
   }
 
-  if (showConfirmation) {
-    return (
-      <div className="absolute top-0 right-0 mt-2 mr-2 bg-[#222222] p-2 rounded-md shadow-lg z-10">
-        <p className="text-sm text-gray-300 mb-2">Tem certeza?</p>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setShowConfirmation(false)}
-            className="text-xs text-gray-400 hover:text-gray-300"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="text-xs text-red-400 hover:text-red-300"
-          >
-            {isDeleting ? 'Excluindo...' : 'Confirmar'}
-          </button>
-        </div>
-      </div>
-    )
+  function handleClick(e: React.MouseEvent) {
+    e.stopPropagation()
+    setShowConfirm(true)
+  }
+
+  function handleCancel(e: React.MouseEvent) {
+    e.stopPropagation()
+    setShowConfirm(false)
   }
 
   return (
-    <button
-      onClick={(e) => {
-        e.stopPropagation()
-        setShowConfirmation(true)
-      }}
-      className="absolute top-4 right-4 text-gray-400 hover:text-red-400"
-    >
-      <Trash2 size={16} />
-    </button>
+    <div className="relative">
+      <button
+        onClick={handleClick}
+        className="invisible group-hover:visible p-1 hover:text-red-400 transition-colors"
+        title="Excluir portfolio"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+
+      {showConfirm && (
+        <div 
+          className="absolute right-0 top-0 z-10 w-48 rounded-md bg-[#222222] shadow-lg ring-1 ring-black ring-opacity-5"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="p-3">
+            <p className="text-sm text-gray-200 mb-3">Confirmar exclusão?</p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 rounded-md bg-red-500 px-2 py-1 text-sm font-semibold text-white shadow-sm hover:bg-red-600 disabled:opacity-50"
+              >
+                {isDeleting ? 'Excluindo...' : 'Excluir'}
+              </button>
+              <button
+                onClick={handleCancel}
+                className="flex-1 rounded-md bg-[#333333] px-2 py-1 text-sm font-semibold text-gray-200 shadow-sm hover:bg-[#444444]"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 } 

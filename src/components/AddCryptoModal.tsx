@@ -80,7 +80,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
 
           // 2. Buscar dados de mercado para as top 400
           const topCoinsResponse = await fetch(
-            'https://pro-api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=400&page=1&sparkline=false&price_change_percentage=24h&locale=en',
+            'https://pro-api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=400&page=1&sparkline=false&price_change_percentage=24h,7d',
             {
               headers: {
                 'accept': 'application/json',
@@ -105,6 +105,8 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                 name: coin.name,
                 image: coin.image || coin.thumb || coin.small || '',
                 current_price: coin.current_price,
+                price_change_percentage_24h: coin.price_change_percentage_24h,
+                price_change_percentage_7d: coin.price_change_percentage_7d_in_currency,
                 isCustom: false
               }
             ])
@@ -114,7 +116,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
           const customCoinsPromises = CUSTOM_COINS.map(async (customCoin) => {
             try {
               const response = await fetch(
-                `https://pro-api.coingecko.com/api/v3/coins/${customCoin.id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false`,
+                `https://pro-api.coingecko.com/api/v3/coins/${customCoin.id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=true`,
                 {
                   headers: {
                     'accept': 'application/json',
@@ -130,6 +132,8 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                   name: customCoin.name,
                   image: '',
                   current_price: 0,
+                  price_change_percentage_24h: 0,
+                  price_change_percentage_7d: 0,
                   isCustom: true
                 }
               }
@@ -143,6 +147,8 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                 name: data.name,
                 image: imageUrl,
                 current_price: data.market_data?.current_price?.usd || 0,
+                price_change_percentage_24h: data.market_data?.price_change_percentage_24h || 0,
+                price_change_percentage_7d: data.market_data?.price_change_percentage_7d || 0,
                 isCustom: true
               }
             } catch (error) {
@@ -153,6 +159,8 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                 name: customCoin.name,
                 image: '',
                 current_price: 0,
+                price_change_percentage_24h: 0,
+                price_change_percentage_7d: 0,
                 isCustom: true
               }
             }
@@ -201,16 +209,6 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
     try {
       const valueInUSD = parseFloat(investedValue) / 100
       
-      console.log('Sending crypto data:', {
-        coinId: selectedCrypto.id,
-        symbol: selectedCrypto.symbol,
-        name: selectedCrypto.name,
-        amount: parseFloat(amount),
-        investedValue: valueInUSD,
-        portfolioId: portfolioId,
-        image: selectedCrypto.image
-      })
-      
       const response = await fetch('/api/crypto', {
         method: 'POST',
         headers: {
@@ -223,7 +221,10 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
           amount: parseFloat(amount),
           investedValue: valueInUSD,
           portfolioId: portfolioId,
-          image: selectedCrypto.image
+          image: selectedCrypto.image,
+          currentPrice: selectedCrypto.current_price,
+          priceChangePercentage24h: selectedCrypto.price_change_percentage_24h,
+          priceChangePercentage7d: selectedCrypto.price_change_percentage_7d
         }),
       })
 
@@ -373,21 +374,11 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                                           <>
                                             <div className="flex items-center justify-between">
                                               <div className="flex items-center">
-                                                {crypto.image ? (
-                                                  <Image
-                                                    src={crypto.image}
-                                                    alt={crypto.name}
-                                                    width={24}
-                                                    height={24}
-                                                    className="rounded-full mr-3"
-                                                  />
-                                                ) : (
-                                                  <div className="w-6 h-6 bg-gray-600 rounded-full mr-3 flex items-center justify-center">
-                                                    <span className="text-xs text-gray-300">
-                                                      {crypto.symbol.slice(0, 2).toUpperCase()}
-                                                    </span>
-                                                  </div>
-                                                )}
+                                                <div className="w-6 h-6 bg-gray-600 rounded-full mr-3 flex items-center justify-center">
+                                                  <span className="text-xs text-gray-300">
+                                                    {crypto.symbol.slice(0, 2).toUpperCase()}
+                                                  </span>
+                                                </div>
                                                 <div>
                                                   <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
                                                     {crypto.name}
@@ -397,9 +388,21 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                                                   </span>
                                                 </div>
                                               </div>
-                                              <span className="text-sm text-gray-400 ml-4">
-                                                {formatUSD(crypto.current_price)}
-                                              </span>
+                                              <div className="flex items-center gap-4">
+                                                <div className="text-right">
+                                                  <div className="text-sm text-gray-400">
+                                                    {formatUSD(crypto.current_price)}
+                                                  </div>
+                                                  <div className="flex items-center gap-2 text-xs">
+                                                    <span className={crypto.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                                      {crypto.price_change_percentage_24h?.toFixed(2)}% (24h)
+                                                    </span>
+                                                    <span className={crypto.price_change_percentage_7d >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                                      {crypto.price_change_percentage_7d?.toFixed(2)}% (7d)
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              </div>
                                             </div>
                                             {selected ? (
                                               <span

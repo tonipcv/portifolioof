@@ -34,6 +34,13 @@ export default async function PortfolioPage({ params }: PageProps) {
   const usdToBRL = 5.00;
   const totalValueBRL = portfolio.totalValue * usdToBRL;
   const totalProfitBRL = portfolio.totalProfit * usdToBRL;
+  
+  // Calcula o valor total investido somando o investedValue de todas as criptos
+  const totalInvestedAmount = portfolio.cryptos.reduce((total, crypto) => {
+    return total + crypto.investedValue;
+  }, 0);
+  
+  const investedAmountBRL = totalInvestedAmount * usdToBRL;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -49,7 +56,7 @@ export default async function PortfolioPage({ params }: PageProps) {
         <div className="flex justify-between items-center mt-4">
           <div>
             <h1 className="text-2xl font-bold text-white flex items-center">
-              <Wallet2 className="w-8 h-8 mr-2 text-blue-400" />
+              <h1 className="w-8 h-8 mr-2 text-blue-400" />
               {portfolio.name}
             </h1>
             {portfolio.description && (
@@ -58,8 +65,12 @@ export default async function PortfolioPage({ params }: PageProps) {
           </div>
           <div className="text-right">
             <div className="flex items-center justify-end mb-2">
-              <span className="text-gray-400 mr-2">Total:</span>
+              <span className="text-gray-400 mr-2">Saldo Total:</span>
               <span className="text-blue-400 font-medium">{formatBRL(totalValueBRL)}</span>
+            </div>
+            <div className="flex items-center justify-end mb-2">
+              <span className="text-gray-400 mr-2">Investido:</span>
+              <span className="text-gray-400 font-medium">{formatBRL(investedAmountBRL)}</span>
             </div>
             <div className="flex items-center justify-end">
               <span className="text-gray-400 mr-2">Lucro:</span>

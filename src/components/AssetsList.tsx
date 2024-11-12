@@ -124,7 +124,7 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
         <div className="flex justify-end">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-400 transition-colors"
+            className="px-4 py-2 bg-transparent border-2 border-white text-white rounded-lg transition-colors hover:bg-white/10"
           >
             Adicionar Criptomoeda
           </button>
@@ -142,7 +142,7 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">7d %</th>
                 {portfolioId && (
                   <>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">Quantidade</th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">Preço Médio</th>
                     <th className="px-6 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">Investido</th>
                     <th className="px-6 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">Lucro/Prejuízo</th>
                     <th className="px-6 py-3 text-left text-sm font-medium text-gray-400 uppercase tracking-wider">Ações</th>
@@ -168,11 +168,6 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full mr-3 flex items-center justify-center bg-gray-700">
-                        <span className="text-xs text-gray-300">
-                          {asset.symbol.slice(0, 2).toUpperCase()}
-                        </span>
-                      </div>
                       <div>
                         <div className="text-sm font-medium text-gray-200">{asset.name}</div>
                         <div className="text-sm text-gray-500">{asset.symbol.toUpperCase()}</div>
@@ -195,7 +190,7 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
                   {portfolioId && (
                     <>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                        {asset.amount.toLocaleString()}
+                        {formatUSD(asset.investedValue / asset.amount)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         {formatUSD(asset.investedValue)}

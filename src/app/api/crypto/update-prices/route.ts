@@ -1,75 +1,41 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getTopCryptos } from '@/lib/coingecko'
 
-export async function POST() {
+export async function GET() {
   try {
-    // Busca todas as criptomoedas do portfolio
     const cryptos = await prisma.crypto.findMany()
-    
-    // Atualiza cada criptomoeda
-    for (const crypto of cryptos) {
-      try {
-        // Busca o preço atual da API
-        const response = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${crypto.coinId.toLowerCase()}&vs_currencies=brl`
-        )
-        const data = await response.json()
-        const currentPrice = data[crypto.coinId.toLowerCase()]?.brl || 0
+    const prices = await getTopCryptos()
 
-        // Calcula o novo lucro/prejuízo
-        const currentValue = crypto.amount * currentPrice
+    // Atualizar preços e calcular lucro/prejuízo
+    const updates = cryptos.map(async (crypto) => {
+      const priceInfo = prices.find(p => p.id === crypto.coinId)
+      
+      if (priceInfo) {
+        const currentValue = priceInfo.current_price * crypto.amount
         const profit = currentValue - crypto.investedValue
 
-        // Atualiza a criptomoeda
-        await prisma.crypto.update({
+        return prisma.crypto.update({
           where: { id: crypto.id },
           data: {
-            currentPrice,
-            profit
+            currentPrice: priceInfo.current_price,
+            priceChangePercentage24h: priceInfo.price_change_percentage_24h,
+            priceChangePercentage7d: priceInfo.price_change_percentage_7d,
+            profit: profit
           }
         })
-      } catch (error) {
-        console.error(`Error updating ${crypto.name}:`, error)
       }
-    }
-
-    // Atualiza os totais do portfolio
-    const updatedCryptos = await prisma.crypto.findMany()
-    const totalValue = updatedCryptos.reduce((sum, crypto) => 
-      sum + (crypto.amount * crypto.currentPrice), 0
-    )
-    const totalProfit = updatedCryptos.reduce((sum, crypto) => 
-      sum + crypto.profit, 0
-    )
-
-    // Busca todos os portfolios e atualiza cada um
-    const portfolios = await prisma.portfolio.findMany({
-      include: { cryptos: true }
+      return null
     })
 
-    for (const portfolio of portfolios) {
-      const portfolioCryptos = portfolio.cryptos
-      const portfolioTotalValue = portfolioCryptos.reduce(
-        (sum, crypto) => sum + (crypto.amount * crypto.currentPrice), 
-        0
-      )
-      const portfolioTotalProfit = portfolioCryptos.reduce(
-        (sum, crypto) => sum + crypto.profit,
-        0
-      )
-
-      await prisma.portfolio.update({
-        where: { id: portfolio.id },
-        data: {
-          totalValue: portfolioTotalValue,
-          totalProfit: portfolioTotalProfit
-        }
-      })
-    }
+    await Promise.all(updates.filter(Boolean))
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error updating prices:', error)
-    return NextResponse.json({ error: 'Failed to update prices' }, { status: 500 })
+    console.error('Error updating crypto prices:', error)
+    return NextResponse.json(
+      { error: 'Failed to update prices' },
+      { status: 500 }
+    )
   }
 } 

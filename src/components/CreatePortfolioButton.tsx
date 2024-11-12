@@ -10,7 +10,7 @@ export function CreatePortfolioButton() {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+        className="bg-transparent border-2 border-white text-white px-4 py-2 rounded-lg transition-colors hover:bg-white/10"
       >
         Criar Portfolio
       </button>

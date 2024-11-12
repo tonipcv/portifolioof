@@ -7,18 +7,19 @@ import { X } from 'lucide-react'
 interface CreatePortfolioModalProps {
   isOpen: boolean
   onClose: () => void
+  onSuccess?: () => void
 }
 
-export function CreatePortfolioModal({ isOpen, onClose }: CreatePortfolioModalProps) {
+export function CreatePortfolioModal({ isOpen, onClose, onSuccess }: CreatePortfolioModalProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [isCreating, setIsCreating] = useState(false)
 
-  const handleCreatePortfolio = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsCreating(true)
-
+    
     try {
+      setIsCreating(true)
       const response = await fetch('/api/portfolio', {
         method: 'POST',
         headers: {
@@ -31,16 +32,17 @@ export function CreatePortfolioModal({ isOpen, onClose }: CreatePortfolioModalPr
       })
 
       if (!response.ok) {
-        throw new Error('Falha ao criar portfolio')
+        const error = await response.json()
+        throw new Error(error.details || 'Falha ao criar portfólio')
       }
 
       onClose()
-      setName('')
-      setDescription('')
-      window.location.reload()
+      if (onSuccess) {
+        onSuccess()
+      }
     } catch (error) {
       console.error('Erro ao criar portfolio:', error)
-      alert('Erro ao criar portfolio')
+      alert(error instanceof Error ? error.message : 'Erro ao criar portfolio')
     } finally {
       setIsCreating(false)
     }
@@ -62,7 +64,7 @@ export function CreatePortfolioModal({ isOpen, onClose }: CreatePortfolioModalPr
               Criar Novo Portfolio
             </Dialog.Title>
             
-            <form onSubmit={handleCreatePortfolio} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
                   Nome
