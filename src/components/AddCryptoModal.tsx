@@ -31,7 +31,7 @@ const CUSTOM_COINS = [
   { id: 'popcat', symbol: 'POPCAT', name: 'Popcat (SOL)' },
   { id: 'dog', symbol: 'DOG', name: 'Dog (Runes)' },
   { id: 'ethena', symbol: 'ENA', name: 'Ethena' },
-  { id: 'seal-2', symbol: 'SEAL', name: 'Seal' },
+  { id: 'seal-sol', symbol: 'SEAL', name: 'Seal' },
   { id: 'cat-in-a-dogs-world', symbol: 'MEW', name: 'Cat in a dogs world' },
   { id: 'kangamoon', symbol: 'KANG', name: 'Kangamoon' },
   { id: 'slerf', symbol: 'SLERF', name: 'SLERF' },
