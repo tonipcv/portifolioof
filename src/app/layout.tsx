@@ -12,7 +12,13 @@ export const metadata = {
   title: 'Kriptwa',
   description: 'Acompanhe seus investimentos em criptomoedas de forma simples e eficiente',
   icons: {
-    icon: '/favicon.png',
+    icon: [
+      {
+        url: '/favicon.png',
+        href: '/favicon.png',
+      }
+    ],
+    shortcut: '/favicon.png',
     apple: '/apple-touch-icon.png',
   },
 }

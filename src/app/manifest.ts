@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Crypto Track',
-    short_name: 'Crypto Track',
+    name: 'Kriptwa',
+    short_name: 'Kriptwa',
     description: 'Acompanhe seus investimentos em criptomoedas de forma simples e eficiente',
     start_url: '/',
     display: 'standalone',
@@ -11,9 +11,14 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#111111',
     icons: [
       {
-        src: '/favicon.ico',
-        sizes: 'any',
-        type: 'image/x-icon',
+        src: '/favicon.png',
+        sizes: '32x32',
+        type: 'image/png',
+      },
+      {
+        src: '/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
       },
       {
         src: '/icon-192.png',
