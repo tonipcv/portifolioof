@@ -1,30 +1,34 @@
 'use client'
 
-import { PlusIcon } from '@heroicons/react/24/solid'
+import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import AddCryptoModal from './AddCryptoModal'
 
 interface AddCryptoButtonProps {
   portfolioId: string
+  onSuccess?: () => void
 }
 
-export default function AddCryptoButton({ portfolioId }: AddCryptoButtonProps) {
+export function AddCryptoButton({ portfolioId, onSuccess }: AddCryptoButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center gap-2 bg-transparent border-2 border-white text-white px-4 py-2 rounded-lg transition-colors hover:bg-white/10"
+        className="inline-flex items-center justify-center rounded-md bg-transparent border-2 border-white/20 transition-colors hover:bg-white/10"
       >
-        <PlusIcon className="h-5 w-5" />
-        Adicionar Crypto
+        <Plus className="h-8 w-8 sm:h-5 sm:w-5 p-1 sm:p-0 text-gray-300" />
+        <span className="hidden sm:inline px-2.5 py-1.5 text-sm font-semibold text-gray-300">
+          Adicionar Criptomoeda
+        </span>
       </button>
 
       <AddCryptoModal 
-        isOpen={isModalOpen}
+        isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
         portfolioId={portfolioId}
+        onSuccess={onSuccess}
       />
     </>
   )

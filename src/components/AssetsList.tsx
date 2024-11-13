@@ -8,6 +8,7 @@ import AddCryptoModal from './AddCryptoModal'
 import Image from 'next/image'
 import CryptoDetailsModal from './CryptoDetailsModal'
 import { Plus } from 'lucide-react'
+import { AddCryptoButton } from './AddCryptoButton'
 
 interface AssetsListProps {
   portfolioId?: string
@@ -123,15 +124,10 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
     <div className="space-y-4">
       {portfolioId && (
         <div className="flex justify-end">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center justify-center rounded-md bg-transparent border-2 border-white/20 transition-colors hover:bg-white/10"
-          >
-            <Plus className="h-8 w-8 sm:h-5 sm:w-5 p-1 sm:p-0" />
-            <span className="hidden sm:inline px-2.5 py-1.5 text-sm font-semibold text-gray-300">
-              Adicionar Criptomoeda
-            </span>
-          </button>
+          <AddCryptoButton 
+            portfolioId={portfolioId} 
+            onSuccess={loadAssets}
+          />
         </div>
       )}
 
