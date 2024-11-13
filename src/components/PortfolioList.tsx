@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DeletePortfolioButton } from './DeletePortfolioButton'
-import { RefreshCw, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
+import { RefreshCw, TrendingUp, TrendingDown } from 'lucide-react'
 
 interface Portfolio {
   id: string
@@ -45,14 +45,12 @@ export function PortfolioList() {
     }
   }
 
-  // Carregar dados iniciais
   useEffect(() => {
     loadPortfolios()
   }, [])
 
-  // Atualizar dados a cada 2 minutos
   useEffect(() => {
-    const intervalId = setInterval(loadPortfolios, 120000) // 2 minutos
+    const intervalId = setInterval(loadPortfolios, 120000)
     return () => clearInterval(intervalId)
   }, [])
 
@@ -69,29 +67,19 @@ export function PortfolioList() {
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 bg-[#111111] py-2">
-        <div className="flex justify-between items-center">
-          <h1 className="text-lg font-medium text-gray-200 sm:text-xl flex items-center">
-            Seus Portfolios
-            <span className="ml-2 text-sm text-gray-400">
-              ({portfolios.length})
-            </span>
-          </h1>
-          <div className="flex gap-2">
-            <button
-              onClick={loadPortfolios}
-              disabled={isRefreshing}
-              className="inline-flex items-center gap-x-1.5 rounded-md bg-transparent border-2 border-white/20 px-2.5 py-1.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50"
-              title="Atualizar portfolios"
-            >
-              <RefreshCw 
-                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-                aria-hidden="true"
-              />
-              {isRefreshing ? 'Atualizando...' : 'Atualizar'}
-            </button>
-          </div>
-        </div>
+      <div className="flex justify-end">
+        <button
+          onClick={loadPortfolios}
+          disabled={isRefreshing}
+          className="inline-flex items-center gap-x-1.5 rounded-md bg-transparent border-2 border-white/20 px-2.5 py-1.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50"
+          title="Atualizar portfolios"
+        >
+          <RefreshCw 
+            className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+            aria-hidden="true"
+          />
+          {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+        </button>
       </div>
 
       {portfolios.length === 0 ? (

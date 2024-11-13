@@ -125,10 +125,12 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
         <div className="flex justify-end">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-transparent border-2 border-white text-white rounded-lg transition-colors hover:bg-white/10"
+            className="inline-flex items-center justify-center rounded-md bg-transparent border-2 border-white/20 transition-colors hover:bg-white/10"
           >
-            <Plus className="w-5 h-5 sm:hidden" />
-            <span className="hidden sm:inline">Adicionar Criptomoeda</span>
+            <Plus className="h-8 w-8 sm:h-5 sm:w-5 p-1 sm:p-0" />
+            <span className="hidden sm:inline px-2.5 py-1.5 text-sm font-semibold text-gray-300">
+              Adicionar Criptomoeda
+            </span>
           </button>
         </div>
       )}
