@@ -34,10 +34,20 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions)
 
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full bg-[#111111]">
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              document.documentElement.style.backgroundColor = '#111111';
+              document.body.style.backgroundColor = '#111111';
+            })();
+          `
+        }} />
+      </head>
       <body className={`${inter.className} h-full bg-[#111111] text-white`}>
         <Providers session={session}>
-          <div className="min-h-full">
+          <div className="min-h-full bg-[#111111]">
             <nav className="border-b border-[#222222] bg-[#161616]">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 justify-between items-center">
