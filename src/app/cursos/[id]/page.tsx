@@ -2,17 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown } from 'lucide-react';
 import CourseDetails from '@/components/CourseDetails'
 
 interface Lesson {
   id: number;
   title: string;
-  description: string;
+  content: string;
   duration?: string;
   thumbnailUrl?: string;
   order: number;
   videoUrl: string;
+  materialUrl?: string;
 }
 
 interface Module {
@@ -35,6 +36,7 @@ const API_URL = 'https://cursos-api-cursos.dpbdp1.easypanel.host';
 export default function CoursePage({ params }: { params: { id: string } }) {
   const [courseData, setCourseData] = useState<Course | null>(null);
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
+  const [isContentExpanded, setIsContentExpanded] = useState(false);
 
   useEffect(() => {
     const loadCourseData = async () => {
@@ -72,10 +74,11 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Área do Vídeo */}
-        <div className="lg:col-span-2">
+        {/* Área do Vídeo e Conteúdo */}
+        <div className="lg:col-span-2 space-y-4">
           {currentLesson ? (
-            <div className="space-y-4">
+            <>
+              {/* Vídeo */}
               <div className="aspect-video bg-black rounded-lg overflow-hidden">
                 <iframe
                   src={currentLesson.videoUrl}
@@ -84,20 +87,83 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   allowFullScreen
                 ></iframe>
               </div>
-              <div className="p-6 bg-[#161616] rounded-lg space-y-4">
-                <div>
-                  <h2 className="text-xl font-bold text-white">{currentLesson.title}</h2>
-                  <p className="text-sm text-gray-400 mt-1">Duração: {currentLesson.duration}</p>
-                </div>
-                {currentLesson.description && (
-                  <div className="pt-4 border-t border-[#222222]">
-                    <p className="text-gray-300 text-sm leading-relaxed">
-                      {currentLesson.description}
-                    </p>
+
+              {/* Título */}
+              <div className="bg-[#161616] rounded-lg p-6">
+                <h2 className="text-xl font-bold text-white">{currentLesson.title}</h2>
+              </div>
+
+              {/* Conteúdo - Desktop */}
+              <div className="hidden sm:block">
+                {currentLesson.content && (
+                  <div className="bg-[#161616] rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-white mb-4">Conteúdo da Aula</h3>
+                    <div className="prose prose-invert max-w-none">
+                      <p className="text-gray-300 text-sm leading-relaxed">
+                        {currentLesson.content}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
+
+              {/* Conteúdo - Mobile */}
+              <div className="block sm:hidden">
+                {currentLesson.content && (
+                  <div className="bg-[#161616] rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => setIsContentExpanded(!isContentExpanded)}
+                      className="w-full p-6 flex items-center justify-between text-left"
+                    >
+                      <h3 className="text-lg font-medium text-white">Conteúdo da Aula</h3>
+                      <ChevronDown 
+                        className={`h-5 w-5 text-gray-400 transition-transform ${
+                          isContentExpanded ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                    
+                    {isContentExpanded && (
+                      <div className="px-6 pb-6">
+                        <div className="prose prose-invert max-w-none">
+                          <p className="text-gray-300 text-sm leading-relaxed">
+                            {currentLesson.content}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Material Complementar */}
+              {currentLesson.materialUrl && (
+                <div className="bg-[#161616] rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-white mb-4">Material Complementar</h3>
+                  <a 
+                    href={currentLesson.materialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    <svg 
+                      className="w-5 h-5" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
+                    </svg>
+                    Baixar material
+                  </a>
+                </div>
+              )}
+            </>
           ) : (
             <div className="aspect-video bg-[#161616] rounded-lg flex items-center justify-center">
               <p className="text-gray-400">Carregando aula...</p>

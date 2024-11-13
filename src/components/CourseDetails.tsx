@@ -7,11 +7,12 @@ import Image from 'next/image'
 interface Lesson {
   id: number
   title: string
-  description: string
+  content: string
   duration?: string
   thumbnailUrl?: string
   order: number
   videoUrl: string
+  materialUrl?: string
 }
 
 interface Module {
@@ -37,7 +38,6 @@ interface CourseDetailsProps {
 
 export default function CourseDetails({ course, onSelectLesson, currentLesson }: CourseDetailsProps) {
   const [expandedModules, setExpandedModules] = useState<string[]>([])
-  const [expandedLesson, setExpandedLesson] = useState<number | null>(null)
 
   const toggleModule = (moduleId: string) => {
     setExpandedModules(prev => 
@@ -47,10 +47,6 @@ export default function CourseDetails({ course, onSelectLesson, currentLesson }:
     )
   }
 
-  const toggleLesson = (lessonId: number) => {
-    setExpandedLesson(prev => prev === lessonId ? null : lessonId)
-  }
-
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60)
     return `${minutes} min`
@@ -58,11 +54,6 @@ export default function CourseDetails({ course, onSelectLesson, currentLesson }:
 
   return (
     <div className="bg-[#161616] rounded-lg overflow-hidden border border-[#222222]">
-      <div className="p-6">
-        <h1 className="text-xl font-bold text-white mb-4">{course.title}</h1>
-        <p className="text-gray-400">{course.description}</p>
-      </div>
-
       <div className="border-t border-[#222222]">
         {course.modules.sort((a, b) => a.order - b.order).map(module => (
           <div key={module.id} className="border-b border-[#222222] last:border-b-0">
@@ -86,50 +77,37 @@ export default function CourseDetails({ course, onSelectLesson, currentLesson }:
             {expandedModules.includes(module.id) && (
               <div className="bg-[#1a1a1a] p-4 space-y-2">
                 {module.lessons.sort((a, b) => a.order - b.order).map(lesson => (
-                  <div key={lesson.id}>
-                    <div 
-                      className={`flex items-center justify-between py-2 px-4 rounded-lg hover:bg-[#222222] transition-colors cursor-pointer ${
-                        currentLesson?.id === lesson.id ? 'bg-blue-500/20' : ''
-                      }`}
-                      onClick={() => {
-                        onSelectLesson(lesson)
-                        toggleLesson(lesson.id)
-                      }}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Play className={`h-4 w-4 ${
-                          currentLesson?.id === lesson.id ? 'text-blue-400' : 'text-gray-400'
-                        }`} />
-                        <span className={`${
-                          currentLesson?.id === lesson.id ? 'text-blue-400' : 'text-gray-200'
-                        }`}>
-                          {lesson.title}
-                        </span>
+                  <div 
+                    key={lesson.id}
+                    className={`flex items-center gap-4 py-2 px-4 rounded-lg hover:bg-[#222222] transition-colors cursor-pointer ${
+                      currentLesson?.id === lesson.id ? 'bg-blue-500/20' : ''
+                    }`}
+                    onClick={() => onSelectLesson(lesson)}
+                  >
+                    {lesson.thumbnailUrl ? (
+                      <div className="relative w-24 h-16 rounded-md overflow-hidden flex-shrink-0">
+                        <Image
+                          src={lesson.thumbnailUrl}
+                          alt={lesson.title}
+                          fill
+                          className="object-cover"
+                        />
                       </div>
-                      <span className="text-sm text-gray-400">
-                        {lesson.duration}
-                      </span>
-                    </div>
-
-                    {expandedLesson === lesson.id && (
-                      <div className="mt-2 ml-11 space-y-2">
-                        {lesson.thumbnailUrl && (
-                          <div className="relative aspect-video rounded-lg overflow-hidden">
-                            <Image
-                              src={lesson.thumbnailUrl}
-                              alt={lesson.title}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        {lesson.description && (
-                          <p className="text-sm text-gray-400 py-2">
-                            {lesson.description}
-                          </p>
-                        )}
+                    ) : (
+                      <div className="w-24 h-16 bg-[#222222] rounded-md flex items-center justify-center flex-shrink-0">
+                        <Play className="h-6 w-6 text-gray-400" />
                       </div>
                     )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className={`text-sm font-medium truncate ${
+                        currentLesson?.id === lesson.id ? 'text-blue-400' : 'text-gray-200'
+                      }`}>
+                        {lesson.title}
+                      </h4>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {lesson.duration}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
