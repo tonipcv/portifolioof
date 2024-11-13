@@ -63,7 +63,7 @@ export function CryptoList() {
       setInvestmentAmount('')
     }
   }
-
+ç
   // Atualiza a quantidade quando o valor investido muda
   const handleInvestmentChange = (value: string) => {
     setInvestmentAmount(value)

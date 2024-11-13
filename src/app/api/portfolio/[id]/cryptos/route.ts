@@ -67,4 +67,78 @@ export async function GET(
     console.error('Error fetching portfolio cryptos:', error)
     return new NextResponse('Internal Server Error', { status: 500 })
   }
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return new NextResponse('Unauthorized', { status: 401 })
+    }
+
+    const { id: portfolioId } = params
+    const { cryptoId, amount, investedValue } = await request.json()
+
+    // Verificar se o portfolio pertence ao usuário
+    const portfolio = await prisma.portfolio.findUnique({
+      where: {
+        id: portfolioId,
+        userId: session.user.id,
+      }
+    })
+
+    if (!portfolio) {
+      return new NextResponse('Portfolio not found', { status: 404 })
+    }
+
+    // Verificar se a cripto já existe no portfolio usando coinId
+    const existingCrypto = await prisma.crypto.findFirst({
+      where: {
+        portfolioId,
+        coinId: cryptoId
+      }
+    })
+
+    if (existingCrypto) {
+      // Calcular novo preço médio
+      const totalInvestment = existingCrypto.investedValue + investedValue
+      const totalAmount = existingCrypto.amount + amount
+
+      // Atualizar a cripto existente com os novos valores
+      const updatedCrypto = await prisma.crypto.update({
+        where: {
+          id: existingCrypto.id
+        },
+        data: {
+          amount: totalAmount,
+          investedValue: totalInvestment
+        }
+      })
+
+      return NextResponse.json(updatedCrypto)
+    }
+
+    // Se não existir, criar nova cripto
+    const crypto = await prisma.crypto.create({
+      data: {
+        coinId: cryptoId,
+        amount,
+        investedValue,
+        currentPrice: 0,
+        profit: 0,
+        name: '',
+        symbol: '',
+        portfolioId
+      }
+    })
+
+    return NextResponse.json(crypto)
+
+  } catch (error) {
+    console.error('Error adding crypto:', error)
+    return new NextResponse('Internal Server Error', { status: 500 })
+  }
 } 

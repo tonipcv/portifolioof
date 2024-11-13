@@ -40,25 +40,27 @@ model Portfolio {
 }
 
 model Crypto {
-  id                        String   @id @default(cuid())
-  name                      String
-  symbol                    String
-  coinId                    String
-  currentPrice             Float
-  image                     String?
+  id                        String    @id @default(cuid())
+  coinId                    String    // mantendo o campo existente
+  amount                    Float
+  investedValue            Float
+  averagePrice             Float     @default(0)
+  currentPrice             Float     @default(0)
+  profit                   Float     @default(0)
   priceChangePercentage24h Float?
   priceChangePercentage7d  Float?
   marketCap                Float?
   totalVolume              Float?
-  profit                   Float
-  amount                   Float
-  investedValue            Float
+  image                    String?
+  name                     String?
+  symbol                   String?
+  portfolio                Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
   portfolioId              String
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
-  portfolio                Portfolio @relation(fields: [portfolioId], references: [id])
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
   @@index([portfolioId])
+  @@index([coinId])  // adicionando índice para melhor performance
 }
 
 model Account {

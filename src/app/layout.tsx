@@ -9,8 +9,12 @@ import { Providers } from '@/components/Providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Crypto Portfolio',
-  description: 'Track your crypto investments',
+  title: 'Kriptwa',
+  description: 'Acompanhe seus investimentos em criptomoedas de forma simples e eficiente',
+  icons: {
+    icon: '/favicon.png',
+    apple: '/apple-touch-icon.png',
+  },
 }
 
 export default async function RootLayout({
