@@ -5,6 +5,9 @@ import Image from 'next/image'
 import { getServerSession } from 'next-auth'
 import { authOptions } from './api/auth/[...nextauth]/route'
 import { Providers } from '@/components/Providers'
+import Link from 'next/link'
+import { Briefcase, GraduationCap } from 'lucide-react'
+import { MobileMenu } from '@/components/MobileMenu'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -35,11 +38,11 @@ export default async function RootLayout({
       <body className={`${inter.className} h-full bg-[#111111] text-white`}>
         <Providers session={session}>
           <div className="min-h-full">
-            <nav className="border-b border-[#222222]">
+            <nav className="border-b border-[#222222] bg-[#161616]">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex h-16 justify-between">
-                  <div className="flex">
-                    <div className="flex flex-shrink-0 items-center">
+                <div className="flex h-16 justify-between items-center">
+                  <div className="flex items-center gap-8">
+                    <Link href="/" className="flex flex-shrink-0 items-center">
                       <Image
                         src="/logo.png"
                         alt="Logo"
@@ -47,10 +50,30 @@ export default async function RootLayout({
                         height={24}
                         priority
                       />
-                    </div>
+                    </Link>
+                    
+                    {session && (
+                      <div className="hidden sm:flex items-center gap-6">
+                        <Link 
+                          href="/portfolios"
+                          className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-[#222222] rounded-md transition-colors"
+                        >
+                          <Briefcase className="w-4 h-4" />
+                          <span className="text-sm font-medium">Portfólio</span>
+                        </Link>
+                        <Link 
+                          href="/cursos/4"
+                          className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-[#222222] rounded-md transition-colors"
+                        >
+                          <GraduationCap className="w-4 h-4" />
+                          <span className="text-sm font-medium">Academy</span>
+                        </Link>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-4">
                     <AuthStatus />
+                    {session && <MobileMenu session={session} />}
                   </div>
                 </div>
               </div>
