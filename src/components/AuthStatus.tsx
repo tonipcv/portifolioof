@@ -1,7 +1,8 @@
 'use client'
 
 import { useSession, signOut } from 'next-auth/react'
-import { LogOut, User } from 'lucide-react'
+import { LogOut, User, Settings } from 'lucide-react'
+import Link from 'next/link'
 
 export function AuthStatus() {
   const { data: session, status } = useSession()
@@ -22,6 +23,13 @@ export function AuthStatus() {
           {session?.user?.name || 'Usuário'}
         </span>
       </div>
+      <Link
+        href="/settings/password"
+        className="text-gray-400 hover:text-blue-400 transition-colors"
+        title="Alterar Senha"
+      >
+        <Settings className="h-5 w-5" />
+      </Link>
       <button
         onClick={() => signOut()}
         className="text-gray-400 hover:text-red-400 transition-colors"
