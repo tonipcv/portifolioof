@@ -99,15 +99,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div className="mt-4 text-center">
-              <Link 
-                href="/forgot-password"
-                className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                Esqueceu sua senha?
-              </Link>
-            </div>
-
             <button
               type="submit"
               disabled={isLoading}
@@ -122,6 +113,15 @@ export default function LoginPage() {
                 </>
               )}
             </button>
+
+            <div className="text-right">
+              <Link 
+                href="/forgot-password"
+                className="text-xs text-gray-400 hover:text-gray-300 transition-colors"
+              >
+                Esqueceu sua senha?
+              </Link>
+            </div>
           </form>
         </div>
       </div>
