@@ -7,7 +7,7 @@ import { Crypto } from '@prisma/client'
 import AddCryptoModal from './AddCryptoModal'
 import Image from 'next/image'
 import CryptoDetailsModal from './CryptoDetailsModal'
-import { Plus } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { AddCryptoButton } from './AddCryptoButton'
 
 interface AssetsListProps {
@@ -190,13 +190,13 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Nome</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Preço</th>
                 <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">24h %</th>
-                <th className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">7d %</th>
                 {portfolioId && (
                   <>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Preço Médio</th>
                     <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Investido</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Lucro</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Ações</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Valor Total</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider"></th>
                   </>
                 )}
                 {!portfolioId && (
@@ -211,7 +211,7 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
               {assets.map((asset) => (
                 <tr 
                   key={asset.id} 
-                  className="hover:bg-[#222222] transition-colors cursor-pointer"
+                  className="group hover:bg-[#222222] transition-colors cursor-pointer"
                   onClick={() => {
                     setSelectedCrypto(asset)
                     setIsDetailsModalOpen(true)
@@ -233,11 +233,6 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
                   }`}>
                     {asset.priceChangePercentage24h?.toFixed(2) ?? 'N/A'}%
                   </td>
-                  <td className={`hidden lg:table-cell px-4 py-3 whitespace-nowrap text-sm ${
-                    (asset.priceChangePercentage7d ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {asset.priceChangePercentage7d?.toFixed(2) ?? 'N/A'}%
-                  </td>
                   {portfolioId && (
                     <>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">
@@ -251,15 +246,18 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
                       }`}>
                         {formatUSD(asset.totalProfit)}
                       </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-200">
+                        {formatUSD(asset.currentPrice * asset.totalAmount)}
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
                             handleDelete(asset.id)
                           }}
-                          className="text-red-400 hover:text-red-300 transition-colors"
+                          className="invisible group-hover:visible text-red-400 hover:text-red-300 transition-colors"
                         >
-                          Remover
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </td>
                     </>
