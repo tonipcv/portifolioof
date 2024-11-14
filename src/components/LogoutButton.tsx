@@ -47,4 +47,4 @@ export function LogoutButton() {
       </Dialog.Portal>
     </Dialog.Root>
   )
-} 
+}
