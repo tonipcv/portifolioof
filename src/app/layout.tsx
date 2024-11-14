@@ -12,7 +12,7 @@ import { MobileMenu } from '@/components/MobileMenu'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Kriptwa',
+  title: 'Wallet',
   description: 'Acompanhe seus investimentos em criptomoedas de forma simples e eficiente',
   icons: {
     icon: [

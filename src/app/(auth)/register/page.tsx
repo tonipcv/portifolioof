@@ -9,56 +9,52 @@ export default function RegisterPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  
-  const inputClassName = "block w-full pl-10 bg-[#222222] border border-gray-800 rounded-md py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
-    
+
     const formData = new FormData(e.currentTarget)
-    
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      password: formData.get('password')
+    }
+
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
-        body: JSON.stringify({
-          name: formData.get('name'),
-          email: formData.get('email'),
-          password: formData.get('password'),
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
       })
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Erro ao criar conta')
+        throw new Error('Registration failed')
       }
 
       router.push('/login')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar conta')
+    } catch (error) {
+      setError('Falha ao registrar usuário. Por favor, tente novamente.')
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <div className="mb-8">
-        <Image
-          src="/logo.png" 
-          alt="Logo"
-          width={140}
-          height={37}
-          priority
-          className="w-auto h-auto"
-        />
-      </div>
-
+    <div className="fixed inset-0 flex flex-col items-center justify-center px-4 bg-[#111111]">
       <div className="w-full sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="text-center mb-8">
+          <Image
+            src="/logo.png" 
+            alt="Logo"
+            width={140}
+            height={37}
+            priority
+            className="mx-auto"
+          />
+        </div>
+
         <div className="bg-[#161616] py-8 px-4 shadow-xl ring-1 ring-gray-900/10 sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
@@ -73,10 +69,9 @@ export default function RegisterPage() {
                   id="name"
                   name="name"
                   type="text"
-                  autoComplete="name"
                   required
-                  className={inputClassName}
-                  placeholder="Seu nome completo"
+                  className="block w-full pl-10 bg-[#222222] border border-gray-800 rounded-md py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
+                  placeholder="Seu nome"
                 />
               </div>
             </div>
@@ -95,7 +90,7 @@ export default function RegisterPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className={inputClassName}
+                  className="block w-full pl-10 bg-[#222222] border border-gray-800 rounded-md py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
                   placeholder="seu@email.com"
                 />
               </div>
@@ -114,7 +109,7 @@ export default function RegisterPage() {
                   name="password"
                   type="password"
                   required
-                  className={inputClassName}
+                  className="block w-full pl-10 bg-[#222222] border border-gray-800 rounded-md py-2 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
                   placeholder="••••••••"
                 />
               </div>
@@ -126,36 +121,21 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-400 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    Criar conta
-                    <ArrowRight className="ml-2 -mr-1 h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-400 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  Criar conta
+                  <ArrowRight className="ml-2 -mr-1 h-4 w-4" />
+                </>
+              )}
+            </button>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-800"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#161616] text-gray-400">
-                  Protegido por criptografia
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

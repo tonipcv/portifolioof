@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Mail, Lock } from 'lucide-react'
-import Link from 'next/link'
 import Image from 'next/image'
 
 export default function LoginPage() {
@@ -38,19 +37,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <div className="mb-8">
-        <Image
-          src="/logo.png" 
-          alt="Logo"
-          width={140}
-          height={37}
-          priority
-          className="w-auto h-auto"
-        />
-      </div>
-
+    <div className="fixed inset-0 flex flex-col items-center justify-center px-4 bg-[#111111]">
       <div className="w-full sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="text-center mb-8">
+          <Image
+            src="/logo.png" 
+            alt="Logo"
+            width={140}
+            height={37}
+            priority
+            className="mx-auto"
+          />
+        </div>
+
         <div className="bg-[#161616] py-8 px-4 shadow-xl ring-1 ring-gray-900/10 sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
@@ -99,36 +98,21 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-400 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    Entrar
-                    <ArrowRight className="ml-2 -mr-1 h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-400 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  Entrar
+                  <ArrowRight className="ml-2 -mr-1 h-4 w-4" />
+                </>
+              )}
+            </button>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-800"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#161616] text-gray-400">
-                  Protegido por criptografia
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
