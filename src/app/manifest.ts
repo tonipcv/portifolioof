@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Wallet',
-    short_name: 'Wallet',
+    name: 'Kriptwa',
+    short_name: 'Kriptwa',
     description: 'Acompanhe seus investimentos em criptomoedas de forma simples e eficiente',
     start_url: '/',
     display: 'standalone',

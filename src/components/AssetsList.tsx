@@ -14,6 +14,13 @@ interface AssetsListProps {
   portfolioId?: string
 }
 
+interface GroupedAsset extends Crypto {
+  totalAmount: number;
+  totalInvestedValue: number;
+  averagePrice: number;
+  totalProfit: number;
+}
+
 const formatUSD = (value: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -24,12 +31,41 @@ const formatUSD = (value: number) => {
 };
 
 export default function AssetsList({ portfolioId }: AssetsListProps) {
-  const [assets, setAssets] = useState<Crypto[]>([])
+  const [assets, setAssets] = useState<GroupedAsset[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedCrypto, setSelectedCrypto] = useState<Crypto | null>(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+
+  const groupAssets = (assets: Crypto[]): GroupedAsset[] => {
+    const groupedMap = assets.reduce((acc, asset) => {
+      const key = asset.coinId;
+      
+      if (!acc.has(key)) {
+        acc.set(key, {
+          ...asset,
+          totalAmount: asset.amount,
+          totalInvestedValue: asset.investedValue,
+          averagePrice: asset.investedValue / asset.amount,
+          totalProfit: asset.profit
+        });
+      } else {
+        const existing = acc.get(key)!;
+        acc.set(key, {
+          ...existing,
+          totalAmount: existing.totalAmount + asset.amount,
+          totalInvestedValue: existing.totalInvestedValue + asset.investedValue,
+          averagePrice: (existing.totalInvestedValue + asset.investedValue) / (existing.totalAmount + asset.amount),
+          totalProfit: existing.totalProfit + asset.profit
+        });
+      }
+      
+      return acc;
+    }, new Map<string, GroupedAsset>());
+
+    return Array.from(groupedMap.values());
+  };
 
   const loadAssets = async () => {
     try {
@@ -53,7 +89,9 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
       }
       
       const data = await response.json()
-      setAssets(data.data || data)
+      const rawAssets = data.data || data
+      const groupedAssets = groupAssets(rawAssets)
+      setAssets(groupedAssets)
     } catch (error) {
       console.error('Error loading assets:', error)
       
@@ -97,6 +135,18 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
     const intervalId = setInterval(loadAssets, 120000)
     return () => clearInterval(intervalId)
   }, [portfolioId])
+
+  const calculateTotals = (assets: GroupedAsset[]) => {
+    return assets.reduce((acc, asset) => ({
+      totalInvested: acc.totalInvested + asset.totalInvestedValue,
+      totalValue: acc.totalValue + (asset.currentPrice * asset.totalAmount),
+      totalProfit: acc.totalProfit + asset.totalProfit
+    }), {
+      totalInvested: 0,
+      totalValue: 0,
+      totalProfit: 0
+    });
+  };
 
   if (isLoading) {
     return (
@@ -191,15 +241,15 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
                   {portfolioId && (
                     <>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-300">
-                        {formatUSD(asset.investedValue / asset.amount)}
+                        {formatUSD(asset.averagePrice)}
                       </td>
                       <td className="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-300">
-                        {formatUSD(asset.investedValue)}
+                        {formatUSD(asset.totalInvestedValue)}
                       </td>
                       <td className={`px-4 py-3 whitespace-nowrap text-sm ${
-                        asset.profit >= 0 ? 'text-green-400' : 'text-red-400'
+                        asset.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'
                       }`}>
-                        {formatUSD(asset.profit)}
+                        {formatUSD(asset.totalProfit)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
                         <button
@@ -258,16 +308,16 @@ export default function AssetsList({ portfolioId }: AssetsListProps) {
                 <>
                   <div>
                     <p className="text-xs text-gray-400">Preço Médio</p>
-                    <p className="text-sm text-gray-200">{formatUSD(asset.investedValue / asset.amount)}</p>
+                    <p className="text-sm text-gray-200">{formatUSD(asset.averagePrice)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-400">Investido</p>
-                    <p className="text-sm text-gray-200">{formatUSD(asset.investedValue)}</p>
+                    <p className="text-sm text-gray-200">{formatUSD(asset.totalInvestedValue)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-400">Lucro/Prejuízo</p>
-                    <p className={`text-sm ${asset.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {formatUSD(asset.profit)}
+                    <p className={`text-sm ${asset.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatUSD(asset.totalProfit)}
                     </p>
                   </div>
                 </>

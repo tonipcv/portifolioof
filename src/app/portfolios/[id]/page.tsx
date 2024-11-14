@@ -2,12 +2,24 @@ import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import AssetsList from '@/components/AssetsList';
 import Link from 'next/link';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
   params: {
     id: string;
   };
+}
+
+// Função para buscar cotação do dólar
+async function getUSDToBRL() {
+  try {
+    const response = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL');
+    const data = await response.json();
+    return parseFloat(data.USDBRL.bid);
+  } catch (error) {
+    console.error('Error fetching USD to BRL rate:', error);
+    return 5.00; // Valor fallback caso a API falhe
+  }
 }
 
 const formatBRL = (value: number) => {
@@ -21,6 +33,7 @@ const formatBRL = (value: number) => {
 
 export default async function PortfolioPage({ params }: PageProps) {
   const portfolioId = params.id;
+  const usdToBRL = await getUSDToBRL();
 
   const portfolio = await prisma.portfolio.findUnique({
     where: { id: portfolioId },
@@ -31,7 +44,6 @@ export default async function PortfolioPage({ params }: PageProps) {
     notFound();
   }
 
-  const usdToBRL = 5.00;
   const totalValueBRL = portfolio.totalValue * usdToBRL;
   const totalProfitBRL = portfolio.totalProfit * usdToBRL;
   const investedAmountBRL = portfolio.cryptos.reduce((total, crypto) => total + crypto.investedValue, 0) * usdToBRL;
