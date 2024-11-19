@@ -2,45 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background-color: #111111;
-}
-
-/* Aplicar fundo preto em todos os níveis possíveis */
-:root,
-html,
-body {
-  background-color: var(--background-color) !important;
-  min-height: 100vh;
-}
-
-/* Força o fundo preto mesmo durante o carregamento */
-#__next,
-main {
-  background-color: var(--background-color) !important;
-  min-height: 100vh;
-}
-
-/* Previne flash de fundo branco */
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+@layer base {
+  :root {
+    --background: 17 17 17;
+    --foreground: 255 255 255;
   }
-}
 
-/* Força o fundo preto durante o carregamento inicial */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--background-color);
-  z-index: -1;
-}
+  html {
+    @apply bg-[#111111];
+  }
 
-/* Garante que o fundo seja preto durante a transição de páginas */
-.next-route-announcer {
-  background-color: var(--background-color);
+  body {
+    @apply bg-[#111111] text-white;
+  }
 }

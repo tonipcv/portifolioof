@@ -8,7 +8,7 @@ import { Providers } from '@/components/Providers'
 import Link from 'next/link'
 import { Briefcase, GraduationCap } from 'lucide-react'
 import { MobileMenu } from '@/components/MobileMenu'
-import { headers } from 'next/headers'
+import { SubscriptionStatus } from '@/components/SubscriptionStatus'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -33,20 +33,9 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const session = await getServerSession(authOptions)
-  const headersList = headers()
 
   return (
     <html lang="en" className="h-full bg-[#111111]">
-      <head>
-        <script dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              document.documentElement.style.backgroundColor = '#111111';
-              document.body.style.backgroundColor = '#111111';
-            })();
-          `
-        }} />
-      </head>
       <body className={`${inter.className} h-full bg-[#111111] text-white`}>
         <Providers session={session}>
           <div className="min-h-full bg-[#111111]">
@@ -74,7 +63,7 @@ export default async function RootLayout({
                           <span className="text-sm font-medium">Portfólio</span>
                         </Link>
                         <Link 
-                          href="/cursos/4"
+                          href="/courses"
                           className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-[#222222] rounded-md transition-colors"
                         >
                           <GraduationCap className="w-4 h-4" />
@@ -97,6 +86,7 @@ export default async function RootLayout({
               </div>
             </main>
           </div>
+          <SubscriptionStatus />
         </Providers>
       </body>
     </html>

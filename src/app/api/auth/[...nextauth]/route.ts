@@ -4,21 +4,7 @@ import { prisma } from "@/lib/prisma";
 import NextAuth from "next-auth/next";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-
-// Extenda o tipo User para incluir os campos do Stripe
-declare module "next-auth" {
-  interface User {
-    id: string;
-    subscriptionStatus?: string;
-  }
-  
-  interface Session {
-    user: User & {
-      id: string;
-      subscriptionStatus?: string;
-    };
-  }
-}
+import { User } from "@prisma/client";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -27,6 +13,36 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 dias
   },
+  callbacks: {
+    async jwt({ token, user, trigger, session }) {
+      if (trigger === "update") {
+        // Buscar dados atualizados do usuário
+        const updatedUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: {
+            subscriptionStatus: true,
+          },
+        });
+        return {
+          ...token,
+          subscriptionStatus: updatedUser?.subscriptionStatus,
+        };
+      }
+
+      if (user) {
+        token.id = user.id;
+        token.subscriptionStatus = (user as any).subscriptionStatus;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.subscriptionStatus = token.subscriptionStatus as string;
+      }
+      return session;
+    },
+  },
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -34,7 +50,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials): Promise<any> {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Credenciais inválidas");
         }
@@ -42,6 +58,13 @@ export const authOptions: NextAuthOptions = {
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email,
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            subscriptionStatus: true,
           },
         });
 
@@ -69,22 +92,6 @@ export const authOptions: NextAuthOptions = {
   ],
   pages: {
     signIn: "/login",
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.subscriptionStatus = user.subscriptionStatus;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.subscriptionStatus = token.subscriptionStatus as string;
-      }
-      return session;
-    },
   },
 };
 

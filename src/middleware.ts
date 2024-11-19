@@ -7,6 +7,12 @@ export default async function middleware(req: NextRequestWithAuth) {
   const isAuth = !!token;
   const isAuthPage = req.nextUrl.pathname.startsWith('/login');
 
+  // Rotas que requerem autenticação
+  const protectedRoutes = [
+    '/portfolios',
+    '/profile',
+  ];
+
   // Rotas que requerem assinatura premium
   const premiumRoutes = [
     '/courses',           // Cursos
@@ -16,10 +22,21 @@ export default async function middleware(req: NextRequestWithAuth) {
     '/signals',          // Sinais de trading
   ];
 
+  const isProtectedRoute = protectedRoutes.some(route => 
+    req.nextUrl.pathname.startsWith(route)
+  );
+
   const isPremiumRoute = premiumRoutes.some(route => 
     req.nextUrl.pathname.startsWith(route)
   );
 
+  // Redirecionar para login se tentar acessar rota protegida sem estar autenticado
+  if (isProtectedRoute && !isAuth) {
+    const callbackUrl = encodeURIComponent(req.nextUrl.pathname);
+    return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, req.url));
+  }
+
+  // Verificar assinatura premium
   if (isPremiumRoute) {
     if (!isAuth) {
       return NextResponse.redirect(new URL('/login', req.url));
@@ -43,11 +60,9 @@ export default async function middleware(req: NextRequestWithAuth) {
     }
   }
 
-  if (isAuthPage) {
-    if (isAuth) {
-      return NextResponse.redirect(new URL('/', req.url));
-    }
-    return NextResponse.next();
+  // Redirecionar para home se tentar acessar página de login já estando autenticado
+  if (isAuthPage && isAuth) {
+    return NextResponse.redirect(new URL('/', req.url));
   }
 
   return NextResponse.next();
@@ -55,6 +70,8 @@ export default async function middleware(req: NextRequestWithAuth) {
 
 export const config = {
   matcher: [
+    '/portfolios/:path*',
+    '/profile/:path*',
     '/courses/:path*',
     '/analytics/:path*',
     '/api/advanced/:path*',

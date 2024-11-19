@@ -1,14 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export default function PricingPage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    const updateSessionData = async () => {
+      try {
+        await update();
+      } catch (error) {
+        console.error('Erro ao atualizar sessão:', error);
+      }
+    };
+
+    updateSessionData();
+  }, [update]);
 
   const isPremium = session?.user?.subscriptionStatus === 'premium';
 
