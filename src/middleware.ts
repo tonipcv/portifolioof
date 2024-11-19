@@ -6,14 +6,25 @@ export default async function middleware(req: NextRequestWithAuth) {
   const token = await getToken({ req });
   const isAuth = !!token;
   const isAuthPage = req.nextUrl.pathname.startsWith('/login');
-  const isCourseRoute = req.nextUrl.pathname.startsWith('/courses');
 
-  if (isCourseRoute) {
+  // Rotas que requerem assinatura premium
+  const premiumRoutes = [
+    '/courses',           // Cursos
+    '/analytics',         // Analytics avançado
+    '/api/advanced',      // APIs avançadas
+    '/portfolio-pro',     // Recursos avançados de portfólio
+    '/signals',          // Sinais de trading
+  ];
+
+  const isPremiumRoute = premiumRoutes.some(route => 
+    req.nextUrl.pathname.startsWith(route)
+  );
+
+  if (isPremiumRoute) {
     if (!isAuth) {
       return NextResponse.redirect(new URL('/login', req.url));
     }
 
-    // Verificar se o usuário é premium
     try {
       const userResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/user/subscription`, {
         headers: {
@@ -43,5 +54,12 @@ export default async function middleware(req: NextRequestWithAuth) {
 }
 
 export const config = {
-  matcher: ['/courses/:path*', '/login']
+  matcher: [
+    '/courses/:path*',
+    '/analytics/:path*',
+    '/api/advanced/:path*',
+    '/portfolio-pro/:path*',
+    '/signals/:path*',
+    '/login'
+  ]
 }; 

@@ -6,11 +6,12 @@ import { prisma } from '@/lib/prisma';
 export async function POST(req: Request) {
   const body = await req.text();
   const headersList = headers();
-  const signature = headersList.get('stripe-signature');
+  const signature = headersList.get('stripe-signature') ?? '';
 
-  if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error('Webhook secret não configurado');
     return NextResponse.json(
-      { error: 'Stripe webhook secret não configurado' },
+      { error: 'Webhook secret não configurado' },
       { status: 500 }
     );
   }
@@ -22,40 +23,57 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as any;
-        
-        await prisma.user.update({
-          where: {
-            stripeCustomerId: session.customer,
-          },
-          data: {
-            subscriptionStatus: 'premium',
-            subscriptionId: session.subscription,
-            subscriptionEndDate: new Date(session.current_period_end * 1000),
-          },
-        });
-        break;
+    console.log('Evento recebido:', event.type);
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as any;
+      console.log('Dados da sessão:', session);
+
+      // Buscar usuário pelo customer ID
+      const customer = await stripe.customers.retrieve(session.customer as string);
+      console.log('Dados do cliente:', customer);
+
+      if (!customer.email) {
+        throw new Error('Email do cliente não encontrado');
       }
 
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as any;
-        
-        await prisma.user.update({
-          where: {
-            stripeCustomerId: subscription.customer,
-          },
-          data: {
-            subscriptionStatus: subscription.status === 'active' ? 'premium' : 'free',
-            subscriptionEndDate: subscription.status === 'active' 
-              ? new Date(subscription.current_period_end * 1000)
-              : null,
-          },
-        });
-        break;
+      // Atualizar usuário usando o email
+      const updatedUser = await prisma.user.update({
+        where: {
+          email: customer.email,
+        },
+        data: {
+          stripeCustomerId: session.customer,
+          subscriptionStatus: 'premium',
+          subscriptionId: session.subscription,
+          subscriptionEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 dias
+        },
+      });
+
+      console.log('Usuário atualizado:', updatedUser);
+    }
+
+    if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object as any;
+      console.log('Dados da assinatura:', subscription);
+
+      const customer = await stripe.customers.retrieve(subscription.customer as string);
+      
+      if (!customer.email) {
+        throw new Error('Email do cliente não encontrado');
       }
+
+      await prisma.user.update({
+        where: {
+          email: customer.email,
+        },
+        data: {
+          subscriptionStatus: subscription.status === 'active' ? 'premium' : 'free',
+          subscriptionEndDate: subscription.status === 'active' 
+            ? new Date(subscription.current_period_end * 1000)
+            : null,
+        },
+      });
     }
 
     return NextResponse.json({ received: true });
@@ -68,7 +86,6 @@ export async function POST(req: Request) {
   }
 }
 
-// Configuração para aceitar raw body
 export const config = {
   api: {
     bodyParser: false,

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function SuccessPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
@@ -17,17 +18,30 @@ export default function SuccessPage() {
 
     const checkStatus = async () => {
       try {
-        const response = await fetch('/api/user/subscription');
-        const data = await response.json();
+        // Primeiro, verifica o status da sessão do Stripe
+        const checkoutResponse = await fetch(`/api/checkout-status?session_id=${sessionId}`);
+        if (!checkoutResponse.ok) {
+          throw new Error('Erro ao verificar status do checkout');
+        }
+        
+        // Depois verifica o status da assinatura
+        const subscriptionResponse = await fetch('/api/user/subscription');
+        if (!subscriptionResponse.ok) {
+          throw new Error('Erro ao verificar status da assinatura');
+        }
+
+        const data = await subscriptionResponse.json();
+        console.log('Subscription status:', data); // Debug
 
         if (data.subscriptionStatus === 'premium') {
           setStatus('success');
         } else {
-          setStatus('error');
+          throw new Error('Status da assinatura não está premium');
         }
       } catch (error) {
         console.error('Erro ao verificar status:', error);
         setStatus('error');
+        setErrorMessage(error instanceof Error ? error.message : 'Erro desconhecido');
       }
     };
 
@@ -53,6 +67,7 @@ export default function SuccessPage() {
             Ops! Algo deu errado.
           </h2>
           <p className="mb-4">Não foi possível confirmar sua assinatura.</p>
+          <p className="mb-4 text-sm text-red-400">{errorMessage}</p>
           <button
             onClick={() => router.push('/pricing')}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
