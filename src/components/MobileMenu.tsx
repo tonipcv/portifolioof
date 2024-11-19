@@ -32,6 +32,18 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
         <Menu.Item>
           {({ active }) => (
             <Link
+              href="/ativos-recomendados"
+              className={`${
+                active ? 'bg-[#333333]' : ''
+              } block px-4 py-2 text-sm text-gray-300`}
+            >
+              Ativos Recomendados
+            </Link>
+          )}
+        </Menu.Item>
+        <Menu.Item>
+          {({ active }) => (
+            <Link
               href={isPremium ? "/cursos" : "/pricing"}
               className={`${
                 active ? 'bg-[#333333]' : ''

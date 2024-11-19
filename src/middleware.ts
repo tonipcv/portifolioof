@@ -20,6 +20,7 @@ export default async function middleware(req: NextRequestWithAuth) {
     '/api/advanced',      // APIs avançadas
     '/portfolio-pro',     // Recursos avançados de portfólio
     '/signals',          // Sinais de trading
+    '/ativos-recomendados/detalhes', // Detalhes dos ativos recomendados
   ];
 
   const isProtectedRoute = protectedRoutes.some(route => 
@@ -77,6 +78,8 @@ export const config = {
     '/api/advanced/:path*',
     '/portfolio-pro/:path*',
     '/signals/:path*',
-    '/login'
+    '/ativos-recomendados/detalhes/:path*',
+    '/(auth)/login',
+    '/register'
   ]
 }; 

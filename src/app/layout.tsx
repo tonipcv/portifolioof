@@ -6,7 +6,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from './api/auth/[...nextauth]/route'
 import { Providers } from '@/components/Providers'
 import Link from 'next/link'
-import { Briefcase, GraduationCap } from 'lucide-react'
+import { Briefcase, GraduationCap, TrendingUp } from 'lucide-react'
 import { MobileMenu } from '@/components/MobileMenu'
 import { SubscriptionStatus } from '@/components/SubscriptionStatus'
 
@@ -62,6 +62,13 @@ export default async function RootLayout({
                         >
                           <Briefcase className="w-4 h-4" />
                           <span className="text-sm font-medium">Portfólio</span>
+                        </Link>
+                        <Link 
+                          href="/ativos-recomendados"
+                          className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-[#222222] rounded-md transition-colors"
+                        >
+                          <TrendingUp className="w-4 h-4" />
+                          <span className="text-sm font-medium">Ativos Recomendados</span>
                         </Link>
                         {isPremium ? (
                           <Link 

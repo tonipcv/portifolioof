@@ -168,7 +168,7 @@ export default function PricingPage() {
               )}
               <p className="mt-4 text-gray-300">Acesso completo</p>
               <p className="mt-8">
-                <span className="text-4xl font-extrabold text-white">R$29</span>
+                <span className="text-4xl font-extrabold text-white">R$97</span>
                 <span className="text-base font-medium text-gray-300">/mês</span>
               </p>
               <ul className="mt-6 space-y-4">
