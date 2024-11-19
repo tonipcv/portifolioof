@@ -8,6 +8,7 @@ import { Providers } from '@/components/Providers'
 import Link from 'next/link'
 import { Briefcase, GraduationCap } from 'lucide-react'
 import { MobileMenu } from '@/components/MobileMenu'
+import { headers } from 'next/headers'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -32,6 +33,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const session = await getServerSession(authOptions)
+  const headersList = headers()
 
   return (
     <html lang="en" className="h-full bg-[#111111]">

@@ -24,6 +24,12 @@ model User {
   updatedAt     DateTime    @updatedAt
   resetToken    String?
   resetTokenExpiry DateTime?
+  stripeCustomerId String?  @unique
+  subscriptionStatus String? @default("free") // 'free' | 'premium'
+  subscriptionId    String?
+  subscriptionEndDate DateTime?
+
+  @@map("User")
 }
 
 model Portfolio {
