@@ -15,7 +15,7 @@ export default async function middleware(req: NextRequestWithAuth) {
 
   // Rotas que requerem assinatura premium
   const premiumRoutes = [
-    '/courses',           // Cursos
+    '/cursos',           // Cursos
     '/analytics',         // Analytics avançado
     '/api/advanced',      // APIs avançadas
     '/portfolio-pro',     // Recursos avançados de portfólio
@@ -72,7 +72,7 @@ export const config = {
   matcher: [
     '/portfolios/:path*',
     '/profile/:path*',
-    '/courses/:path*',
+    '/cursos/:path*',
     '/analytics/:path*',
     '/api/advanced/:path*',
     '/portfolio-pro/:path*',

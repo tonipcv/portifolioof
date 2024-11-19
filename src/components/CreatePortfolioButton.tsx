@@ -17,7 +17,6 @@ export function CreatePortfolioButton() {
   const { data: session } = useSession();
 
   useEffect(() => {
-    // Buscar número de portfólios do usuário
     const fetchPortfolios = async () => {
       try {
         const response = await fetch('/api/portfolio');
@@ -73,7 +72,8 @@ export function CreatePortfolioButton() {
         throw new Error(data.error || 'Erro ao criar portfólio');
       }
 
-      router.refresh();
+      router.push(`/portfolios/${data.id}`);
+      
       setIsOpen(false);
       setName('');
       setDescription('');

@@ -33,6 +33,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const session = await getServerSession(authOptions)
+  const isPremium = session?.user?.subscriptionStatus === 'premium'
 
   return (
     <html lang="en" className="h-full bg-[#111111]">
@@ -62,19 +63,29 @@ export default async function RootLayout({
                           <Briefcase className="w-4 h-4" />
                           <span className="text-sm font-medium">Portfólio</span>
                         </Link>
-                        <Link 
-                          href="/courses"
-                          className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-[#222222] rounded-md transition-colors"
-                        >
-                          <GraduationCap className="w-4 h-4" />
-                          <span className="text-sm font-medium">Academy</span>
-                        </Link>
+                        {isPremium ? (
+                          <Link 
+                            href="/cursos"
+                            className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-[#222222] rounded-md transition-colors"
+                          >
+                            <GraduationCap className="w-4 h-4" />
+                            <span className="text-sm font-medium">Academy</span>
+                          </Link>
+                        ) : (
+                          <Link 
+                            href="/pricing"
+                            className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-[#222222] rounded-md transition-colors"
+                          >
+                            <GraduationCap className="w-4 h-4" />
+                            <span className="text-sm font-medium">Academy</span>
+                          </Link>
+                        )}
                       </div>
                     )}
                   </div>
                   <div className="flex items-center gap-4">
                     <AuthStatus />
-                    {session && <MobileMenu session={session} />}
+                    {session && <MobileMenu session={session} isPremium={isPremium} />}
                   </div>
                 </div>
               </div>

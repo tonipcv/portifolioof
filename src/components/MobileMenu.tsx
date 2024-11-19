@@ -1,51 +1,47 @@
 'use client'
 
-import { useState } from 'react'
+import { Menu } from '@headlessui/react'
+import { Bars3Icon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
-import { Briefcase, GraduationCap, Menu, X } from 'lucide-react'
+import { Session } from 'next-auth'
 
 interface MobileMenuProps {
-  session: any
+  session: Session
+  isPremium?: boolean
 }
 
-export function MobileMenu({ session }: MobileMenuProps) {
-  const [isOpen, setIsOpen] = useState(false)
-
+export function MobileMenu({ session, isPremium }: MobileMenuProps) {
   return (
-    <div className="sm:hidden">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 text-gray-400 hover:text-white transition-colors"
-      >
-        {isOpen ? (
-          <X className="h-6 w-6" />
-        ) : (
-          <Menu className="h-6 w-6" />
-        )}
-      </button>
-
-      {isOpen && (
-        <div className="absolute top-16 left-0 right-0 bg-[#161616] border-b border-[#222222]">
-          <div className="px-4 py-2 space-y-1">
-            <Link 
+    <Menu as="div" className="relative sm:hidden">
+      <Menu.Button className="p-2 text-gray-300 hover:text-white">
+        <Bars3Icon className="h-6 w-6" />
+      </Menu.Button>
+      <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-[#222222] py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+        <Menu.Item>
+          {({ active }) => (
+            <Link
               href="/portfolios"
-              className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-[#222222] rounded-md transition-colors"
-              onClick={() => setIsOpen(false)}
+              className={`${
+                active ? 'bg-[#333333]' : ''
+              } block px-4 py-2 text-sm text-gray-300`}
             >
-              <Briefcase className="w-4 h-4" />
-              <span className="text-sm font-medium">Portfólio</span>
+              Portfólio
             </Link>
-            <Link 
-              href="/cursos/4"
-              className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-[#222222] rounded-md transition-colors"
-              onClick={() => setIsOpen(false)}
+          )}
+        </Menu.Item>
+        <Menu.Item>
+          {({ active }) => (
+            <Link
+              href={isPremium ? "/cursos" : "/pricing"}
+              className={`${
+                active ? 'bg-[#333333]' : ''
+              } block px-4 py-2 text-sm text-gray-300`}
             >
-              <GraduationCap className="w-4 h-4" />
-              <span className="text-sm font-medium">Academy</span>
+              Academy
             </Link>
-          </div>
-        </div>
-      )}
-    </div>
+          )}
+        </Menu.Item>
+      </Menu.Items>
+    </Menu>
   )
 } 
