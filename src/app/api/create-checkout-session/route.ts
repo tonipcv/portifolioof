@@ -4,12 +4,12 @@ import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-      return new NextResponse('Não autorizado', { status: 401 });
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -17,12 +17,12 @@ export async function POST() {
     });
 
     if (!user) {
-      return new NextResponse('Usuário não encontrado', { status: 404 });
+      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
     // Verificar se já existe uma assinatura ativa
     if (user.subscriptionStatus === 'premium') {
-      return new NextResponse('Usuário já possui assinatura premium', { status: 400 });
+      return NextResponse.json({ error: 'Usuário já possui assinatura premium' }, { status: 400 });
     }
 
     // Criar ou recuperar cliente no Stripe
@@ -60,15 +60,24 @@ export async function POST() {
       metadata: {
         userId: user.id,
       },
+      allow_promotion_codes: true,
+      billing_address_collection: 'required',
+      customer_update: {
+        address: 'auto',
+        name: 'auto',
+      },
     });
 
     if (!checkoutSession.url) {
-      return new NextResponse('Erro ao criar sessão de checkout', { status: 500 });
+      return NextResponse.json({ error: 'Erro ao criar sessão de checkout' }, { status: 500 });
     }
 
     return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
-    console.error('Erro ao criar sessão de checkout:', error);
-    return new NextResponse('Erro interno do servidor', { status: 500 });
+    console.error('Erro detalhado ao criar sessão de checkout:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor', details: error }, 
+      { status: 500 }
+    );
   }
 } 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
@@ -27,11 +27,21 @@ export default function PricingPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRICE_ID,
+          successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/success`,
+          cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
+        }),
       });
       
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+        const errorData = await response.json().catch(() => null);
+        console.error('Erro na resposta:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(errorData?.message || 'Erro ao criar sessão de checkout');
       }
       
       const data = await response.json();
@@ -39,10 +49,11 @@ export default function PricingPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
+        console.error('URL não encontrada na resposta:', data);
         throw new Error('URL de checkout não encontrada');
       }
     } catch (error) {
-      console.error('Erro ao iniciar checkout:', error);
+      console.error('Erro detalhado:', error);
       setError('Erro ao iniciar o checkout. Por favor, tente novamente.');
     } finally {
       setIsLoading(false);
