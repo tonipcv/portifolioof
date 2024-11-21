@@ -9,7 +9,10 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Não autorizado' }, 
+        { status: 401 }
+      );
     }
 
     const user = await prisma.user.findUnique({
@@ -17,7 +20,22 @@ export async function POST(req: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Usuário não encontrado' }, 
+        { status: 404 }
+      );
+    }
+
+    // Verifica se já existe uma sessão de checkout ativa
+    const existingSessions = await stripe.checkout.sessions.list({
+      customer: user.stripeCustomerId || undefined,
+      status: 'open',
+      limit: 1,
+    });
+
+    if (existingSessions.data.length > 0) {
+      // Retorna a URL da sessão existente
+      return NextResponse.json({ url: existingSessions.data[0].url });
     }
 
     // Criar ou recuperar cliente no Stripe
@@ -40,7 +58,7 @@ export async function POST(req: Request) {
       stripeCustomerId = customer.id;
     }
 
-    // Criar sessão de checkout
+    // Criar nova sessão de checkout
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
       line_items: [
@@ -61,7 +79,10 @@ export async function POST(req: Request) {
     });
 
     if (!checkoutSession.url) {
-      return NextResponse.json({ error: 'Erro ao criar sessão de checkout' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Erro ao criar sessão de checkout' }, 
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ url: checkoutSession.url });
