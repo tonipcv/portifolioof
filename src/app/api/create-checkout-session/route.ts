@@ -26,68 +26,89 @@ export async function POST(req: Request) {
       );
     }
 
-    // Verifica se já existe uma sessão de checkout ativa
-    const existingSessions = await stripe.checkout.sessions.list({
-      customer: user.stripeCustomerId || undefined,
-      status: 'open',
-      limit: 1,
-    });
-
-    if (existingSessions.data.length > 0) {
-      // Retorna a URL da sessão existente
-      return NextResponse.json({ url: existingSessions.data[0].url });
-    }
-
-    // Criar ou recuperar cliente no Stripe
     let stripeCustomerId = user.stripeCustomerId;
-
-    if (!stripeCustomerId) {
-      const customer = await stripe.customers.create({
-        email: user.email!,
-        name: user.name || undefined,
-        metadata: {
-          userId: user.id,
-        },
-      });
-      
+    
+    if (stripeCustomerId?.startsWith('cus_') && process.env.NODE_ENV === 'production') {
       await prisma.user.update({
         where: { id: user.id },
-        data: { stripeCustomerId: customer.id },
+        data: { stripeCustomerId: null },
       });
-      
-      stripeCustomerId = customer.id;
+      stripeCustomerId = null;
     }
 
-    // Criar nova sessão de checkout
-    const checkoutSession = await stripe.checkout.sessions.create({
-      customer: stripeCustomerId,
-      line_items: [
-        {
-          price: process.env.STRIPE_PREMIUM_PRICE_ID,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: `${process.env.NEXTAUTH_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/pricing`,
-      metadata: {
-        userId: user.id,
-      },
-      payment_method_types: ['card'],
-      billing_address_collection: 'required',
-      allow_promotion_codes: true,
-    });
+    if (!stripeCustomerId) {
+      try {
+        const customer = await stripe.customers.create({
+          email: user.email!,
+          name: user.name || undefined,
+          metadata: {
+            userId: user.id,
+            environment: process.env.NODE_ENV,
+          },
+        });
+        
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { stripeCustomerId: customer.id },
+        });
+        
+        stripeCustomerId = customer.id;
+      } catch (error) {
+        console.error('Erro ao criar cliente Stripe:', error);
+        return NextResponse.json(
+          { error: 'Erro ao criar cliente no Stripe' },
+          { status: 500 }
+        );
+      }
+    }
 
-    if (!checkoutSession.url) {
+    try {
+      const checkoutSession = await stripe.checkout.sessions.create({
+        customer: stripeCustomerId,
+        line_items: [
+          {
+            price: process.env.STRIPE_PREMIUM_PRICE_ID,
+            quantity: 1,
+          },
+        ],
+        mode: 'subscription',
+        success_url: `${process.env.NEXTAUTH_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.NEXTAUTH_URL}/pricing`,
+        metadata: {
+          userId: user.id,
+          environment: process.env.NODE_ENV,
+        },
+        payment_method_types: ['card'],
+        billing_address_collection: 'required',
+        allow_promotion_codes: true,
+      });
+
+      if (!checkoutSession.url) {
+        return NextResponse.json(
+          { error: 'URL da sessão de checkout não gerada' }, 
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ url: checkoutSession.url });
+    } catch (checkoutError: any) {
+      console.error('Erro específico ao criar sessão:', {
+        error: checkoutError.message,
+        type: checkoutError.type,
+        code: checkoutError.code,
+      });
+      
       return NextResponse.json(
-        { error: 'Erro ao criar sessão de checkout' }, 
+        { 
+          error: 'Erro ao criar sessão de checkout',
+          details: checkoutError.message,
+          code: checkoutError.code
+        }, 
         { status: 500 }
       );
     }
-
-    return NextResponse.json({ url: checkoutSession.url });
   } catch (error: any) {
-    console.error('Erro ao criar sessão de checkout:', error);
+    console.error('Erro geral:', error);
     return NextResponse.json(
       { 
         error: 'Erro ao criar sessão de checkout',
