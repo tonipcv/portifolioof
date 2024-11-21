@@ -1,7 +1,6 @@
-import Image, { ImageProps } from 'next/image';
-import React from 'react';
+import Image from 'next/image';
 
-export interface OptimizedImageProps extends Omit<ImageProps, 'src' | 'alt'> {
+interface OptimizedImageProps {
   src: string;
   alt: string;
   width?: number;
@@ -10,6 +9,14 @@ export interface OptimizedImageProps extends Omit<ImageProps, 'src' | 'alt'> {
   className?: string;
 }
 
-export function OptimizedImage(props: OptimizedImageProps) {
-  return <Image {...props} />;
-} 
+function OptimizedImage({ src, alt, ...props }: OptimizedImageProps) {
+  return (
+    <Image 
+      src={src}
+      alt={alt}
+      {...props}
+    />
+  );
+}
+
+export default OptimizedImage; 

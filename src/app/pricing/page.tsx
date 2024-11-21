@@ -29,19 +29,15 @@ export default function PricingPage() {
         },
         body: JSON.stringify({
           priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRICE_ID,
-          successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/success`,
-          cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
+          successUrl: `${window.location.origin}/success`,
+          cancelUrl: `${window.location.origin}/pricing`,
         }),
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        console.error('Erro na resposta:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData
-        });
-        throw new Error(errorData?.message || 'Erro ao criar sessão de checkout');
+        const errorData = await response.json();
+        console.error('Erro na resposta:', errorData);
+        throw new Error(errorData.error || 'Erro ao criar sessão de checkout');
       }
       
       const data = await response.json();
@@ -49,12 +45,11 @@ export default function PricingPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        console.error('URL não encontrada na resposta:', data);
         throw new Error('URL de checkout não encontrada');
       }
-    } catch (error) {
-      console.error('Erro detalhado:', error);
-      setError('Erro ao iniciar o checkout. Por favor, tente novamente.');
+    } catch (error: any) {
+      console.error('Erro ao iniciar checkout:', error);
+      setError(error.message || 'Erro ao iniciar o checkout. Por favor, tente novamente.');
     } finally {
       setIsLoading(false);
     }

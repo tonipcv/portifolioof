@@ -20,11 +20,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    // Verificar se já existe uma assinatura ativa
-    if (user.subscriptionStatus === 'premium') {
-      return NextResponse.json({ error: 'Usuário já possui assinatura premium' }, { status: 400 });
-    }
-
     // Criar ou recuperar cliente no Stripe
     let stripeCustomerId = user.stripeCustomerId;
 
@@ -60,12 +55,9 @@ export async function POST(req: Request) {
       metadata: {
         userId: user.id,
       },
-      allow_promotion_codes: true,
+      payment_method_types: ['card'],
       billing_address_collection: 'required',
-      customer_update: {
-        address: 'auto',
-        name: 'auto',
-      },
+      allow_promotion_codes: true,
     });
 
     if (!checkoutSession.url) {
@@ -73,11 +65,14 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ url: checkoutSession.url });
-  } catch (error) {
-    console.error('Erro detalhado ao criar sessão de checkout:', error);
+  } catch (error: any) {
+    console.error('Erro ao criar sessão de checkout:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor', details: error }, 
-      { status: 500 }
+      { 
+        error: 'Erro ao criar sessão de checkout',
+        details: error.message 
+      }, 
+      { status: 400 }
     );
   }
 } 
