@@ -1,10 +1,5 @@
-import { Inter } from 'next/font/google'
-import { NextAuthProvider } from '@/providers/NextAuthProvider'
-
-const inter = Inter({ 
-  subsets: ['latin'],
-  variable: '--font-inter',
-})
+import { Providers } from '@/components/Providers'
+import '../globals.css'
 
 export default function AuthLayout({
   children,
@@ -12,11 +7,11 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className="h-full bg-[#111111]">
-      <body className={`${inter.className} h-full bg-[#111111] text-gray-100`}>
-        <NextAuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-screen bg-white dark:bg-[#121214]">
+        <Providers>
           {children}
-        </NextAuthProvider>
+        </Providers>
       </body>
     </html>
   )

@@ -18,7 +18,7 @@ export default function PricingPage() {
       return;
     }
 
-    window.location.href = 'https://checkout.k17.com.br/subscribe/ars';
+    router.push('/carrinho');
   };
 
   const handleManageSubscription = async () => {
@@ -62,10 +62,10 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-[#121214]">
       <div className="max-w-7xl mx-auto">
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold sm:text-4xl">
+          <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
             Planos e Preços
           </h2>
           {isPremium && (
@@ -85,8 +85,8 @@ export default function PricingPage() {
 
         <div className="mt-12 space-y-4 sm:mt-16 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-6 lg:max-w-4xl lg:mx-auto">
           {/* Plano Gratuito */}
-          <div className={`border rounded-lg shadow-sm divide-y divide-gray-700 bg-gray-800 
-            ${!isPremium ? 'border-gray-700' : 'border-gray-700 opacity-75'}`}>
+          <div className={`border rounded-lg shadow-sm divide-y divide-zinc-800 bg-[#202024] 
+            ${!isPremium ? 'border-zinc-800' : 'border-zinc-800 opacity-75'}`}>
             <div className="p-6">
               <h3 className="text-xl font-semibold text-white">Gratuito</h3>
               <p className="mt-4 text-gray-300">Acesso básico à plataforma</p>
@@ -96,7 +96,7 @@ export default function PricingPage() {
               </p>
               {isPremium && (
                 <div className="mt-8">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-700 text-gray-300">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-zinc-800 text-gray-300">
                     Plano Atual: Premium
                   </span>
                 </div>
@@ -117,7 +117,7 @@ export default function PricingPage() {
           </div>
 
           {/* Plano Premium */}
-          <div className={`border rounded-lg shadow-sm divide-y divide-gray-700 bg-gray-800 
+          <div className={`border rounded-lg shadow-sm divide-y divide-zinc-800 bg-[#202024] 
             ${isPremium ? 'border-blue-500 ring-2 ring-blue-500' : 'border-blue-500'}`}>
             <div className="p-6">
               <h3 className="text-xl font-semibold text-white">Premium</h3>
