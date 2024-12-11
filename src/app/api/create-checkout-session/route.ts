@@ -6,6 +6,27 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
+    const priceId = process.env.STRIPE_PREMIUM_PRICE_ID;
+    console.log('Ambiente:', process.env.NODE_ENV);
+    console.log('Price ID:', priceId);
+
+    if (!priceId) {
+      return NextResponse.json(
+        { error: 'STRIPE_PREMIUM_PRICE_ID não configurado' },
+        { status: 500 }
+      );
+    }
+
+    try {
+      await stripe.prices.retrieve(priceId);
+    } catch (priceError) {
+      console.error('Erro ao verificar price:', priceError);
+      return NextResponse.json(
+        { error: 'Price ID inválido ou não encontrado' },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
@@ -67,7 +88,7 @@ export async function POST(req: Request) {
         customer: stripeCustomerId,
         line_items: [
           {
-            price: process.env.STRIPE_PREMIUM_PRICE_ID,
+            price: priceId,
             quantity: 1,
           },
         ],
@@ -96,6 +117,8 @@ export async function POST(req: Request) {
         error: checkoutError.message,
         type: checkoutError.type,
         code: checkoutError.code,
+        priceId: priceId,
+        environment: process.env.NODE_ENV
       });
       
       return NextResponse.json(

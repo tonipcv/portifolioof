@@ -18,41 +18,7 @@ export default function PricingPage() {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      setError('');
-      
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRICE_ID,
-          successUrl: `${window.location.origin}/success`,
-          cancelUrl: `${window.location.origin}/pricing`,
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Erro na resposta:', errorData);
-        throw new Error(errorData.error || 'Erro ao criar sessão de checkout');
-      }
-      
-      const data = await response.json();
-      
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('URL de checkout não encontrada');
-      }
-    } catch (error: any) {
-      console.error('Erro ao iniciar checkout:', error);
-      setError(error.message || 'Erro ao iniciar o checkout. Por favor, tente novamente.');
-    } finally {
-      setIsLoading(false);
-    }
+    window.location.href = 'https://checkout.k17.com.br/subscribe/ars';
   };
 
   const handleManageSubscription = async () => {

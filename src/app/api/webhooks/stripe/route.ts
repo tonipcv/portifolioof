@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = headers().get('stripe-signature') as string;
+  const signature = (await headers()).get('stripe-signature') as string;
 
   if (!process.env.STRIPE_WEBHOOK_SECRET) {
     console.error('Webhook secret não configurado');
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
         await prisma.user.update({
           where: {
-            email: customerData.email,
+            email: customerData.email ?? '',
           },
           data: {
             stripeCustomerId: session.customer as string,
@@ -54,11 +54,11 @@ export async function POST(req: Request) {
 
         await prisma.user.update({
           where: {
-            email: customerData.email,
+            email: customerData.email ?? '',
           },
           data: {
             subscriptionStatus: subscription.status === 'active' ? 'premium' : 'free',
-            subscriptionEndDate: subscription.status === 'active' 
+            subscriptionEndDate: subscription.status === 'active'
               ? new Date(subscription.current_period_end * 1000)
               : null,
           },
