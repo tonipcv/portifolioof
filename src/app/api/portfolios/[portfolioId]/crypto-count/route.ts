@@ -6,30 +6,18 @@ export async function GET(
   { params }: { params: { portfolioId: string } }
 ) {
   try {
-    const portfolio = await prisma.portfolio.findUnique({
+    const count = await prisma.crypto.count({
       where: {
-        id: params.portfolioId
-      },
-      include: {
-        user: {
-          select: {
-            subscriptionStatus: true
-          }
-        },
-        cryptos: true
+        portfolioId: params.portfolioId
       }
     })
 
-    if (!portfolio) {
-      return NextResponse.json(
-        { error: 'Portfolio not found' },
-        { status: 404 }
-      )
-    }
-
     return NextResponse.json({ 
-      count: portfolio.cryptos.length,
-      subscriptionStatus: portfolio.user.subscriptionStatus
+      count,
+      subscriptionStatus: await prisma.portfolio.findUnique({
+        where: { id: params.portfolioId },
+        select: { user: { select: { subscriptionStatus: true } } }
+      }).then(p => p?.user?.subscriptionStatus)
     })
   } catch (error) {
     return NextResponse.json(

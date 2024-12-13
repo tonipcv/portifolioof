@@ -6,7 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
   params: {
-    id: string;
+    portfolioId: string;
   };
 }
 
@@ -32,7 +32,7 @@ const formatBRL = (value: number) => {
 };
 
 export default async function PortfolioPage({ params }: PageProps) {
-  const portfolioId = params.id;
+  const portfolioId = params.portfolioId;
   const usdToBRL = await getUSDToBRL();
 
   const portfolio = await prisma.portfolio.findUnique({
