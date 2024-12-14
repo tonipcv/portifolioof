@@ -15,28 +15,55 @@ interface Portfolio {
   cryptos: any[]
 }
 
+// Função para buscar cotação do dólar
+async function getUSDToBRL() {
+  try {
+    const response = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL');
+    const data = await response.json();
+    return parseFloat(data.USDBRL.bid);
+  } catch (error) {
+    console.error('Error fetching USD to BRL rate:', error);
+    return 5.00; // Valor fallback caso a API falhe
+  }
+}
+
+// Função para formatar valores em BRL
+const formatBRL = (value: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+};
+
 export function PortfolioList() {
   const [portfolios, setPortfolios] = useState<Portfolio[]>([])
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [usdToBRL, setUsdToBRL] = useState(5.00)
   const router = useRouter()
 
   async function loadPortfolios() {
     try {
       setIsRefreshing(true)
-      const response = await fetch('/api/portfolio', {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
-      })
+      const [portfoliosResponse, usdRate] = await Promise.all([
+        fetch('/api/portfolio', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        }),
+        getUSDToBRL()
+      ]);
       
-      if (!response.ok) {
+      if (!portfoliosResponse.ok) {
         throw new Error('Failed to fetch portfolios')
       }
       
-      const data = await response.json()
+      const data = await portfoliosResponse.json()
       setPortfolios(data)
+      setUsdToBRL(usdRate)
     } catch (error) {
       console.error('Error loading portfolios:', error)
     } finally {
@@ -71,7 +98,7 @@ export function PortfolioList() {
         <button
           onClick={loadPortfolios}
           disabled={isRefreshing}
-          className="inline-flex items-center gap-x-1.5 rounded-md bg-transparent border-2 border-white/20 px-2.5 py-1.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-50"
+          className="inline-flex items-center gap-x-1.5 rounded-md bg-transparent border-2 border-white/20 px-2.5 py-1.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500 disabled:opacity-50"
           title="Atualizar portfolios"
         >
           <RefreshCw 
@@ -94,12 +121,12 @@ export function PortfolioList() {
           {portfolios.map((portfolio) => (
             <div
               key={portfolio.id}
-              className="group relative flex flex-col overflow-hidden rounded-lg bg-[#161616] shadow transition-all hover:shadow-lg hover:ring-1 hover:ring-blue-500"
+              className="group relative flex flex-col overflow-hidden rounded-lg bg-[#161616] shadow transition-all hover:shadow-lg hover:ring-1 hover:ring-green-500"
               onClick={() => router.push(`/portfolios/${portfolio.id}`)}
             >
               <div className="flex-1 p-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-200 group-hover:text-blue-400">
+                  <h2 className="text-lg font-semibold text-gray-200 group-hover:text-green-400">
                     {portfolio.name}
                   </h2>
                   <DeletePortfolioButton 
@@ -107,53 +134,60 @@ export function PortfolioList() {
                     onDelete={loadPortfolios}
                   />
                 </div>
-                
-                {portfolio.description && (
-                  <p className="mt-2 text-sm text-gray-400 line-clamp-2">
-                    {portfolio.description}
-                  </p>
-                )}
+
+                <div className={`mt-4 p-4 rounded-lg ${
+                  portfolio.totalProfit >= 0 
+                    ? 'bg-green-900/20 border border-green-800' 
+                    : 'bg-red-900/20 border border-red-800'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-400">Lucro/Prejuízo</span>
+                    <div className="flex items-center">
+                      {portfolio.totalProfit >= 0 ? (
+                        <TrendingUp className="mr-2 h-5 w-5 text-green-400" />
+                      ) : (
+                        <TrendingDown className="mr-2 h-5 w-5 text-red-400" />
+                      )}
+                      <span className={`text-lg font-bold ${
+                        portfolio.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {formatBRL(Math.abs(portfolio.totalProfit) * usdToBRL)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-2 flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Retorno</span>
+                    <span className={`text-sm font-medium ${
+                      portfolio.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {((portfolio.totalProfit / portfolio.totalInvested) * 100).toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <div className="p-3 rounded-lg bg-[#1a1a1a] border border-gray-800">
+                    <p className="text-sm text-gray-400">Valor Total</p>
+                    <p className="text-sm font-medium text-green-400">
+                      {formatBRL(portfolio.totalValue * usdToBRL)}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[#1a1a1a] border border-gray-800">
+                    <p className="text-sm text-gray-400">Investido</p>
+                    <p className="text-sm font-medium text-gray-200">
+                      {formatBRL(portfolio.totalInvested * usdToBRL)}
+                    </p>
+                  </div>
+                </div>
 
                 <div className="mt-4 border-t border-gray-800 pt-4">
-                  <dl className="grid grid-cols-1 gap-3">
-                    <div className="flex justify-between">
-                      <dt className="text-sm text-gray-400">Valor Investido:</dt>
-                      <dd className="text-sm font-medium text-gray-200">
-                        ${portfolio.totalInvested.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-sm text-gray-400">Valor Total:</dt>
-                      <dd className="text-sm font-medium text-gray-200">
-                        ${portfolio.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-sm text-gray-400">Preço Médio:</dt>
-                      <dd className="text-sm font-medium text-gray-200">
-                        ${(portfolio.totalValue / portfolio.cryptos.reduce((sum, crypto) => sum + crypto.amount, 0) || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between border-t border-gray-800 pt-3">
-                      <dt className="text-sm text-gray-400">Lucro/Prejuízo:</dt>
-                      <dd className="flex items-center text-sm font-medium">
-                        {portfolio.totalProfit >= 0 ? (
-                          <TrendingUp className="mr-1 h-4 w-4 text-green-400" />
-                        ) : (
-                          <TrendingDown className="mr-1 h-4 w-4 text-red-400" />
-                        )}
-                        <span className={portfolio.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}>
-                          ${Math.abs(portfolio.totalProfit).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </span>
-                      </dd>
-                    </div>
-                    <div className="flex justify-between border-t border-gray-800 pt-3">
-                      <dt className="text-sm text-gray-400">Ativos:</dt>
-                      <dd className="text-sm font-medium text-gray-200">
-                        {portfolio.cryptos.length}
-                      </dd>
-                    </div>
-                  </dl>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400">Ativos</span>
+                    <span className="text-sm font-medium text-gray-200">
+                      {portfolio.cryptos.length}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
