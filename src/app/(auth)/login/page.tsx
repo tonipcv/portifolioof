@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <>
-      <div className="fixed inset-0 bg-[#111111] flex items-center justify-center">
-        <div className="w-full max-w-sm px-4">
+      <div className="fixed inset-0 bg-zinc-950 flex items-center justify-center font-helvetica">
+        <div className="w-full max-w-sm px-8 py-10 bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-green-100/20">
           <div className="text-center">
             <Image
               src="/logo.png"
@@ -22,18 +22,18 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="mt-8">
+          <div className="mt-8 font-helvetica">
             <LoginForm />
-            <div className="mt-4 flex justify-between text-sm">
+            <div className="mt-6 flex justify-between text-sm font-light tracking-wide">
               <Link
                 href="/register"
-                className="text-gray-400 hover:text-gray-300 transition-colors"
+                className="text-zinc-400 hover:text-green-100/90 transition-colors duration-300"
               >
                 Criar conta
               </Link>
               <Link
                 href="/forgot-password"
-                className="text-gray-400 hover:text-gray-300 transition-colors"
+                className="text-zinc-400 hover:text-green-100/90 transition-colors duration-300"
               >
                 Esqueceu sua senha?
               </Link>

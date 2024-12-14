@@ -12,6 +12,9 @@ module.exports = {
         background: 'rgb(var(--background))',
         foreground: 'rgb(var(--foreground))',
       },
+      fontFamily: {
+        helvetica: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+      },
     },
   },
   plugins: [],
