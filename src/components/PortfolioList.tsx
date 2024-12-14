@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { DeletePortfolioButton } from './DeletePortfolioButton'
 import { RefreshCw, TrendingUp, TrendingDown } from 'lucide-react'
 
@@ -38,11 +39,23 @@ const formatBRL = (value: number) => {
 };
 
 export function PortfolioList() {
+  const { data: session, status } = useSession()
   const [portfolios, setPortfolios] = useState<Portfolio[]>([])
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [usdToBRL, setUsdToBRL] = useState(5.00)
   const router = useRouter()
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      loadPortfolios()
+    }
+  }, [status])
+
+  useEffect(() => {
+    const intervalId = setInterval(loadPortfolios, 120000)
+    return () => clearInterval(intervalId)
+  }, [])
 
   async function loadPortfolios() {
     try {
@@ -72,16 +85,7 @@ export function PortfolioList() {
     }
   }
 
-  useEffect(() => {
-    loadPortfolios()
-  }, [])
-
-  useEffect(() => {
-    const intervalId = setInterval(loadPortfolios, 120000)
-    return () => clearInterval(intervalId)
-  }, [])
-
-  if (loading) {
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-[200px] flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">

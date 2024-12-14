@@ -1,9 +1,19 @@
-import { Providers } from '@/components/Providers'
-import { Navbar } from '@/components/Navbar'
+import { Inter } from 'next/font/google'
+import { ThemeProvider } from '@/components/providers/theme-provider'
+import { Toaster } from '@/components/ui/toaster'
+import { cn } from '@/lib/utils'
+import './globals.css'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import './globals.css'
-import { cn } from '@/lib/utils'
+import { Navbar } from '@/components/Navbar'
+import { SessionProvider } from '@/components/providers/session-provider'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata = {
+  title: 'Crypto Portfolio',
+  description: 'Gerencie seu portfolio de criptomoedas',
+}
 
 export default async function RootLayout({
   children,
@@ -11,24 +21,29 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const session = await getServerSession(authOptions)
-  
-  // Verifica se a rota atual está no grupo (auth)
-  const isAuthRoute = children?.toString().includes('(auth)')
 
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-white dark:bg-[#121214]">
-        <Providers>
-          {!isAuthRoute && <Navbar session={session} />}
-          <main className={cn(
-            "min-h-screen",
-            !isAuthRoute && "md:pl-64 pt-[72px] md:pt-0"
-          )}>
-            <div className="h-full">
-              {children}
+    <html lang="pt-BR" suppressHydrationWarning className="dark">
+      <body className={cn(
+        inter.className,
+        "min-h-screen bg-[#121214]"
+      )}>
+        <SessionProvider session={session}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+            storageKey="crypto-theme"
+          >
+            <div className="min-h-screen bg-[#121214]">
+              <Navbar session={session} />
+              <main className="md:pl-64 min-h-screen bg-[#121214]">
+                {children}
+              </main>
+              <Toaster />
             </div>
-          </main>
-        </Providers>
+          </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   )

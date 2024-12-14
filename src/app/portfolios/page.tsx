@@ -1,14 +1,34 @@
 import { PortfolioList } from '@/components/PortfolioList'
 import { CreatePortfolioButton } from '@/components/CreatePortfolioButton'
+import { getServerSession } from 'next-auth'
+import { redirect } from 'next/navigation'
+import { authOptions } from '@/lib/auth'
+import { Suspense } from 'react'
 
-export default function PortfoliosPage() {
+export default async function PortfoliosPage() {
+  const session = await getServerSession(authOptions)
+  
+  if (!session) {
+    redirect('/login')
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="bg-[#121214]">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-white">Seus Portfolios</h1>
         <CreatePortfolioButton />
       </div>
-      <PortfolioList />
+      <Suspense fallback={
+        <div className="animate-pulse">
+          <div className="grid gap-4">
+            <div className="h-32 bg-gray-700 rounded"></div>
+            <div className="h-32 bg-gray-700 rounded"></div>
+            <div className="h-32 bg-gray-700 rounded"></div>
+          </div>
+        </div>
+      }>
+        <PortfolioList />
+      </Suspense>
     </div>
   )
 } 

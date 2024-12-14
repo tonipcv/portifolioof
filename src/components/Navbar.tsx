@@ -20,7 +20,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ session }: NavbarProps) {
-  const { theme } = useTheme()
+  const { theme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const isPremium = session?.user?.subscriptionStatus === 'premium'
   const pathname = usePathname()
@@ -29,7 +29,15 @@ export function Navbar({ session }: NavbarProps) {
     setMounted(true)
   }, [])
 
-  if (!mounted) return null
+  if (!mounted) {
+    return (
+      <nav className="hidden md:flex flex-col h-full w-64 fixed left-0 top-0 bg-[#121214] text-white border-r border-white/10">
+        <div className="animate-pulse">
+          <div className="h-24 bg-gray-800"></div>
+        </div>
+      </nav>
+    )
+  }
 
   if (pathname?.includes('login') || pathname?.includes('register')) {
     return null
@@ -77,7 +85,12 @@ export function Navbar({ session }: NavbarProps) {
       </div>
 
       {/* Desktop Sidebar */}
-      <nav className="hidden md:flex flex-col h-full w-64 fixed left-0 top-0 bg-white dark:bg-[#121214] text-zinc-900 dark:text-white border-r border-zinc-200 dark:border-white/10">
+      <nav className={cn(
+        "hidden md:flex flex-col h-full w-64 fixed left-0 top-0 border-r transition-colors",
+        mounted && theme === 'dark' 
+          ? "bg-[#121214] text-white border-white/10" 
+          : "bg-white text-zinc-900 border-zinc-200"
+      )}>
         <div className="flex-1">
           <div className="h-24 flex items-center px-6 mt-4">
             <Link href="/">
@@ -107,17 +120,17 @@ export function Navbar({ session }: NavbarProps) {
             href="/profile"
             className={cn(
               "flex items-center p-3 text-sm font-medium cursor-pointer hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 transition",
-              "text-zinc-500 dark:text-zinc-400"
+              "text-zinc-500 dark:text-white"
             )}
           >
             <div className="flex items-center space-x-3">
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-8 w-8 ring-2 ring-white/20">
                 <AvatarImage src={session?.user?.image || ''} />
-                <AvatarFallback>
+                <AvatarFallback className="bg-zinc-800 text-white">
                   {session?.user?.name?.charAt(0).toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+              <span className="text-sm font-medium text-white">
                 {session?.user?.name || 'Usuário'}
               </span>
             </div>
@@ -127,7 +140,7 @@ export function Navbar({ session }: NavbarProps) {
             {session && (
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                className="flex items-center p-2 text-zinc-500 dark:text-white hover:text-zinc-900 dark:hover:text-white/80 transition-colors"
               >
                 <LogOut className="h-5 w-5" />
               </button>
