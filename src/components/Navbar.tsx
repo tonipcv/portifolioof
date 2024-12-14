@@ -4,7 +4,7 @@ import { Session } from 'next-auth'
 import { ThemeToggle } from './ThemeToggle'
 import Link from 'next/link'
 import Image from 'next/image'
-import { LayoutDashboard, BookOpen, LineChart, Menu, LogOut } from 'lucide-react'
+import { LayoutDashboard, BookOpen, LineChart, Menu, LogOut, User } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react'
 import { signOut } from 'next-auth/react'
 import { MobileMenu } from './MobileMenu'
 import { usePathname } from 'next/navigation'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface NavbarProps {
   session: Session | null
@@ -101,16 +102,37 @@ export function Navbar({ session }: NavbarProps) {
             ))}
           </div>
         </div>
-        <div className="p-3 flex items-center justify-between border-t border-zinc-200 dark:border-white/10">
-          <ThemeToggle />
-          {session && (
-            <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="flex items-center p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          )}
+        <div className="border-t border-zinc-200 dark:border-white/10">
+          <Link
+            href="/profile"
+            className={cn(
+              "flex items-center p-3 text-sm font-medium cursor-pointer hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 transition",
+              "text-zinc-500 dark:text-zinc-400"
+            )}
+          >
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={session?.user?.image || ''} />
+                <AvatarFallback>
+                  {session?.user?.name?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                {session?.user?.name || 'Usuário'}
+              </span>
+            </div>
+          </Link>
+          <div className="p-3 flex items-center justify-between border-t border-zinc-200 dark:border-white/10">
+            <ThemeToggle />
+            {session && (
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="flex items-center p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            )}
+          </div>
         </div>
       </nav>
     </>

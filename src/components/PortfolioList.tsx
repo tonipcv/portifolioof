@@ -98,7 +98,7 @@ export function PortfolioList() {
         <button
           onClick={loadPortfolios}
           disabled={isRefreshing}
-          className="inline-flex items-center gap-x-1.5 rounded-md bg-transparent border-2 border-white/20 px-2.5 py-1.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500 disabled:opacity-50"
+          className="inline-flex items-center gap-x-1.5 rounded-md bg-transparent border-2 border-white/20 px-2.5 py-1.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-100 disabled:opacity-50"
           title="Atualizar portfolios"
         >
           <RefreshCw 
@@ -121,12 +121,12 @@ export function PortfolioList() {
           {portfolios.map((portfolio) => (
             <div
               key={portfolio.id}
-              className="group relative flex flex-col overflow-hidden rounded-lg bg-[#161616] shadow transition-all hover:shadow-lg hover:ring-1 hover:ring-green-500"
+              className="group relative flex flex-col overflow-hidden rounded-lg bg-[#161616] shadow transition-all hover:shadow-lg hover:ring-1 hover:ring-green-100"
               onClick={() => router.push(`/portfolios/${portfolio.id}`)}
             >
               <div className="flex-1 p-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-200 group-hover:text-green-400">
+                  <h2 className="text-lg font-semibold text-gray-200 group-hover:text-green-100">
                     {portfolio.name}
                   </h2>
                   <DeletePortfolioButton 
@@ -137,19 +137,19 @@ export function PortfolioList() {
 
                 <div className={`mt-4 p-4 rounded-lg ${
                   portfolio.totalProfit >= 0 
-                    ? 'bg-green-900/20 border border-green-800' 
+                    ? 'bg-green-900/20 border border-green-100/30' 
                     : 'bg-red-900/20 border border-red-800'
                 }`}>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-400">Lucro/Prejuízo</span>
                     <div className="flex items-center">
                       {portfolio.totalProfit >= 0 ? (
-                        <TrendingUp className="mr-2 h-5 w-5 text-green-400" />
+                        <TrendingUp className="mr-2 h-5 w-5 text-green-100" />
                       ) : (
                         <TrendingDown className="mr-2 h-5 w-5 text-red-400" />
                       )}
                       <span className={`text-lg font-bold ${
-                        portfolio.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'
+                        portfolio.totalProfit >= 0 ? 'text-green-100' : 'text-red-400'
                       }`}>
                         {formatBRL(Math.abs(portfolio.totalProfit) * usdToBRL)}
                       </span>
@@ -159,7 +159,7 @@ export function PortfolioList() {
                   <div className="mt-2 flex justify-between items-center">
                     <span className="text-sm text-gray-400">Retorno</span>
                     <span className={`text-sm font-medium ${
-                      portfolio.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'
+                      portfolio.totalProfit >= 0 ? 'text-green-100' : 'text-red-400'
                     }`}>
                       {((portfolio.totalProfit / portfolio.totalInvested) * 100).toFixed(2)}%
                     </span>
@@ -169,7 +169,7 @@ export function PortfolioList() {
                 <div className="mt-4 grid grid-cols-2 gap-4">
                   <div className="p-3 rounded-lg bg-[#1a1a1a] border border-gray-800">
                     <p className="text-sm text-gray-400">Valor Total</p>
-                    <p className="text-sm font-medium text-green-400">
+                    <p className="text-sm font-medium text-green-100">
                       {formatBRL(portfolio.totalValue * usdToBRL)}
                     </p>
                   </div>

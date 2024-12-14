@@ -36,7 +36,7 @@ export default function ProfilePage() {
                 className={`
                   flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm
                   ${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-500'
+                    ? 'border-green-100 text-green-100'
                     : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
                   }
                 `}
@@ -82,7 +82,7 @@ export default function ProfilePage() {
                     {!isPremium && (
                       <Link
                         href="/pricing"
-                        className="text-blue-500 hover:text-blue-400 text-sm"
+                        className="text-green-100 hover:text-green-200 text-sm"
                       >
                         Fazer upgrade →
                       </Link>
@@ -91,7 +91,7 @@ export default function ProfilePage() {
                   {isPremium && (
                     <button
                       onClick={() => window.location.href = '/api/create-portal-session'}
-                      className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                      className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-black bg-green-100 hover:bg-green-200"
                     >
                       Gerenciar Assinatura
                     </button>
