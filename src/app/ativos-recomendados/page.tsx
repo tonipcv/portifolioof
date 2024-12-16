@@ -33,18 +33,17 @@ export default function RecommendedAssetsPage() {
       target: '$120',
       analysis: 'Rompimento de resistência importante com volume.',
     },
-    // Adicione mais ativos conforme necessário
   ];
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Ativos Recomendados</h1>
+          <h1 className="text-3xl font-bold text-white">Ativos Recomendados</h1>
           {!isPremium && (
             <Link
               href="/pricing"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
             >
               Fazer Upgrade
             </Link>
@@ -55,7 +54,7 @@ export default function RecommendedAssetsPage() {
           {recommendedAssets.map((asset, index) => (
             <div
               key={index}
-              className="relative bg-[#222222] rounded-lg p-6 overflow-hidden"
+              className="relative bg-[#222222] rounded-lg p-6 overflow-hidden border border-white/10"
             >
               {!isPremium && (
                 <div className="absolute inset-0 bg-[#222222]/80 backdrop-blur-sm flex flex-col items-center justify-center z-10">
@@ -65,7 +64,7 @@ export default function RecommendedAssetsPage() {
                   </p>
                   <Link
                     href="/pricing"
-                    className="mt-4 text-blue-400 hover:text-blue-300 text-sm"
+                    className="mt-4 text-green-400 hover:text-green-300 text-sm"
                   >
                     Fazer upgrade para ver →
                   </Link>
@@ -76,7 +75,7 @@ export default function RecommendedAssetsPage() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-xl font-semibold text-white">{asset.name}</h3>
-                    <p className="text-2xl font-bold mt-1">{asset.price}</p>
+                    <p className="text-2xl font-bold mt-1 text-white">{asset.price}</p>
                   </div>
                   <div className="text-green-400 flex items-center">
                     <TrendingUp className="w-4 h-4 mr-1" />

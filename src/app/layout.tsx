@@ -13,14 +13,9 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'CRYPH - Gerencie seu Portfolio de Criptomoedas',
-  description: 'CRYPH é a plataforma definitiva para gerenciar seus investimentos em criptomoedas. Acompanhe seu portfolio, analise tendências e tome decisões informadas.',
+  description: 'CRYPH é a plataforma definitiva para gerenciar seus investimentos em criptomoedas.',
   keywords: 'cryph, cripto, criptomoedas, portfolio, investimentos, bitcoin, ethereum, trading',
   authors: [{ name: 'CRYPH' }],
-  openGraph: {
-    title: 'CRYPH - Gerencie seu Portfolio de Criptomoedas',
-    description: 'CRYPH é a plataforma definitiva para gerenciar seus investimentos em criptomoedas.',
-    type: 'website',
-  }
 }
 
 export default async function RootLayout({
@@ -45,7 +40,7 @@ export default async function RootLayout({
           >
             <div className="min-h-screen bg-[#121214] flex flex-col">
               <Navbar session={session} />
-              <main className="md:pl-64 flex-1 bg-[#121214]">
+              <main className="flex-1 md:pl-64 pt-[72px] md:pt-0">
                 {children}
               </main>
               <div className="md:pl-64">
