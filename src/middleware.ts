@@ -11,6 +11,7 @@ export default async function middleware(req: NextRequestWithAuth) {
   const protectedRoutes = [
     '/portfolios',
     '/profile',
+    '/gpt',
   ];
 
   // Rotas que requerem assinatura premium

@@ -2,16 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 100%;
-  }
-
-  body {
-    background-color: #121214;
-    color: white;
-  }
+:root {
+  --background: 0 0% 7%;
+  --foreground: 0 0% 100%;
 }
 
 * {
@@ -24,4 +17,9 @@ html,
 body {
   background-color: #121214;
   color: white;
+  min-height: 100vh;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
 }

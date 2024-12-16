@@ -4,7 +4,7 @@ import { Session } from 'next-auth'
 import { ThemeToggle } from './ThemeToggle'
 import Link from 'next/link'
 import Image from 'next/image'
-import { LayoutDashboard, BookOpen, LineChart, Menu, LogOut, User } from 'lucide-react'
+import { LayoutDashboard, BookOpen, LineChart, Menu, LogOut, User, MessageSquare } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -58,6 +58,11 @@ export function Navbar({ session }: NavbarProps) {
       label: 'Academy',
       icon: BookOpen,
       href: isPremium ? '/cursos' : '/pricing',
+    },
+    {
+      label: 'AI Assistant',
+      icon: MessageSquare,
+      href: '/gpt',
     }
   ]
 
