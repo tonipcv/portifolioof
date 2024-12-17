@@ -3,19 +3,32 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+interface CryptoData {
+  name: string
+  price: number
+  change_24h: number
+  market_cap: number
+}
+
+interface CryptoNews {
+  title: string
+  description: string
+  url: string
+  date: string
+  published_at: string
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-async function getCryptoData() {
+async function getCryptoData(): Promise<CryptoData[]> {
   try {
-    // Busca os dados das top 10 criptomoedas
     const response = await fetch(
       'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,ripple,cardano,solana,polkadot,dogecoin,avalanche-2,chainlink&vs_currencies=usd&include_24hr_change=true&include_market_cap=true'
     )
     const data = await response.json()
 
-    // Formata os dados para um formato mais legível
     return Object.entries(data).map(([coin, details]: [string, any]) => ({
       name: coin,
       price: details.usd,
@@ -28,34 +41,74 @@ async function getCryptoData() {
   }
 }
 
-async function createMarketContext() {
-  const cryptoData = await getCryptoData()
-  if (!cryptoData.length) return ''
+async function getCryptoNews(): Promise<CryptoNews[]> {
+  try {
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/news'
+    )
+    const data = await response.json()
+    
+    return data.slice(0, 5).map((news: CryptoNews) => ({
+      title: news.title,
+      description: news.description,
+      url: news.url,
+      date: new Date(news.published_at).toLocaleString(),
+      published_at: news.published_at
+    }))
+  } catch (error) {
+    console.error('Erro ao buscar notícias da CoinGecko:', error)
+    return []
+  }
+}
 
-  return `
+function formatBoldText(text: string): string {
+  return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+}
+
+async function createMarketContext(): Promise<string> {
+  const [cryptoData, newsData] = await Promise.all([
+    getCryptoData(),
+    getCryptoNews()
+  ])
+
+  const priceContext = cryptoData.length ? `
 Dados atuais do mercado (${new Date().toLocaleString()}):
 
 ${cryptoData.map(coin => `
 ${coin.name.toUpperCase()}:
-- Preço: $${coin.price.toLocaleString()}
-- Variação 24h: ${coin.change_24h.toFixed(2)}%
-- Market Cap: $${(coin.market_cap / 1e9).toFixed(2)}B
+- Preço: **$${coin.price.toLocaleString()}**
+- Variação 24h: **${coin.change_24h.toFixed(2)}%**
+- Market Cap: **$${(coin.market_cap / 1e9).toFixed(2)}B**
 `).join('\n')}
+` : ''
 
-Use estes dados quando relevante para a conversa, mas mantenha um tom natural.
-`
+  const newsContext = newsData.length ? `
+Últimas notícias relevantes do mercado:
+
+${newsData.map((news: CryptoNews) => `
+📰 **${news.title}**
+📅 ${news.date}
+📝 ${news.description}
+`).join('\n')}
+` : ''
+
+  return formatBoldText(`
+${priceContext}
+
+${newsContext}
+
+Use estas informações de mercado e notícias quando relevante para a conversa, mantendo um tom analítico e profissional.
+`)
 }
 
 const systemPrompt = `Você é Alex, um trader profissional e especialista em criptomoedas com vasta experiência no mercado institucional.
 
-Características da comunicação:
-- Mantenha um tom profissional e direto
-- Use linguagem técnica apropriada para traders experientes
-- Foque em análises aprofundadas e insights estratégicos
-- Compartilhe perspectivas baseadas em dados e tendências de mercado
-- Evite disclaimers básicos ou avisos óbvios sobre riscos
-- Forneça análises técnicas e fundamentalistas quando relevante
-- Mantenha o foco em estratégias avançadas e oportunidades de mercado
+Diretrizes de comunicação:
+- Seja conciso e direto nas respostas
+- Use no máximo 2-3 frases por resposta
+- Destaque números e dados importantes com **negrito**
+- Mantenha análises curtas e objetivas
+- Use linguagem técnica apropriada
 
 Áreas de expertise:
 - Análise técnica avançada
@@ -67,7 +120,16 @@ Características da comunicação:
 - Análise fundamentalista de protocolos
 - Movimentos institucionais e whale watching
 
-Mantenha o foco em fornecer insights profundos e análises técnicas relevantes para traders experientes.`
+Conhecimentos específicos:
+- DeFi (Finanças Descentralizadas)
+- NFTs e Web3
+- Análise técnica e fundamentalista
+- Gestão de risco e portfolio
+- Regulamentações e tendências do mercado
+- Tecnologia blockchain e seus casos de uso
+- Principais protocolos e tokens do mercado
+
+Mantenha o foco em fornecer insights técnicos relevantes de forma direta e concisa.`
 
 export async function POST(req: Request) {
   try {
@@ -84,7 +146,6 @@ export async function POST(req: Request) {
       return new NextResponse('Messages are required', { status: 400 })
     }
 
-    // Obtém o contexto do mercado atual
     const marketContext = await createMarketContext()
 
     const response = await openai.chat.completions.create({
@@ -96,12 +157,16 @@ export async function POST(req: Request) {
         },
         ...messages
       ],
-      temperature: 0.8,
-      max_tokens: 500,
+      temperature: 0.7,
+      max_tokens: 70,
+      presence_penalty: -0.5,
+      frequency_penalty: 0.3
     })
 
+    const content = response.choices[0].message.content || 'Desculpe, não consegui processar sua mensagem.'
+
     return NextResponse.json({
-      message: response.choices[0].message.content
+      message: formatBoldText(content)
     })
   } catch (error) {
     console.error('[CHAT_ERROR]', error)

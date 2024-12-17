@@ -43,12 +43,10 @@ export function ChatMessage({ content, role, isTyping = false }: MessageProps) {
             : 'bg-[#1a1a1a] border border-white/10'
         }`}
       >
-        <div className="text-sm text-gray-200 whitespace-pre-line">
-          {displayContent}
-          {isTyping && currentIndex < content.length && (
-            <span className="animate-pulse">▋</span>
-          )}
-        </div>
+        <div 
+          className="text-sm text-gray-200 whitespace-pre-line"
+          dangerouslySetInnerHTML={{ __html: displayContent }}
+        />
       </div>
       {role === 'user' && (
         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center ml-2">
