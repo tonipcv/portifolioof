@@ -88,10 +88,9 @@ export function CreatePortfolioButton() {
     <div>
       <button
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-transparent border border-white/20 rounded-md hover:bg-white/5 transition-colors"
+        className="inline-flex items-center justify-center w-8 h-8 bg-transparent border border-white/20 rounded-md hover:bg-white/5 transition-colors"
       >
-        <Plus className="w-3.5 h-3.5" />
-        <span>Criar</span>
+        <Plus className="w-4 h-4" />
       </button>
 
       {isOpen && (

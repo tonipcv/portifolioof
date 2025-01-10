@@ -12,6 +12,11 @@ export default async function middleware(request: NextRequestWithAuth) {
   const token = await getToken({ req: request })
   const { pathname } = request.nextUrl
 
+  // Ignorar a rota /onboard
+  if (pathname === '/onboard') {
+    return NextResponse.redirect(new URL('/portfolios', request.url))
+  }
+
   // Verifica se a rota requer autenticação
   if (authRoutes.some(route => pathname.startsWith(route))) {
     if (!token) {

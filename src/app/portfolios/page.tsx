@@ -15,7 +15,7 @@ export default async function PortfoliosPage() {
   return (
     <div className="bg-[#121214]">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-white">Seus Portfolios</h1>
+        <div></div>
         <CreatePortfolioButton />
       </div>
       <Suspense fallback={

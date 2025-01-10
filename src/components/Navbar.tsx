@@ -38,7 +38,7 @@ export function Navbar({ session }: NavbarProps) {
     )
   }
 
-  if (pathname?.includes('login') || pathname?.includes('register') || pathname?.includes('onboard')) {
+  if (pathname?.includes('login') || pathname?.includes('register')) {
     return null
   }
 

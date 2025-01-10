@@ -90,14 +90,13 @@ export function PortfolioList() {
         <button
           onClick={loadPortfolios}
           disabled={isRefreshing}
-          className="inline-flex items-center gap-x-1.5 rounded-md bg-transparent border-2 border-white/20 px-2.5 py-1.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-100 disabled:opacity-50"
+          className="inline-flex items-center justify-center w-8 h-8 bg-transparent border border-white/20 rounded-md hover:bg-white/5 transition-colors disabled:opacity-50"
           title="Atualizar portfolios"
         >
           <RefreshCw 
             className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
             aria-hidden="true"
           />
-          {isRefreshing ? 'Atualizando...' : 'Atualizar'}
         </button>
       </div>
 

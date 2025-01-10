@@ -33,17 +33,41 @@ export default function RecommendedAssetsPage() {
       target: '$120',
       analysis: 'Rompimento de resistência importante com volume.',
     },
+    {
+      name: 'Cardano (ADA)',
+      price: '$0.58',
+      change: '+4.20%',
+      prediction: 'Acumulação',
+      target: '$0.75',
+      analysis: 'Formação de suporte forte em $0.55, volume crescente.',
+    },
+    {
+      name: 'Polkadot (DOT)',
+      price: '$7.89',
+      change: '+6.15%',
+      prediction: 'Compra',
+      target: '$9.50',
+      analysis: 'Padrão de reversão formado, momentum positivo.',
+    },
+    {
+      name: 'Chainlink (LINK)',
+      price: '$15.34',
+      change: '+7.80%',
+      prediction: 'Forte tendência de alta',
+      target: '$18.00',
+      analysis: 'Quebra de resistência com alto volume, tendência de alta confirmada.',
+    }
   ];
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 font-['Helvetica']">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Ativos Recomendados</h1>
+          <h1 className="text-3xl font-light text-white">Ativos Recomendados</h1>
           {!isPremium && (
             <Link
               href="/pricing"
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+              className="border border-white bg-transparent hover:bg-white/10 text-white px-4 py-2 rounded-lg transition-colors"
             >
               Fazer Upgrade
             </Link>
@@ -64,7 +88,7 @@ export default function RecommendedAssetsPage() {
                   </p>
                   <Link
                     href="/pricing"
-                    className="mt-4 text-green-400 hover:text-green-300 text-sm"
+                    className="mt-4 text-blue-400 hover:text-blue-300 text-sm"
                   >
                     Fazer upgrade para ver →
                   </Link>
@@ -77,7 +101,7 @@ export default function RecommendedAssetsPage() {
                     <h3 className="text-xl font-semibold text-white">{asset.name}</h3>
                     <p className="text-2xl font-bold mt-1 text-white">{asset.price}</p>
                   </div>
-                  <div className="text-green-400 flex items-center">
+                  <div className="text-blue-400 flex items-center">
                     <TrendingUp className="w-4 h-4 mr-1" />
                     {asset.change}
                   </div>
@@ -102,10 +126,10 @@ export default function RecommendedAssetsPage() {
                   <div className="pt-4 border-t border-gray-700">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-400">Confiança</span>
-                      <span className="text-green-400">Alta</span>
+                      <span className="text-blue-400">Alta</span>
                     </div>
                     <div className="mt-2 h-2 bg-gray-700 rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500 rounded-full" style={{ width: '85%' }} />
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: '85%' }} />
                     </div>
                   </div>
                 </div>
