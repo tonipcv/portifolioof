@@ -2,6 +2,9 @@ import OpenAI from 'openai'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 interface CryptoData {
   name: string
@@ -16,6 +19,21 @@ interface CryptoNews {
   url: string
   date: string
   published_at: string
+}
+
+interface UserPortfolio {
+  name: string
+  totalValue: number
+  totalProfit: number
+  cryptos: {
+    name: string
+    symbol: string
+    amount: number
+    investedValue: number
+    currentPrice: number
+    profit: number
+    averagePrice: number
+  }[]
 }
 
 const openai = new OpenAI({
@@ -65,10 +83,40 @@ function formatBoldText(text: string): string {
   return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
 }
 
-async function createMarketContext(): Promise<string> {
-  const [cryptoData, newsData] = await Promise.all([
+async function getUserPortfolios(userId: string): Promise<UserPortfolio[]> {
+  try {
+    const portfolios = await prisma.portfolio.findMany({
+      where: { userId },
+      include: {
+        cryptos: true
+      }
+    })
+
+    return portfolios.map(portfolio => ({
+      name: portfolio.name,
+      totalValue: portfolio.totalValue,
+      totalProfit: portfolio.totalProfit,
+      cryptos: portfolio.cryptos.map(crypto => ({
+        name: crypto.name || '',
+        symbol: crypto.symbol || '',
+        amount: crypto.amount,
+        investedValue: crypto.investedValue,
+        currentPrice: crypto.currentPrice,
+        profit: crypto.profit,
+        averagePrice: crypto.averagePrice
+      }))
+    }))
+  } catch (error) {
+    console.error('Erro ao buscar portfólios do usuário:', error)
+    return []
+  }
+}
+
+async function createMarketContext(userId: string): Promise<string> {
+  const [cryptoData, newsData, userPortfolios] = await Promise.all([
     getCryptoData(),
-    getCryptoNews()
+    getCryptoNews(),
+    getUserPortfolios(userId)
   ])
 
   const priceContext = cryptoData.length ? `
@@ -92,12 +140,33 @@ ${newsData.map((news: CryptoNews) => `
 `).join('\n')}
 ` : ''
 
+  const portfolioContext = userPortfolios.length ? `
+Portfólios do usuário:
+
+${userPortfolios.map(portfolio => `
+📊 ${portfolio.name}
+- Valor Total: **$${portfolio.totalValue.toLocaleString()}**
+- Lucro/Prejuízo: **$${portfolio.totalProfit.toLocaleString()}**
+
+Ativos:
+${portfolio.cryptos.map(crypto => `
+${crypto.name} (${crypto.symbol.toUpperCase()})
+- Quantidade: **${crypto.amount.toFixed(4)}**
+- Preço Médio: **$${crypto.averagePrice.toLocaleString()}**
+- Preço Atual: **$${crypto.currentPrice.toLocaleString()}**
+- Lucro/Prejuízo: **$${crypto.profit.toLocaleString()}**
+`).join('\n')}
+`).join('\n')}
+` : 'O usuário ainda não possui portfólios.'
+
   return formatBoldText(`
+${portfolioContext}
+
 ${priceContext}
 
 ${newsContext}
 
-Use estas informações de mercado e notícias quando relevante para a conversa, mantendo um tom analítico e profissional.
+Use estas informações de mercado, portfólios do usuário e notícias quando relevante para a conversa, mantendo um tom analítico e profissional.
 `)
 }
 
@@ -145,7 +214,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Messages are required' }, { status: 400 })
     }
 
-    const marketContext = await createMarketContext()
+    const marketContext = await createMarketContext(session.user.id)
 
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
@@ -174,5 +243,7 @@ export async function POST(req: Request) {
       { error: 'Internal server error' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 } 
