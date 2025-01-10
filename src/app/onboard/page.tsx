@@ -165,63 +165,65 @@ export default function OnboardPage() {
   const currentQuestion = questions[currentStep - 1]
 
   return (
-    <div className="flex flex-col items-center w-full max-w-md mx-auto px-4">
-      {/* Logo */}
-      <div className="mb-16">
-        <Image
-          src="/logo.png"
-          alt="CRYPH"
-          width={140}
-          height={45}
-          className="object-contain brightness-0 invert"
-          priority
-        />
-      </div>
-
-      {/* Content */}
-      <div className="w-full">
-        {/* Progress bar */}
-        <div className="h-0.5 bg-white/10 rounded-full mb-16">
-          <div 
-            className="h-0.5 bg-red-500 rounded-full transition-all duration-300"
-            style={{ width: `${(currentStep / questions.length) * 100}%` }}
+    <div className="fixed inset-0 flex flex-col items-center justify-center px-4 bg-[#121214]">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="mb-16">
+          <Image
+            src="/logo.png"
+            alt="CRYPH"
+            width={140}
+            height={45}
+            className="object-contain brightness-0 invert"
+            priority
           />
         </div>
 
-        {/* Question */}
-        <div className="space-y-12">
-          <div className="text-center space-y-6">
-            <currentQuestion.icon className="w-12 h-12 mx-auto text-red-500/40" />
-            <h2 className="text-2xl font-light tracking-wide">
-              {currentQuestion.title}
-            </h2>
+        {/* Content */}
+        <div className="w-full">
+          {/* Progress bar */}
+          <div className="h-0.5 bg-white/10 rounded-full mb-16">
+            <div 
+              className="h-0.5 bg-red-500 rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / questions.length) * 100}%` }}
+            />
           </div>
 
-          {/* Options */}
-          <div className="space-y-3">
-            {currentQuestion.options.map((option) => (
-              <button
-                key={option.id}
-                onClick={() => {
-                  setAnswers({ ...answers, [currentQuestion.id]: option.id })
-                  handleNext()
-                }}
-                className="w-full p-4 rounded-lg border border-white/10 hover:border-red-500/20 hover:bg-red-500/5 
-                  transition-all duration-200 text-center font-light tracking-wide"
-              >
-                {option.label}
-              </button>
-            ))}
+          {/* Question */}
+          <div className="space-y-12">
+            <div className="text-center space-y-6">
+              <currentQuestion.icon className="w-12 h-12 mx-auto text-red-500/40" />
+              <h2 className="text-2xl font-light tracking-wide">
+                {currentQuestion.title}
+              </h2>
+            </div>
+
+            {/* Options */}
+            <div className="space-y-3">
+              {currentQuestion.options.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => {
+                    setAnswers({ ...answers, [currentQuestion.id]: option.id })
+                    handleNext()
+                  }}
+                  className="w-full p-4 rounded-lg border border-white/10 hover:border-red-500/20 hover:bg-red-500/5 
+                    transition-all duration-200 text-center font-light tracking-wide"
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {/* Skip option */}
+          <button
+            onClick={handleNext}
+            className="mt-12 text-sm text-white/40 hover:text-red-500/60 transition-colors mx-auto block font-light"
+          >
+            Pular esta etapa
+          </button>
         </div>
-
-        {/* Skip option */}
-        <button
-          onClick={handleNext}
-          className="mt-12 text-sm text-white/40 hover:text-red-500/60 transition-colors mx-auto block font-light"
-        >
-          Pular esta etapa
-        </button>
       </div>
     </div>
   )

@@ -8,11 +8,13 @@ interface PortfolioWithCryptos extends Portfolio {
   cryptos: Crypto[]
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions)
+    console.log('API - Session:', session?.user?.id)
     
-    if (!session?.user) {
+    if (!session?.user?.id) {
+      console.log('API - No user ID in session')
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
@@ -21,17 +23,29 @@ export async function GET() {
         userId: session.user.id
       },
       include: {
-        cryptos: true
+        cryptos: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            subscriptionStatus: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
-    }) as PortfolioWithCryptos[]
+    })
 
-    // Calcular os valores totais para cada portfólio
-    const enrichedPortfolios = portfolios.map((portfolio: PortfolioWithCryptos) => {
-      const totalInvested = portfolio.cryptos.reduce((acc: number, crypto: Crypto) => {
+    console.log('API - Found portfolios:', portfolios.length)
+
+    const enrichedPortfolios = portfolios.map((portfolio) => {
+      const totalInvested = portfolio.cryptos.reduce((acc, crypto) => {
         return acc + crypto.investedValue
       }, 0)
 
-      const totalValue = portfolio.cryptos.reduce((acc: number, crypto: Crypto) => {
+      const totalValue = portfolio.cryptos.reduce((acc, crypto) => {
         const currentValue = crypto.currentPrice * crypto.amount
         return acc + currentValue
       }, 0)
@@ -46,9 +60,10 @@ export async function GET() {
       }
     })
 
+    console.log('API - Returning enriched portfolios')
     return NextResponse.json(enrichedPortfolios)
   } catch (error) {
-    console.error('Error fetching portfolios:', error)
+    console.error('API - Error:', error)
     return new NextResponse('Internal Server Error', { status: 500 })
   }
 }

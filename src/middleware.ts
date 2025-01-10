@@ -1,87 +1,51 @@
-import { NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-import { NextRequestWithAuth } from 'next-auth/middleware';
+import { NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
+import { NextRequestWithAuth } from 'next-auth/middleware'
 
-export default async function middleware(req: NextRequestWithAuth) {
-  const token = await getToken({ req });
-  const isAuth = !!token;
-  const isAuthPage = req.nextUrl.pathname.startsWith('/login');
+// Rotas que requerem autenticação
+const authRoutes = ['/portfolios', '/ativos-recomendados', '/chat', '/gpt']
 
-  // Rotas que requerem autenticação
-  const protectedRoutes = [
-    '/portfolios',
-    '/profile',
-  ];
+// Rotas que requerem premium
+const premiumRoutes = ['/chat']
 
-  // Rotas que requerem assinatura premium
-  const premiumRoutes = [
-    '/cursos',           // Cursos
-    '/analytics',         // Analytics avançado
-    '/api/advanced',      // APIs avançadas
-    '/portfolio-pro',     // Recursos avançados de portfólio
-    '/signals',          // Sinais de trading
-    '/ativos-recomendados/detalhes', // Detalhes dos ativos recomendados
-    '/gpt',              // AI Assistant (agora premium)
-  ];
+export default async function middleware(request: NextRequestWithAuth) {
+  const token = await getToken({ req: request })
+  const { pathname } = request.nextUrl
 
-  const isProtectedRoute = protectedRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
-  );
-
-  const isPremiumRoute = premiumRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
-  );
-
-  // Redirecionar para login se tentar acessar rota protegida sem estar autenticado
-  if (isProtectedRoute && !isAuth) {
-    const callbackUrl = encodeURIComponent(req.nextUrl.pathname);
-    return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, req.url));
-  }
-
-  // Verificar assinatura premium
-  if (isPremiumRoute) {
-    if (!isAuth) {
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
-
-    try {
-      const userResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/user/subscription`, {
-        headers: {
-          Cookie: req.headers.get('cookie') || '',
-        },
-      });
-
-      const userData = await userResponse.json();
-
-      if (userData.subscriptionStatus !== 'premium') {
-        return NextResponse.redirect(new URL('/blocked', req.url));
-      }
-    } catch (error) {
-      console.error('Erro ao verificar assinatura:', error);
-      return NextResponse.redirect(new URL('/blocked', req.url));
+  // Verifica se a rota requer autenticação
+  if (authRoutes.some(route => pathname.startsWith(route))) {
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
-  // Redirecionar para home se tentar acessar página de login já estando autenticado
-  if (isAuthPage && isAuth) {
-    return NextResponse.redirect(new URL('/', req.url));
+  // Verifica se a rota requer premium
+  if (premiumRoutes.some(route => pathname.startsWith(route))) {
+    if (!token?.isPremium) {
+      return NextResponse.redirect(new URL('/pricing', request.url))
+    }
   }
 
-  return NextResponse.next();
+  // Verifica acesso ao GPT (liberado para não-free)
+  if (pathname.startsWith('/gpt')) {
+    if (token?.plan === 'free') {
+      return NextResponse.redirect(new URL('/pricing', request.url))
+    }
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    '/portfolios/:path*',
-    '/profile/:path*',
-    '/cursos/:path*',
-    '/analytics/:path*',
-    '/api/advanced/:path*',
-    '/portfolio-pro/:path*',
-    '/signals/:path*',
-    '/ativos-recomendados/detalhes/:path*',
-    '/gpt/:path*',
-    '/(auth)/login',
-    '/register'
-  ]
-}; 
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|logo.png|globe.svg).*)',
+  ],
+} 

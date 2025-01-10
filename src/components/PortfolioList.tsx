@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { DeletePortfolioButton } from './DeletePortfolioButton'
@@ -46,46 +46,48 @@ export function PortfolioList() {
   const [usdToBRL, setUsdToBRL] = useState(5.00)
   const router = useRouter()
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      loadPortfolios()
-    }
-  }, [status])
-
-  useEffect(() => {
-    const intervalId = setInterval(loadPortfolios, 120000)
-    return () => clearInterval(intervalId)
-  }, [])
-
-  async function loadPortfolios() {
+  const loadPortfolios = useCallback(async () => {
+    if (!session?.user?.id) return;
+    
     try {
       setIsRefreshing(true)
-      const [portfoliosResponse, usdRate] = await Promise.all([
-        fetch('/api/portfolio', {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache'
-          }
-        }),
-        getUSDToBRL()
-      ]);
+      
+      const portfoliosResponse = await fetch('/api/portfolio', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store',
+      })
       
       if (!portfoliosResponse.ok) {
-        throw new Error('Failed to fetch portfolios')
+        throw new Error(`Failed to fetch portfolios: ${portfoliosResponse.statusText}`)
       }
       
       const data = await portfoliosResponse.json()
       setPortfolios(data)
+      
+      const usdRate = await getUSDToBRL()
       setUsdToBRL(usdRate)
     } catch (error) {
       console.error('Error loading portfolios:', error)
+      setPortfolios([])
     } finally {
       setIsRefreshing(false)
       setLoading(false)
     }
-  }
+  }, [session?.user?.id])
 
-  if (status === 'loading' || loading) {
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.id) {
+      console.log('Session authenticated, loading portfolios')
+      loadPortfolios()
+    } else {
+      setLoading(false) // Definir loading como false se não houver sessão
+    }
+  }, [status, session, loadPortfolios])
+
+  if (loading) {
     return (
       <div className="min-h-[200px] flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">

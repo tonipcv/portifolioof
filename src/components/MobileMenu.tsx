@@ -8,11 +8,17 @@ import { Session } from 'next-auth'
 import { Fragment } from 'react'
 
 interface MobileMenuProps {
-  session: Session
+  session: Session & {
+    user?: {
+      plan?: string
+    }
+  }
   isPremium?: boolean
 }
 
 export function MobileMenu({ session, isPremium }: MobileMenuProps) {
+  const isNotFree = session?.user?.plan !== 'free'
+
   const menuItems = [
     {
       name: 'Portfólio',
@@ -28,13 +34,19 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
     },
     {
       name: 'Academy',
-      href: isPremium ? "/cursos" : "https://app.cryph.ai/pricing",
+      href: "/cursos",
       icon: BookOpen,
-      premium: true,
+      premium: false,
     },
     {
-      name: 'Chat AI',
-      href: isPremium ? '/gpt' : '/blocked',
+      name: 'AI Assistant',
+      href: isPremium ? '/chat' : '/blocked',
+      icon: MessageSquare,
+      premium: true
+    },
+    {
+      name: 'GPT',
+      href: isNotFree ? '/gpt' : '/pricing',
       icon: MessageSquare,
       premium: true
     },
@@ -68,11 +80,15 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
                           href={item.href}
                           className={`${
                             active ? 'bg-[#333333]' : ''
-                          } group flex items-center px-4 py-3 text-sm text-gray-300 hover:text-white transition-colors`}
+                          } group flex items-center px-4 py-3 text-sm ${
+                            (isPremium || isNotFree || !item.premium) ? 'text-white' : 'text-gray-400'
+                          } hover:text-white transition-colors`}
                         >
-                          <item.icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
+                          <item.icon className={`mr-3 h-5 w-5 ${
+                            (isPremium || isNotFree || !item.premium) ? 'text-white' : 'text-gray-400'
+                          } group-hover:text-white transition-colors`} />
                           <span>{item.name}</span>
-                          {item.premium && !isPremium && (
+                          {item.premium && !isPremium && !isNotFree && (
                             <Lock className="h-4 w-4 ml-2 text-gray-500" />
                           )}
                         </Link>

@@ -96,10 +96,14 @@ export function Navbar({ session }: NavbarProps) {
               <Link
                 key={route.href}
                 href={route.href}
-                className="text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:bg-white/5 rounded-lg transition text-gray-400 hover:text-white"
+                className={`text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:bg-white/5 rounded-lg transition ${
+                  isPremium || !route.premium ? 'text-white' : 'text-gray-400 hover:text-white'
+                }`}
               >
                 <div className="flex items-center flex-1">
-                  <route.icon className="h-5 w-5 mr-3 text-gray-400 group-hover:text-white transition-colors" />
+                  <route.icon className={`h-5 w-5 mr-3 ${
+                    isPremium || !route.premium ? 'text-white' : 'text-gray-400 group-hover:text-white'
+                  } transition-colors`} />
                   <span>{route.label}</span>
                   {route.premium && !isPremium && (
                     <Lock className="h-4 w-4 ml-2 text-gray-500" />
@@ -111,7 +115,10 @@ export function Navbar({ session }: NavbarProps) {
         </div>
         <div className="border-t border-white/10">
           <div className="p-3 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <Link 
+              href="/profile"
+              className="flex items-center space-x-3 hover:bg-white/5 rounded-lg p-2 transition-colors w-full"
+            >
               <Avatar className="h-8 w-8 ring-2 ring-white/10">
                 <AvatarImage src={session?.user?.image || ''} />
                 <AvatarFallback className="bg-zinc-800 text-white">
@@ -121,7 +128,7 @@ export function Navbar({ session }: NavbarProps) {
               <span className="text-sm font-medium text-gray-300">
                 {session?.user?.name || 'Usuário'}
               </span>
-            </div>
+            </Link>
             {session && (
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}

@@ -1,22 +1,14 @@
 import Image from 'next/image';
+import { ComponentProps } from 'react';
 
-interface OptimizedImageProps {
-  src: string;
-  alt: string;
-  width?: number;
-  height?: number;
-  fill?: boolean;
-  className?: string;
-}
+type ImageProps = ComponentProps<typeof Image>;
 
-function OptimizedImage({ src, alt, ...props }: OptimizedImageProps) {
+export function OptimizedImage(props: ImageProps) {
   return (
-    <Image 
-      src={src}
-      alt={alt}
+    <Image
       {...props}
+      quality={90}
+      loading="lazy"
     />
   );
-}
-
-export default OptimizedImage; 
+} 

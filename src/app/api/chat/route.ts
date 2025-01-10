@@ -135,15 +135,14 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session) {
-      return new NextResponse('Unauthorized', { status: 401 })
+    if (!session || session.user?.subscriptionStatus !== 'premium') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await req.json()
-    const { messages } = body
+    const { messages } = await req.json()
 
     if (!messages) {
-      return new NextResponse('Messages are required', { status: 400 })
+      return NextResponse.json({ error: 'Messages are required' }, { status: 400 })
     }
 
     const marketContext = await createMarketContext()
@@ -158,7 +157,7 @@ export async function POST(req: Request) {
         ...messages
       ],
       temperature: 0.7,
-      max_tokens: 70,
+      max_tokens: 150,
       presence_penalty: -0.5,
       frequency_penalty: 0.3
     })
@@ -166,10 +165,14 @@ export async function POST(req: Request) {
     const content = response.choices[0].message.content || 'Desculpe, não consegui processar sua mensagem.'
 
     return NextResponse.json({
-      message: formatBoldText(content)
+      role: 'assistant',
+      content: formatBoldText(content)
     })
   } catch (error) {
     console.error('[CHAT_ERROR]', error)
-    return new NextResponse('Internal Error', { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 } 

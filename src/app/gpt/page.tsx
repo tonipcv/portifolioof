@@ -1,54 +1,68 @@
 'use client'
 
-import { useState } from 'react'
-import { ChatMessage } from '@/components/Chat/ChatMessage'
-import { ChatInput } from '@/components/Chat/ChatInput'
+import { useSession } from 'next-auth/react'
+import { redirect } from 'next/navigation'
+import { useState, FormEvent, useRef, useEffect } from 'react'
+import { Send } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-type Message = {
+interface Message {
   role: 'user' | 'assistant'
   content: string
 }
 
 export default function GPTPage() {
+  const { data: session, status } = useSession()
+  const isPremium = session?.user?.subscriptionStatus === 'premium'
   const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [isTyping, setIsTyping] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const handleSendMessage = async (content: string) => {
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  if (status === 'loading') {
+    return <div>Loading...</div>
+  }
+
+  if (!session || !isPremium) {
+    redirect('/blocked')
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
+
+    const userMessage: Message = { role: 'user', content: input.trim() }
+    setInput('')
+    setMessages(prev => [...prev, userMessage])
+    setIsLoading(true)
+
     try {
-      setIsLoading(true)
-      
-      const userMessage = { role: 'user' as const, content }
-      setMessages(prev => [...prev, userMessage])
-
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
+          messages: [...messages, userMessage]
         }),
       })
 
       if (!response.ok) {
-        throw new Error('Falha ao obter resposta')
+        throw new Error('Failed to send message')
       }
 
       const data = await response.json()
-      
-      setIsTyping(true)
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.message
-      }])
-
-      setTimeout(() => {
-        setIsTyping(false)
-      }, data.message.length * 15 + 500)
-
+      setMessages(prev => [...prev, data])
     } catch (error) {
-      console.error('Erro ao enviar mensagem:', error)
+      console.error('Error sending message:', error)
     } finally {
       setIsLoading(false)
     }
@@ -59,28 +73,85 @@ export default function GPTPage() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-white">Chat com Alex 💬</h1>
       </div>
-      <div className="bg-[#1a1a1a] rounded-lg border border-white/10 p-6">
-        <div className="h-[60vh] overflow-y-auto mb-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-          {messages.length === 0 ? (
-            <div className="text-center text-gray-400 mt-8">
-              <p className="text-lg mb-2">👋 Olá! Eu sou o Alex</p>
-              <p className="text-sm">
-                Estou aqui para ajudar com suas dúvidas sobre criptomoedas e investimentos.
-                Pode me perguntar qualquer coisa!
-              </p>
+      <div className="bg-black/20 backdrop-blur-md rounded-xl border border-white/10 p-6 flex flex-col h-[80vh]">
+        <div className="flex-1 overflow-y-auto mb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <Avatar className="h-8 w-8 mt-1">
+                <AvatarImage src="/alex-avatar.png" />
+                <AvatarFallback className="bg-[#0099ff]/80 text-white">AI</AvatarFallback>
+              </Avatar>
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 max-w-[80%] border border-white/10">
+                <p className="text-white">
+                  👋 Olá! Eu sou o Alex, seu assistente especialista em criptomoedas e investimentos.
+                  Como posso ajudar você hoje?
+                </p>
+              </div>
             </div>
-          ) : (
-            messages.map((message, index) => (
-              <ChatMessage
-                key={index}
-                role={message.role}
-                content={message.content}
-                isTyping={isTyping && index === messages.length - 1 && message.role === 'assistant'}
-              />
-            ))
-          )}
+
+            {messages.map((message, index) => (
+              <div key={index} className={`flex items-start gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                <Avatar className="h-8 w-8 mt-1">
+                  {message.role === 'user' ? (
+                    <>
+                      <AvatarImage src={session.user?.image || ''} />
+                      <AvatarFallback className="bg-zinc-800 text-white">
+                        {session.user?.name?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </>
+                  ) : (
+                    <>
+                      <AvatarImage src="/alex-avatar.png" />
+                      <AvatarFallback className="bg-[#0099ff]/80 text-white">AI</AvatarFallback>
+                    </>
+                  )}
+                </Avatar>
+                <div className={`rounded-xl p-4 max-w-[80%] backdrop-blur-sm border border-white/10 ${
+                  message.role === 'user' 
+                    ? 'bg-[#0099ff]/10' 
+                    : 'bg-white/5'
+                }`}>
+                  <p className="text-white" dangerouslySetInnerHTML={{ __html: message.content }} />
+                </div>
+              </div>
+            ))}
+
+            {isLoading && (
+              <div className="flex items-start gap-3">
+                <Avatar className="h-8 w-8 mt-1">
+                  <AvatarImage src="/alex-avatar.png" />
+                  <AvatarFallback className="bg-[#0099ff]/80 text-white">AI</AvatarFallback>
+                </Avatar>
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 bg-[#0099ff] rounded-full animate-pulse"></div>
+                    <div className="w-1.5 h-1.5 bg-[#0099ff] rounded-full animate-pulse delay-150"></div>
+                    <div className="w-1.5 h-1.5 bg-[#0099ff] rounded-full animate-pulse delay-300"></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
-        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+
+        <form onSubmit={handleSubmit} className="flex items-center gap-2 mt-auto">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Digite sua mensagem..."
+            className="flex-1 bg-white/5 backdrop-blur-sm text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-[#0099ff]/50 border border-white/10"
+            disabled={isLoading}
+          />
+          <button
+            type="submit"
+            disabled={isLoading || !input.trim()}
+            className="bg-[#0099ff] text-white p-3 rounded-xl hover:bg-[#0099ff]/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Send className="h-5 w-5" />
+          </button>
+        </form>
       </div>
     </div>
   )
