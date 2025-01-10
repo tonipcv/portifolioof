@@ -3,7 +3,7 @@ import { getToken } from 'next-auth/jwt'
 import { NextRequestWithAuth } from 'next-auth/middleware'
 
 // Rotas que requerem autenticação
-const authRoutes = ['/portfolios', '/ativos-recomendados', '/chat', '/gpt']
+const authRoutes = ['/portfolios', '/ativos-recomendados', '/chat', '/gpt', '/analises']
 
 // Rotas que requerem premium
 const premiumRoutes = ['/gpt']

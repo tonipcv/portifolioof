@@ -27,6 +27,12 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
       premium: false,
     },
     {
+      name: 'Análises',
+      href: '/analises',
+      icon: LineChart,
+      premium: false,
+    },
+    {
       name: 'Ativos Recomendados',
       href: '/ativos-recomendados',
       icon: LineChart,

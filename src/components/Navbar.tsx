@@ -50,6 +50,12 @@ export function Navbar({ session }: NavbarProps) {
       premium: false,
     },
     {
+      label: 'Análises',
+      icon: LineChart,
+      href: '/analises',
+      premium: false,
+    },
+    {
       label: 'Ativos Recomendados',
       icon: LineChart,
       href: '/ativos-recomendados',
