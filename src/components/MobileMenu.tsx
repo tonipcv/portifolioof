@@ -40,13 +40,13 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
     },
     {
       name: 'Academy',
-      href: "/cursos",
+      href: isPremium ? "/cursos" : "/pricing",
       icon: BookOpen,
-      premium: false,
+      premium: true,
     },
     {
       name: 'AI Assistant',
-      href: isPremium ? '/gpt' : '/blocked',
+      href: isPremium ? '/gpt' : '/pricing',
       icon: MessageSquare,
       premium: true
     }

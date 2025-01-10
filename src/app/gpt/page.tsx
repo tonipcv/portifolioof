@@ -71,7 +71,7 @@ export default function GPTPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-white">Chat com Alex 💬</h1>
+        <h1 className="text-2xl font-bold text-white">Cryph AI 💬</h1>
       </div>
       <div className="bg-black/20 backdrop-blur-md rounded-xl border border-white/10 p-6 flex flex-col h-[80vh]">
         <div className="flex-1 overflow-y-auto mb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">

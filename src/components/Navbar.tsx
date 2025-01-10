@@ -64,13 +64,13 @@ export function Navbar({ session }: NavbarProps) {
     {
       label: 'Academy',
       icon: BookOpen,
-      href: isPremium ? "/cursos" : "https://app.cryph.ai/pricing",
+      href: isPremium ? "/cursos" : "/pricing",
       premium: true,
     },
     {
       label: 'AI Assistant',
       icon: MessageSquare,
-      href: isPremium ? '/gpt' : '/blocked',
+      href: isPremium ? '/gpt' : '/pricing',
       premium: true
     }
   ]

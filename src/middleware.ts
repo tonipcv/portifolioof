@@ -6,10 +6,14 @@ import { NextRequestWithAuth } from 'next-auth/middleware'
 const authRoutes = ['/portfolios', '/ativos-recomendados', '/chat', '/gpt', '/analises']
 
 // Rotas que requerem premium
-const premiumRoutes = ['/gpt']
+const premiumRoutes = ['/gpt', '/cursos']
+
+interface CustomToken {
+  subscriptionStatus?: string;
+}
 
 export default async function middleware(request: NextRequestWithAuth) {
-  const token = await getToken({ req: request })
+  const token = await getToken({ req: request }) as CustomToken | null
   const { pathname } = request.nextUrl
 
   // Ignorar a rota /onboard
@@ -26,14 +30,11 @@ export default async function middleware(request: NextRequestWithAuth) {
 
   // Verifica se a rota requer premium
   if (premiumRoutes.some(route => pathname.startsWith(route))) {
-    if (!token?.isPremium) {
-      return NextResponse.redirect(new URL('/pricing', request.url))
-    }
-  }
-
-  // Verifica acesso ao GPT (liberado para não-free)
-  if (pathname.startsWith('/gpt')) {
-    if (token?.plan === 'free') {
+    // Log para debug
+    console.log('Token:', token)
+    console.log('Subscription status:', token?.subscriptionStatus)
+    
+    if (token?.subscriptionStatus !== 'premium') {
       return NextResponse.redirect(new URL('/pricing', request.url))
     }
   }
