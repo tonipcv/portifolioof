@@ -1,10 +1,9 @@
 'use client'
 
 import { Session } from 'next-auth'
-import { ThemeToggle } from './ThemeToggle'
 import Link from 'next/link'
 import Image from 'next/image'
-import { LayoutDashboard, BookOpen, LineChart, Menu, LogOut, User, MessageSquare } from 'lucide-react'
+import { LayoutDashboard, BookOpen, LineChart, Menu, LogOut, User, MessageSquare, Lock } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -20,7 +19,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ session }: NavbarProps) {
-  const { theme, resolvedTheme } = useTheme()
+  const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const isPremium = session?.user?.subscriptionStatus === 'premium'
   const pathname = usePathname()
@@ -39,7 +38,7 @@ export function Navbar({ session }: NavbarProps) {
     )
   }
 
-  if (pathname?.includes('login') || pathname?.includes('register')) {
+  if (pathname?.includes('login') || pathname?.includes('register') || pathname?.includes('onboard')) {
     return null
   }
 
@@ -48,39 +47,27 @@ export function Navbar({ session }: NavbarProps) {
       label: 'Portfólio',
       icon: LayoutDashboard,
       href: '/portfolios',
+      premium: false,
     },
     {
       label: 'Ativos Recomendados',
       icon: LineChart,
       href: '/ativos-recomendados',
+      premium: false,
     },
     {
       label: 'Academy',
       icon: BookOpen,
-      href: isPremium ? '/cursos' : '/pricing',
+      href: isPremium ? "/cursos" : "https://app.cryph.ai/pricing",
+      premium: true,
     },
     {
       label: 'AI Assistant',
       icon: MessageSquare,
-      href: '/gpt',
+      href: isPremium ? '/gpt' : '/blocked',
+      premium: true
     }
   ]
-
-  const LogoComponent = () => {    
-    return (
-      <Image
-        src="/logo.png"
-        alt="Logo"
-        width={120}
-        height={40}
-        className={cn(
-          "object-contain",
-          theme === 'dark' ? 'brightness-0 invert' : 'brightness-0'
-        )}
-        priority
-      />
-    )
-  }
 
   return (
     <>
@@ -90,16 +77,18 @@ export function Navbar({ session }: NavbarProps) {
       </div>
 
       {/* Desktop Sidebar */}
-      <nav className={cn(
-        "hidden md:flex flex-col h-full w-64 fixed left-0 top-0 border-r transition-colors",
-        mounted && theme === 'dark' 
-          ? "bg-[#121214] text-white border-white/10" 
-          : "bg-white text-zinc-900 border-zinc-200"
-      )}>
+      <nav className="hidden md:flex flex-col h-full w-64 fixed left-0 top-0 bg-[#121214] text-white border-r border-white/10">
         <div className="flex-1">
           <div className="h-24 flex items-center px-6 mt-4">
             <Link href="/">
-              <LogoComponent />
+              <Image
+                src="/logo.png"
+                alt="Logo"
+                width={120}
+                height={40}
+                className="object-contain brightness-0 invert"
+                priority
+              />
             </Link>
           </div>
           <div className="space-y-1 px-3 mt-6">
@@ -107,45 +96,36 @@ export function Navbar({ session }: NavbarProps) {
               <Link
                 key={route.href}
                 href={route.href}
-                className={cn(
-                  "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg transition",
-                  "text-zinc-500 dark:text-zinc-400"
-                )}
+                className="text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:bg-white/5 rounded-lg transition text-gray-400 hover:text-white"
               >
                 <div className="flex items-center flex-1">
-                  <route.icon className="h-5 w-5 mr-3 text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors" />
-                  {route.label}
+                  <route.icon className="h-5 w-5 mr-3 text-gray-400 group-hover:text-white transition-colors" />
+                  <span>{route.label}</span>
+                  {route.premium && !isPremium && (
+                    <Lock className="h-4 w-4 ml-2 text-gray-500" />
+                  )}
                 </div>
               </Link>
             ))}
           </div>
         </div>
-        <div className="border-t border-zinc-200 dark:border-white/10">
-          <Link
-            href="/profile"
-            className={cn(
-              "flex items-center p-3 text-sm font-medium cursor-pointer hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 transition",
-              "text-zinc-500 dark:text-white"
-            )}
-          >
+        <div className="border-t border-white/10">
+          <div className="p-3 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Avatar className="h-8 w-8 ring-2 ring-white/20">
+              <Avatar className="h-8 w-8 ring-2 ring-white/10">
                 <AvatarImage src={session?.user?.image || ''} />
                 <AvatarFallback className="bg-zinc-800 text-white">
                   {session?.user?.name?.charAt(0).toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium text-white">
+              <span className="text-sm font-medium text-gray-300">
                 {session?.user?.name || 'Usuário'}
               </span>
             </div>
-          </Link>
-          <div className="p-3 flex items-center justify-between border-t border-zinc-200 dark:border-white/10">
-            <ThemeToggle />
             {session && (
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center p-2 text-zinc-500 dark:text-white hover:text-zinc-900 dark:hover:text-white/80 transition-colors"
+                className="flex items-center p-2 text-gray-400 hover:text-gray-200 transition-colors"
               >
                 <LogOut className="h-5 w-5" />
               </button>

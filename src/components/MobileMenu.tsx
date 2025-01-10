@@ -1,7 +1,7 @@
 'use client'
 
 import { Menu, Transition } from '@headlessui/react'
-import { Menu as MenuIcon, LayoutDashboard, LineChart, BookOpen, MessageSquare } from 'lucide-react'
+import { Menu as MenuIcon, LayoutDashboard, LineChart, BookOpen, MessageSquare, Lock } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Session } from 'next-auth'
@@ -18,22 +18,25 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
       name: 'Portfólio',
       href: '/portfolios',
       icon: LayoutDashboard,
+      premium: false,
     },
     {
       name: 'Ativos Recomendados',
       href: '/ativos-recomendados',
       icon: LineChart,
+      premium: false,
     },
     {
       name: 'Academy',
-      href: isPremium ? "/cursos" : "/pricing",
+      href: isPremium ? "/cursos" : "https://app.cryph.ai/pricing",
       icon: BookOpen,
+      premium: true,
     },
     {
       name: 'Chat AI',
-      href: '/gpt',
+      href: isPremium ? '/gpt' : '/blocked',
       icon: MessageSquare,
-      badge: 'Novo'
+      premium: true
     },
   ]
 
@@ -69,10 +72,8 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
                         >
                           <item.icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-white transition-colors" />
                           <span>{item.name}</span>
-                          {item.badge && (
-                            <span className="ml-auto px-1.5 py-0.5 text-xs bg-green-600 text-white rounded-full">
-                              {item.badge}
-                            </span>
+                          {item.premium && !isPremium && (
+                            <Lock className="h-4 w-4 ml-2 text-gray-500" />
                           )}
                         </Link>
                       )}

@@ -1,4 +1,3 @@
-import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { cn } from '@/lib/utils'
@@ -9,36 +8,34 @@ import { Navbar } from '@/components/Navbar'
 import { SessionProvider } from '@/components/providers/session-provider'
 import { Footer } from '@/components/Footer'
 
-const inter = Inter({ subsets: ['latin'] })
-
 export const metadata = {
-  title: 'CRYPH - Gerencie seu Portfolio de Criptomoedas',
-  description: 'CRYPH é a plataforma definitiva para gerenciar seus investimentos em criptomoedas.',
-  keywords: 'cryph, cripto, criptomoedas, portfolio, investimentos, bitcoin, ethereum, trading',
+  title: 'CRYPH - Artificial Intelligence for Cryptocurrency',
+  description: 'CRYPH é a plataforma definitiva para gerenciar seus investimentos em criptomoedas com inteligência artificial.',
+  keywords: 'cryph, cripto, criptomoedas, portfolio, investimentos, bitcoin, ethereum, trading, artificial intelligence, AI',
   authors: [{ name: 'CRYPH' }],
   icons: {
-    icon: [
-      {
-        url: '/favicon.ico',
-        sizes: 'any',
-      },
-      {
-        url: '/icon.png',
-        type: 'image/png',
-        sizes: '32x32',
-      },
-      {
-        url: '/apple-icon.png',
-        type: 'image/png',
-        sizes: '180x180',
-      },
-    ],
-    apple: [
-      {
-        url: '/apple-icon.png',
-        sizes: '180x180',
-      },
-    ],
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+    other: {
+      rel: 'apple-touch-icon-precomposed',
+      url: '/apple-touch-icon.png',
+    },
+  },
+  manifest: '/site.webmanifest',
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: 'https://cryph.ai',
+    title: 'CRYPH - Artificial Intelligence for Cryptocurrency',
+    description: 'CRYPH é a plataforma definitiva para gerenciar seus investimentos em criptomoedas com inteligência artificial.',
+    siteName: 'CRYPH',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CRYPH - Artificial Intelligence for Cryptocurrency',
+    description: 'CRYPH é a plataforma definitiva para gerenciar seus investimentos em criptomoedas com inteligência artificial.',
+    creator: '@cryph_ai',
   },
 }
 
@@ -51,10 +48,13 @@ export default async function RootLayout({
 
   return (
     <html lang="pt-BR" suppressHydrationWarning className="dark">
-      <body className={cn(
-        inter.className,
-        "min-h-screen bg-[#121214]"
-      )}>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+      </head>
+      <body className="min-h-screen bg-[#121214]">
         <SessionProvider session={session}>
           <ThemeProvider
             attribute="class"

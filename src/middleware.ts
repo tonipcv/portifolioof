@@ -11,7 +11,6 @@ export default async function middleware(req: NextRequestWithAuth) {
   const protectedRoutes = [
     '/portfolios',
     '/profile',
-    '/gpt',
   ];
 
   // Rotas que requerem assinatura premium
@@ -22,6 +21,7 @@ export default async function middleware(req: NextRequestWithAuth) {
     '/portfolio-pro',     // Recursos avançados de portfólio
     '/signals',          // Sinais de trading
     '/ativos-recomendados/detalhes', // Detalhes dos ativos recomendados
+    '/gpt',              // AI Assistant (agora premium)
   ];
 
   const isProtectedRoute = protectedRoutes.some(route => 
@@ -54,11 +54,11 @@ export default async function middleware(req: NextRequestWithAuth) {
       const userData = await userResponse.json();
 
       if (userData.subscriptionStatus !== 'premium') {
-        return NextResponse.redirect(new URL('/pricing', req.url));
+        return NextResponse.redirect(new URL('/blocked', req.url));
       }
     } catch (error) {
       console.error('Erro ao verificar assinatura:', error);
-      return NextResponse.redirect(new URL('/pricing', req.url));
+      return NextResponse.redirect(new URL('/blocked', req.url));
     }
   }
 
@@ -80,6 +80,7 @@ export const config = {
     '/portfolio-pro/:path*',
     '/signals/:path*',
     '/ativos-recomendados/detalhes/:path*',
+    '/gpt/:path*',
     '/(auth)/login',
     '/register'
   ]
