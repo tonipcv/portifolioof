@@ -47,36 +47,22 @@ export function PortfolioList() {
   const router = useRouter()
 
   const loadPortfolios = useCallback(async () => {
-    if (!session?.user?.id) return;
-    
     try {
-      setIsRefreshing(true)
-      
-      const portfoliosResponse = await fetch('/api/portfolio', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        cache: 'no-store',
-      })
-      
-      if (!portfoliosResponse.ok) {
-        throw new Error(`Failed to fetch portfolios: ${portfoliosResponse.statusText}`)
-      }
-      
-      const data = await portfoliosResponse.json()
-      setPortfolios(data)
-      
+      setLoading(true)
       const usdRate = await getUSDToBRL()
       setUsdToBRL(usdRate)
+
+      const response = await fetch('/api/portfolios')
+      if (!response.ok) throw new Error('Failed to fetch portfolios')
+      
+      const data = await response.json()
+      setPortfolios(data)
     } catch (error) {
       console.error('Error loading portfolios:', error)
-      setPortfolios([])
     } finally {
-      setIsRefreshing(false)
       setLoading(false)
     }
-  }, [session?.user?.id])
+  }, [])
 
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.id) {

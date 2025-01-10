@@ -1,11 +1,13 @@
 'use client'
 
 import { Menu, Transition } from '@headlessui/react'
-import { Menu as MenuIcon, LayoutDashboard, LineChart, BookOpen, MessageSquare, Lock } from 'lucide-react'
+import { Menu as MenuIcon, LayoutDashboard, LineChart, BookOpen, MessageSquare, Lock, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Session } from 'next-auth'
 import { Fragment } from 'react'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { signOut } from 'next-auth/react'
 
 interface MobileMenuProps {
   session: Session & {
@@ -17,8 +19,6 @@ interface MobileMenuProps {
 }
 
 export function MobileMenu({ session, isPremium }: MobileMenuProps) {
-  const isNotFree = session?.user?.plan !== 'free'
-
   const menuItems = [
     {
       name: 'Portfólio',
@@ -43,13 +43,7 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
       href: isPremium ? '/chat' : '/blocked',
       icon: MessageSquare,
       premium: true
-    },
-    {
-      name: 'GPT',
-      href: isNotFree ? '/gpt' : '/pricing',
-      icon: MessageSquare,
-      premium: true
-    },
+    }
   ]
 
   return (
@@ -81,20 +75,53 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
                           className={`${
                             active ? 'bg-[#333333]' : ''
                           } group flex items-center px-4 py-3 text-sm ${
-                            (isPremium || isNotFree || !item.premium) ? 'text-white' : 'text-gray-400'
+                            (isPremium || !item.premium) ? 'text-white' : 'text-gray-400'
                           } hover:text-white transition-colors`}
                         >
                           <item.icon className={`mr-3 h-5 w-5 ${
-                            (isPremium || isNotFree || !item.premium) ? 'text-white' : 'text-gray-400'
+                            (isPremium || !item.premium) ? 'text-white' : 'text-gray-400'
                           } group-hover:text-white transition-colors`} />
                           <span>{item.name}</span>
-                          {item.premium && !isPremium && !isNotFree && (
+                          {item.premium && !isPremium && (
                             <Lock className="h-4 w-4 ml-2 text-gray-500" />
                           )}
                         </Link>
                       )}
                     </Menu.Item>
                   ))}
+                  <div className="pt-2">
+                    <Menu.Item>
+                      {({ active }) => (
+                        <Link
+                          href="/profile"
+                          className={`${
+                            active ? 'bg-[#333333]' : ''
+                          } group flex items-center px-4 py-3 text-sm text-white hover:text-white transition-colors`}
+                        >
+                          <Avatar className="h-8 w-8 ring-2 ring-white/10 mr-3">
+                            <AvatarImage src={session?.user?.image || ''} />
+                            <AvatarFallback className="bg-zinc-800 text-white">
+                              {session?.user?.name?.charAt(0).toUpperCase() || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{session?.user?.name || 'Usuário'}</span>
+                        </Link>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={() => signOut({ callbackUrl: '/' })}
+                          className={`${
+                            active ? 'bg-[#333333]' : ''
+                          } group flex items-center px-4 py-3 text-sm text-gray-400 hover:text-white transition-colors w-full`}
+                        >
+                          <LogOut className="h-5 w-5 mr-3" />
+                          <span>Sair</span>
+                        </button>
+                      )}
+                    </Menu.Item>
+                  </div>
                 </Menu.Items>
               </Transition>
             </>
