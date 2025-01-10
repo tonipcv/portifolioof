@@ -40,7 +40,7 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
     },
     {
       name: 'AI Assistant',
-      href: isPremium ? '/chat' : '/blocked',
+      href: isPremium ? '/gpt' : '/blocked',
       icon: MessageSquare,
       premium: true
     }

@@ -6,7 +6,7 @@ import { NextRequestWithAuth } from 'next-auth/middleware'
 const authRoutes = ['/portfolios', '/ativos-recomendados', '/chat', '/gpt']
 
 // Rotas que requerem premium
-const premiumRoutes = ['/chat']
+const premiumRoutes = ['/gpt']
 
 export default async function middleware(request: NextRequestWithAuth) {
   const token = await getToken({ req: request })
