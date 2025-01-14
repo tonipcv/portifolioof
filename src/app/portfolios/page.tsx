@@ -13,7 +13,7 @@ export default async function PortfoliosPage() {
   }
 
   return (
-    <div className="bg-[#121214]">
+    <div>
       <div className="flex justify-between items-center mb-8">
         <div></div>
         <CreatePortfolioButton />

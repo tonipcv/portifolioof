@@ -6,7 +6,7 @@ export default function PortfoliosLayout({
   children: ReactNode
 }) {
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl min-h-screen bg-[#121214]">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
       {children}
     </div>
   )

@@ -12,7 +12,7 @@ export default function AppLayout({
 }) {
   return (
     <NextAuthProvider>
-      <div className="min-h-full">
+      <div className="min-h-screen bg-[#161616]">
         <nav className="bg-[#161616] border-b border-[#222222]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-14 items-center justify-between">
@@ -53,10 +53,8 @@ export default function AppLayout({
           </div>
         </nav>
 
-        <main className="bg-[#111111]">
-          <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-            {children}
-          </div>
+        <main className="min-h-screen bg-[#161616]">
+          {children}
         </main>
       </div>
     </NextAuthProvider>

@@ -4,11 +4,24 @@ const ZAPI_INSTANCE = process.env.ZAPI_INSTANCE
 const ZAPI_TOKEN = process.env.ZAPI_TOKEN
 const ZAPI_CLIENT_TOKEN = process.env.ZAPI_CLIENT_TOKEN
 
-if (!ZAPI_INSTANCE || !ZAPI_TOKEN || !ZAPI_CLIENT_TOKEN) {
-  throw new Error('Variáveis de ambiente ZAPI_INSTANCE, ZAPI_TOKEN e ZAPI_CLIENT_TOKEN são obrigatórias')
+// Verifica se as variáveis de ambiente estão definidas em produção
+const isProduction = process.env.NODE_ENV === 'production'
+if (isProduction && (!ZAPI_INSTANCE || !ZAPI_TOKEN || !ZAPI_CLIENT_TOKEN)) {
+  console.error('Variáveis de ambiente Z-API não configuradas em produção')
 }
 
 export async function sendMessage(phone: string, message: string): Promise<any> {
+  // Em desenvolvimento, apenas simula o envio
+  if (!isProduction) {
+    console.log('Simulando envio de mensagem em desenvolvimento:', { phone, message })
+    return Promise.resolve({ success: true })
+  }
+
+  // Em produção, verifica as variáveis de ambiente
+  if (!ZAPI_INSTANCE || !ZAPI_TOKEN || !ZAPI_CLIENT_TOKEN) {
+    throw new Error('Configuração do Z-API incompleta')
+  }
+
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'api.z-api.io',

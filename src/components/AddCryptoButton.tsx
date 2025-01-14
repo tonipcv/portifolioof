@@ -26,7 +26,6 @@ export function AddCryptoButton({ portfolioId, onSuccess }: AddCryptoButtonProps
 
   const handleClick = () => {
     if (cryptoCount >= 3) {
-      // Redirecionar para o link de inscrição K17
       window.location.href = 'https://checkout.k17.com.br/subscribe/ars'
       return
     }
@@ -46,8 +45,8 @@ export function AddCryptoButton({ portfolioId, onSuccess }: AddCryptoButtonProps
       </button>
 
       {cryptoCount >= 2 && cryptoCount < 3 && (
-        <div className="text-sm text-yellow-500 mt-2">
-          Você está usando {cryptoCount}/3 criptomoedas disponíveis no plano gratuito
+        <div className="text-xs text-zinc-500 mt-2">
+          {cryptoCount}/3 criptos
         </div>
       )}
 

@@ -191,8 +191,8 @@ export default function VerifyPage({
   )
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center font-helvetica">
-      <div className="w-full max-w-sm px-8 py-10 bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-green-100/20">
+    <div className="min-h-screen bg-black flex items-center justify-center font-helvetica">
+      <div className="w-full max-w-sm px-8 py-10 bg-zinc-900/30 backdrop-blur-sm rounded-lg border border-green-100/20">
         <div className="text-center">
           <Image
             src="/logo.png"
