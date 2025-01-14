@@ -25,21 +25,11 @@ export async function middleware(request: NextRequest) {
 
   // Verificar acesso premium
   if (token && premiumRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
-    // Verificar status da assinatura via API
-    const response = await fetch(`${request.nextUrl.origin}/api/user/subscription`, {
-      headers: {
-        'Authorization': `Bearer ${token.sub}`,
-        'Cookie': request.headers.get('cookie') || ''
-      }
-    })
-
-    if (!response.ok) {
-      return NextResponse.redirect(new URL('/upgrade', request.url))
-    }
-
-    const { isActive } = await response.json()
-    if (!isActive) {
-      return NextResponse.redirect(new URL('/upgrade', request.url))
+    // @ts-ignore - o token tem a propriedade subscriptionStatus
+    const isPremium = token.subscriptionStatus === 'premium'
+    
+    if (!isPremium) {
+      return NextResponse.redirect(new URL('/pricing', request.url))
     }
   }
 
