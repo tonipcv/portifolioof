@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "User" 
+ADD COLUMN IF NOT EXISTS "whatsapp" TEXT UNIQUE,
+ADD COLUMN IF NOT EXISTS "whatsappVerified" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS "verificationCode" TEXT,
+ADD COLUMN IF NOT EXISTS "verificationCodeExpiry" TIMESTAMP(3); 

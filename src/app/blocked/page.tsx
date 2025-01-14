@@ -1,45 +1,56 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { Lock } from 'lucide-react'
-import Link from 'next/link'
+'use client'
 
-export default async function BlockedPage() {
-  const session = await getServerSession(authOptions)
-  
-  if (session?.user?.subscriptionStatus === 'premium') {
-    redirect('/')
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { Phone } from 'lucide-react'
+import Image from 'next/image'
+
+export default function BlockedPage() {
+  const router = useRouter()
+  const { data: session } = useSession()
+
+  if (!session) {
+    router.push('/login')
+    return null
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#121214] p-4">
-      <div className="bg-[#18181B] p-8 rounded-lg border border-blue-500/20 max-w-md w-full text-center shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-        <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-6 ring-1 ring-blue-500/30">
-          <Lock className="w-8 h-8 text-blue-400" />
-        </div>
-        
-        <h2 className="text-2xl font-bold text-white mb-3">
-          Conteúdo Premium
-        </h2>
-        
-        <p className="text-gray-400 mb-8">
-          Este recurso está disponível apenas para membros premium.
-        </p>
-        
-        <div className="space-y-4">
-          <a
-            href="https://app.cryph.ai/pricing"
-            className="block w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 font-medium shadow-[0_0_10px_rgba(59,130,246,0.3)] hover:shadow-[0_0_15px_rgba(59,130,246,0.4)]"
+    <div className="fixed inset-0 bg-zinc-950 flex items-center justify-center font-helvetica px-4">
+      <div className="w-full max-w-md text-center space-y-8">
+        <Image
+          src="/logo.png" 
+          alt="Logo"
+          width={120}
+          height={36}
+          priority
+          className="mx-auto brightness-0 invert"
+        />
+
+        <div className="bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-green-100/20 p-8 space-y-6">
+          <div className="mx-auto w-16 h-16 bg-zinc-800/50 rounded-full flex items-center justify-center">
+            <Phone className="w-8 h-8 text-zinc-400" />
+          </div>
+
+          <div className="space-y-3">
+            <h1 className="text-2xl font-light text-zinc-100">
+              Verifique seu WhatsApp
+            </h1>
+            <p className="text-zinc-400 text-sm">
+              Para acessar esta área, você precisa verificar seu número de WhatsApp.
+              Por favor, complete o processo de verificação.
+            </p>
+          </div>
+
+          <button
+            onClick={() => router.push('/register')}
+            className="w-full py-2.5 bg-zinc-800/30 border border-green-100/20 
+              text-zinc-100 rounded-lg transition-all duration-300 
+              hover:bg-zinc-700/50 hover:border-green-100/40 
+              focus:outline-none focus:ring-2 focus:ring-green-100/30
+              font-light tracking-wide"
           >
-            Fazer Upgrade
-          </a>
-          
-          <Link
-            href="/"
-            className="block text-sm text-gray-400 hover:text-blue-400 transition-colors"
-          >
-            Voltar para Home
-          </Link>
+            Verificar WhatsApp
+          </button>
         </div>
       </div>
     </div>

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,81 +8,93 @@ datasource db {
 }
 
 model User {
-  id            String      @id @default(cuid())
-  name          String?
-  email         String?     @unique
-  password      String?     // Add this field
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  portfolios    Portfolio[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  resetToken    String?
-  resetTokenExpiry DateTime?
-  stripeCustomerId String?  @unique
-  subscriptionStatus String? @default("free") // 'free' | 'premium'
-  subscriptionId    String?
-  subscriptionEndDate DateTime?
+  id                     String      @id @default(cuid())
+  name                   String?
+  email                  String?     @unique
+  password               String?
+  whatsapp               String?     @unique
+  whatsappVerified       Boolean     @default(false)
+  verificationCode       String?
+  verificationCodeExpiry DateTime?
+  emailToken             String?     @unique
+  emailTokenExpiry       DateTime?
+  emailVerified          DateTime?
+  image                  String?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+  resetToken             String?
+  resetTokenExpiry       DateTime?
+  stripeCustomerId       String?     @unique
+  subscriptionStatus     String?     @default("free")
+  subscriptionId         String?
+  subscriptionEndDate    DateTime?
+  level                  String?
+  exchange               String?
+  traditional_investment String?
+  crypto_investment      String?
+  discovery              String?
+  onboardingCompleted    Boolean     @default(false)
+  provider               String?
+  accounts               Account[]
+  portfolios             Portfolio[]
+  sessions               Session[]
 
   @@map("User")
 }
 
 model Portfolio {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
+  createdAt   DateTime @default(now())
   description String?
+  updatedAt   DateTime @updatedAt
+  totalProfit Float    @default(0)
+  totalValue  Float    @default(0)
+  userId      String
   cryptos     Crypto[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  totalValue  Float     @default(0)
-  totalProfit Float     @default(0)
-  userId      String    // Agora obrigatório novamente
-  user        User      @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
 model Crypto {
-  id                        String    @id @default(cuid())
-  coinId                    String    // mantendo o campo existente
-  amount                    Float
-  investedValue            Float
-  averagePrice             Float     @default(0)
-  currentPrice             Float     @default(0)
-  profit                   Float     @default(0)
-  priceChangePercentage24h Float?
-  priceChangePercentage7d  Float?
-  marketCap                Float?
-  totalVolume              Float?
-  image                    String?
+  id                       String    @id @default(cuid())
   name                     String?
   symbol                   String?
-  portfolio                Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-  portfolioId              String
+  amount                   Float
   createdAt                DateTime  @default(now())
+  portfolioId              String
+  coinId                   String
+  investedValue            Float
   updatedAt                DateTime  @updatedAt
+  currentPrice             Float     @default(0)
+  profit                   Float     @default(0)
+  averagePrice             Float     @default(0)
+  image                    String?
+  marketCap                Float?
+  priceChangePercentage24h Float?
+  priceChangePercentage7d  Float?
+  totalVolume              Float?
+  portfolio                Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
 
   @@index([portfolioId])
-  @@index([coinId])  // adicionando índice para melhor performance
+  @@index([coinId])
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])

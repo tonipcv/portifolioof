@@ -8,6 +8,9 @@ declare module "next-auth" {
       name?: string | null
       image?: string | null
       subscriptionStatus?: string
+      emailVerified?: Date | null
+      whatsappVerified?: boolean
+      whatsapp?: string
     }
   }
 
@@ -17,5 +20,7 @@ declare module "next-auth" {
     name?: string | null
     image?: string | null
     subscriptionStatus?: string
+    whatsappVerified?: boolean
+    whatsapp?: string
   }
 } 

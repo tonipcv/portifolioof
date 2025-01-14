@@ -1,34 +1,43 @@
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]/route';
-import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { prisma } from '@/lib/prisma'
+import { authOptions } from '@/lib/auth'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions)
 
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      return NextResponse.json(
+        { isActive: false, message: 'Não autorizado' },
+        { status: 401 }
+      )
     }
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: {
         subscriptionStatus: true,
-        subscriptionEndDate: true,
-      },
-    });
+        subscriptionEndDate: true
+      }
+    })
 
     if (!user) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
+      return NextResponse.json(
+        { isActive: false, message: 'Usuário não encontrado' },
+        { status: 404 }
+      )
     }
 
-    return NextResponse.json(user);
+    const isActive = user.subscriptionStatus === 'active' && 
+      (!user.subscriptionEndDate || new Date(user.subscriptionEndDate) > new Date())
+
+    return NextResponse.json({ isActive })
   } catch (error) {
-    console.error('Erro ao verificar assinatura:', error);
+    console.error('Erro ao verificar assinatura:', error)
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { isActive: false, message: 'Erro ao verificar assinatura' },
       { status: 500 }
-    );
+    )
   }
 } 
