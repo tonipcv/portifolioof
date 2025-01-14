@@ -40,12 +40,6 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
       premium: false,
     },
     {
-      name: 'Academy',
-      href: userIsPremium ? "/cursos" : "/pricing",
-      icon: BookOpen,
-      premium: true,
-    },
-    {
       name: 'AI',
       href: userIsPremium ? '/gpt' : '/pricing',
       icon: MessageSquare,

@@ -62,12 +62,6 @@ export function Navbar({ session }: NavbarProps) {
       premium: false,
     },
     {
-      label: 'Academy',
-      icon: BookOpen,
-      href: isPremium ? "/cursos" : "/pricing",
-      premium: true,
-    },
-    {
       label: 'AI Assistant',
       icon: MessageSquare,
       href: isPremium ? '/gpt' : '/pricing',
