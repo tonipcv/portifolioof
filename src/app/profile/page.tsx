@@ -1,14 +1,18 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useState } from 'react';
 import Link from 'next/link';
-import { User, Settings, CreditCard } from 'lucide-react';
+import { User, Settings, CreditCard, LogOut } from 'lucide-react';
 
 export default function ProfilePage() {
   const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState('profile');
   const isPremium = session?.user?.subscriptionStatus === 'premium';
+
+  const handleSignOut = () => {
+    signOut({ callbackUrl: '/login' });
+  };
 
   const tabs = [
     { id: 'profile', name: 'Perfil', icon: User },
@@ -64,6 +68,16 @@ export default function ProfilePage() {
                     <p className="mt-1 text-white">{session?.user?.email}</p>
                   </div>
                 </div>
+              </div>
+              
+              <div className="pt-6 border-t border-gray-700">
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sair da conta</span>
+                </button>
               </div>
             </div>
           )}

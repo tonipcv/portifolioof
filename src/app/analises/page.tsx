@@ -124,7 +124,7 @@ export default function AnalisesPage() {
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 font-['Helvetica']">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <h1 className="text-3xl font-light text-white">Análise de Mercado</h1>
+          <h1 className="text-2xl font-light text-white">Mercado</h1>
           <div className="relative w-full sm:w-64">
             <input
               type="text"
@@ -137,7 +137,66 @@ export default function AnalisesPage() {
           </div>
         </div>
 
-        <div className="bg-[#161616] rounded-lg border border-white/10 overflow-hidden">
+        {/* Mobile View */}
+        <div className="md:hidden space-y-4">
+          {currentCryptos.map((crypto) => (
+            <div key={crypto.id} className="bg-[#161616] rounded-lg border border-white/10 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <img src={crypto.image} alt={crypto.name} className="w-8 h-8 rounded-full" />
+                  <div className="ml-3">
+                    <div className="text-white font-medium">{crypto.name}</div>
+                    <div className="text-sm text-gray-400">{crypto.symbol.toUpperCase()}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-white font-medium">{formatUSD(crypto.current_price)}</div>
+                  <div className="flex items-center justify-end mt-1">
+                    {crypto.price_change_percentage_24h >= 0 ? (
+                      <TrendingUp className="w-4 h-4 text-green-400 mr-1" />
+                    ) : (
+                      <TrendingDown className="w-4 h-4 text-red-400 mr-1" />
+                    )}
+                    <span className={crypto.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      {crypto.price_change_percentage_24h?.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="text-gray-400">7d %</div>
+                  <div className="flex items-center mt-1">
+                    {crypto.price_change_percentage_7d >= 0 ? (
+                      <TrendingUp className="w-3 h-3 text-green-400 mr-1" />
+                    ) : (
+                      <TrendingDown className="w-3 h-3 text-red-400 mr-1" />
+                    )}
+                    <span className={crypto.price_change_percentage_7d >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      {crypto.price_change_percentage_7d?.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-400">Market Cap</div>
+                  <div className="text-white mt-1">{formatLargeNumber(crypto.market_cap)}</div>
+                </div>
+                <div>
+                  <div className="text-gray-400">Volume (24h)</div>
+                  <div className="text-white mt-1">{formatLargeNumber(crypto.total_volume)}</div>
+                </div>
+                <div>
+                  <div className="text-gray-400">Circulante</div>
+                  <div className="text-white mt-1">{formatLargeNumber(crypto.circulating_supply)}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop View */}
+        <div className="hidden md:block bg-[#161616] rounded-lg border border-white/10 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-white/10">
               <thead>

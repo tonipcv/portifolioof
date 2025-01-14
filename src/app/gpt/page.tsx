@@ -70,19 +70,19 @@ export default function GPTPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-white">Cryph AI 💬</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-bold text-white">Cryph AI 💬</h1>
       </div>
-      <div className="bg-black/20 backdrop-blur-md rounded-xl border border-white/10 p-6 flex flex-col h-[80vh]">
-        <div className="flex-1 overflow-y-auto mb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <Avatar className="h-8 w-8 mt-1">
+      <div className="bg-black/20 backdrop-blur-md rounded-xl border border-white/10 p-4 flex flex-col h-[80vh]">
+        <div className="flex-1 overflow-y-auto mb-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <div className="space-y-3">
+            <div className="flex items-start gap-2">
+              <Avatar className="h-6 w-6 mt-1">
                 <AvatarImage src="/alex-avatar.png" />
-                <AvatarFallback className="bg-[#0099ff]/80 text-white">AI</AvatarFallback>
+                <AvatarFallback className="bg-[#0099ff]/80 text-white text-xs">AI</AvatarFallback>
               </Avatar>
-              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 max-w-[80%] border border-white/10">
-                <p className="text-white">
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 max-w-[85%] border border-white/10">
+                <p className="text-white text-sm">
                   👋 Olá! Eu sou o Alex, seu assistente especialista em criptomoedas e investimentos.
                   Como posso ajudar você hoje?
                 </p>
@@ -90,43 +90,43 @@ export default function GPTPage() {
             </div>
 
             {messages.map((message, index) => (
-              <div key={index} className={`flex items-start gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                <Avatar className="h-8 w-8 mt-1">
+              <div key={index} className={`flex items-start gap-2 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                <Avatar className="h-6 w-6 mt-1">
                   {message.role === 'user' ? (
                     <>
                       <AvatarImage src={session.user?.image || ''} />
-                      <AvatarFallback className="bg-zinc-800 text-white">
+                      <AvatarFallback className="bg-zinc-800 text-white text-xs">
                         {session.user?.name?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </>
                   ) : (
                     <>
                       <AvatarImage src="/alex-avatar.png" />
-                      <AvatarFallback className="bg-[#0099ff]/80 text-white">AI</AvatarFallback>
+                      <AvatarFallback className="bg-[#0099ff]/80 text-white text-xs">AI</AvatarFallback>
                     </>
                   )}
                 </Avatar>
-                <div className={`rounded-xl p-4 max-w-[80%] backdrop-blur-sm border border-white/10 ${
+                <div className={`rounded-xl p-3 max-w-[85%] backdrop-blur-sm border border-white/10 ${
                   message.role === 'user' 
                     ? 'bg-[#0099ff]/10' 
                     : 'bg-white/5'
                 }`}>
-                  <p className="text-white" dangerouslySetInnerHTML={{ __html: message.content }} />
+                  <p className="text-white text-sm" dangerouslySetInnerHTML={{ __html: message.content }} />
                 </div>
               </div>
             ))}
 
             {isLoading && (
-              <div className="flex items-start gap-3">
-                <Avatar className="h-8 w-8 mt-1">
+              <div className="flex items-start gap-2">
+                <Avatar className="h-6 w-6 mt-1">
                   <AvatarImage src="/alex-avatar.png" />
-                  <AvatarFallback className="bg-[#0099ff]/80 text-white">AI</AvatarFallback>
+                  <AvatarFallback className="bg-[#0099ff]/80 text-white text-xs">AI</AvatarFallback>
                 </Avatar>
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 bg-[#0099ff] rounded-full animate-pulse"></div>
-                    <div className="w-1.5 h-1.5 bg-[#0099ff] rounded-full animate-pulse delay-150"></div>
-                    <div className="w-1.5 h-1.5 bg-[#0099ff] rounded-full animate-pulse delay-300"></div>
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-1">
+                    <div className="w-1 h-1 bg-[#0099ff] rounded-full animate-pulse"></div>
+                    <div className="w-1 h-1 bg-[#0099ff] rounded-full animate-pulse delay-150"></div>
+                    <div className="w-1 h-1 bg-[#0099ff] rounded-full animate-pulse delay-300"></div>
                   </div>
                 </div>
               </div>
@@ -141,15 +141,15 @@ export default function GPTPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Digite sua mensagem..."
-            className="flex-1 bg-white/5 backdrop-blur-sm text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-[#0099ff]/50 border border-white/10"
+            className="flex-1 bg-white/5 backdrop-blur-sm text-white text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-[#0099ff]/50 border border-white/10"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="bg-[#0099ff] text-white p-3 rounded-xl hover:bg-[#0099ff]/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[#0099ff] text-white p-2 rounded-xl hover:bg-[#0099ff]/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send className="h-5 w-5" />
+            <Send className="h-4 w-4" />
           </button>
         </form>
       </div>
