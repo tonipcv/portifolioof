@@ -79,7 +79,12 @@ export function Navbar({ session }: NavbarProps) {
     <>
       {/* Mobile Menu */}
       <div className="fixed top-4 right-4 z-50 md:hidden">
-        {session && <MobileMenu session={session} isPremium={isPremium} />}
+        {session && (
+          <MobileMenu 
+            session={session} 
+            isPremium={session?.user?.subscriptionStatus === 'premium'} 
+          />
+        )}
       </div>
 
       {/* Desktop Sidebar */}
