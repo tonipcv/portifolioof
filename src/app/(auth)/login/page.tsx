@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center font-helvetica">
-      <div className="w-full max-w-sm px-8 py-10 bg-zinc-900/30 backdrop-blur-sm rounded-lg border border-green-100/20">
+      <div className="w-full max-w-sm px-8 py-10 bg-zinc-950/70 backdrop-blur-sm rounded-lg border border-zinc-600">
         <div className="text-center">
           <Image
             src="/logo.png"
