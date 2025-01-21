@@ -116,15 +116,26 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Forçar redirecionamento para login após signOut
-      if (url.includes('signout')) {
-        return `${baseUrl}/login`;
+      const productionDomain = 'https://app.cryph.ai';
+
+      // Se estiver em produção, usar o domínio de produção
+      if (process.env.NODE_ENV === 'production') {
+        if (url.startsWith('/')) {
+          return `${productionDomain}${url}`;
+        }
+        if (url.startsWith(productionDomain)) {
+          return url;
+        }
+        return productionDomain;
       }
-      // Permitir redirecionamentos para URLs do mesmo domínio ou relativas
-      if (url.startsWith(baseUrl) || url.startsWith('/')) {
+
+      // Em desenvolvimento, usar o baseUrl normal
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`;
+      }
+      if (url.startsWith(baseUrl)) {
         return url;
       }
-      // Caso contrário, redirecionar para a página inicial
       return baseUrl;
     }
   },
