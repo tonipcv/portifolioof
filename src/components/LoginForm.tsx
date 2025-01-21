@@ -1,7 +1,7 @@
 'use client';
 
-import { signIn, getCsrfToken } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { signIn } from 'next-auth/react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface LoginFormProps {
@@ -16,63 +16,25 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [csrfToken, setCsrfToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const loadCsrfToken = async () => {
-      try {
-        const token = await getCsrfToken();
-        if (token) {
-          setCsrfToken(token);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar token CSRF:', error);
-      }
-    };
-    loadCsrfToken();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    if (!csrfToken) {
-      setError('Erro ao inicializar segurança. Recarregue a página.');
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      console.log('Iniciando tentativa de login:', { email });
-
       const result = await signIn('credentials', {
         redirect: false,
         email,
         password,
         callbackUrl,
-        csrfToken
-      });
-
-      console.log('Resultado do login:', {
-        ok: result?.ok,
-        error: result?.error,
-        status: result?.status,
-        url: result?.url
       });
 
       if (!result) {
-        console.error('Resposta vazia do servidor');
         throw new Error("Não foi possível conectar ao servidor. Tente novamente.");
       }
 
       if (!result.ok) {
-        console.error('Erro no login:', {
-          error: result.error,
-          status: result.status
-        });
-        
-        // Tentar parsear o erro se for uma string JSON
         let errorMessage = result.error;
         try {
           const errorObj = JSON.parse(result.error || '{}');
@@ -90,20 +52,11 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
         }
       }
 
-      console.log('Login bem-sucedido, redirecionando para:', callbackUrl);
       router.push(callbackUrl);
       router.refresh();
     } catch (error: any) {
-      console.error('Erro capturado no formulário:', {
-        message: error?.message,
-        stack: error?.stack,
-        name: error?.name,
-        originalError: error
-      });
-      
       let errorMessage = error?.message || 'Erro ao fazer login. Tente novamente.';
       
-      // Se for um erro de rede
       if (error instanceof TypeError && error.message.includes('fetch')) {
         errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
       }
@@ -114,18 +67,9 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
     }
   };
 
-  if (!csrfToken) {
-    return (
-      <div className="flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-100/20"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <input name="csrfToken" type="hidden" defaultValue={csrfToken} />
         {error && (
           <div className="p-4 bg-red-900/50 border border-red-500 rounded-lg">
             <p className="text-sm text-red-500">{error}</p>
@@ -146,6 +90,7 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3 py-2 bg-[#333333] border border-[#444444] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -164,6 +109,7 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2 bg-[#333333] border border-[#444444] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={isLoading}
             />
           </div>
         </div>
