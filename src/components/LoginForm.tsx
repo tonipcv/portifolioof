@@ -25,13 +25,6 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
     try {
       console.log('Iniciando tentativa de login:', { email });
 
-      // Enviar dados como application/x-www-form-urlencoded
-      const formData = new URLSearchParams();
-      formData.append('email', email);
-      formData.append('password', password);
-      formData.append('redirect', 'false');
-      formData.append('callbackUrl', callbackUrl);
-
       const result = await signIn('credentials', {
         redirect: false,
         email,
@@ -47,7 +40,8 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
       });
 
       if (!result) {
-        throw new Error("Não foi possível conectar ao servidor");
+        console.error('Resposta vazia do servidor');
+        throw new Error("Não foi possível conectar ao servidor. Tente novamente.");
       }
 
       if (!result.ok) {
@@ -56,12 +50,21 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
           status: result.status
         });
         
-        if (result.error === "Email não encontrado") {
+        // Tentar parsear o erro se for uma string JSON
+        let errorMessage = result.error;
+        try {
+          const errorObj = JSON.parse(result.error || '{}');
+          errorMessage = errorObj.error || errorObj.message || result.error;
+        } catch (e) {
+          // Se não for JSON, usar a mensagem como está
+        }
+        
+        if (errorMessage.includes("Email não encontrado")) {
           throw new Error("Email não encontrado");
-        } else if (result.error === "Senha incorreta") {
+        } else if (errorMessage.includes("Senha incorreta")) {
           throw new Error("Senha incorreta");
         } else {
-          throw new Error(result.error || "Erro ao fazer login");
+          throw new Error(errorMessage || "Erro ao fazer login");
         }
       }
 
@@ -72,9 +75,18 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
       console.error('Erro capturado no formulário:', {
         message: error?.message,
         stack: error?.stack,
-        name: error?.name
+        name: error?.name,
+        originalError: error
       });
-      setError(error?.message || 'Erro ao fazer login. Tente novamente.');
+      
+      let errorMessage = error?.message || 'Erro ao fazer login. Tente novamente.';
+      
+      // Se for um erro de rede
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
