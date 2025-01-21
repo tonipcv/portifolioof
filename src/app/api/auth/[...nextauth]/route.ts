@@ -13,34 +13,70 @@ console.log('NextAuth route handler initialized with config:', {
   production: process.env.NODE_ENV === 'production'
 })
 
-// Criar o handler do NextAuth com a configuração correta para App Router
+// Criar o handler do NextAuth
 const handler = NextAuth(authOptions)
 
 // Exportar as funções com o tipo correto para App Router
-export async function GET(request: Request) {
-  // Extrair o path da URL para simular o query.nextauth
-  const url = new URL(request.url)
-  const nextauthPath = url.pathname.replace('/api/auth/', '')
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const nextauthParams = Object.fromEntries(searchParams.entries())
   
   console.log('[Auth] GET request:', {
-    path: nextauthPath,
-    url: request.url,
+    url: req.url,
+    params: nextauthParams,
     timestamp: new Date().toISOString()
   })
 
-  return handler(request)
+  try {
+    const response = await handler(req)
+    console.log('[Auth] GET response:', {
+      status: response.status,
+      timestamp: new Date().toISOString()
+    })
+    return response
+  } catch (error) {
+    console.error('[Auth] GET error:', error)
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal Server Error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
+  }
 }
 
-export async function POST(request: Request) {
-  // Extrair o path da URL para simular o query.nextauth
-  const url = new URL(request.url)
-  const nextauthPath = url.pathname.replace('/api/auth/', '')
+export async function POST(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const nextauthParams = Object.fromEntries(searchParams.entries())
   
   console.log('[Auth] POST request:', {
-    path: nextauthPath,
-    url: request.url,
+    url: req.url,
+    params: nextauthParams,
     timestamp: new Date().toISOString()
   })
 
-  return handler(request)
+  try {
+    const response = await handler(req)
+    console.log('[Auth] POST response:', {
+      status: response.status,
+      timestamp: new Date().toISOString()
+    })
+    return response
+  } catch (error) {
+    console.error('[Auth] POST error:', error)
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal Server Error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
+  }
 }

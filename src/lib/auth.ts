@@ -32,7 +32,19 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 dias
   },
-  debug: production, // Habilita logs detalhados em produção
+  debug: true, // Sempre habilitar logs para diagnóstico
+  useSecureCookies: process.env.NODE_ENV === 'production',
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    }
+  },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -153,6 +165,19 @@ export const authOptions: NextAuthOptions = {
     signOut: '/login'
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      console.log('[Auth] Redirect callback:', { url, baseUrl });
+      // Se a URL for relativa, adiciona o baseUrl
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`;
+      }
+      // Se a URL for do mesmo domínio, permite
+      else if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      // Caso contrário, redireciona para a página inicial
+      return baseUrl;
+    },
     async signIn({ user, account }) {
       try {
         console.log('[Auth] SignIn callback started:', {
