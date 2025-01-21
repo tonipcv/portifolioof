@@ -49,7 +49,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         try {
           // Log do início da autorização
           console.log('[Auth] Starting authorization:', { 

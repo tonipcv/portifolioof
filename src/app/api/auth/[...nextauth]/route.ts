@@ -13,66 +13,34 @@ console.log('NextAuth route handler initialized with config:', {
   production: process.env.NODE_ENV === 'production'
 })
 
-interface ExtendedRequestInit extends RequestInit {
-  duplex?: 'half'
+// Criar o handler do NextAuth com a configuração correta para App Router
+const handler = NextAuth(authOptions)
+
+// Exportar as funções com o tipo correto para App Router
+export async function GET(request: Request) {
+  // Extrair o path da URL para simular o query.nextauth
+  const url = new URL(request.url)
+  const nextauthPath = url.pathname.replace('/api/auth/', '')
+  
+  console.log('[Auth] GET request:', {
+    path: nextauthPath,
+    url: request.url,
+    timestamp: new Date().toISOString()
+  })
+
+  return handler(request)
 }
 
-async function auth(request: Request) {
-  try {
-    const contentType = request.headers.get('content-type')
-    
-    console.log('[Auth] Processing request:', {
-      method: request.method,
-      contentType,
-      url: request.url
-    })
+export async function POST(request: Request) {
+  // Extrair o path da URL para simular o query.nextauth
+  const url = new URL(request.url)
+  const nextauthPath = url.pathname.replace('/api/auth/', '')
+  
+  console.log('[Auth] POST request:', {
+    path: nextauthPath,
+    url: request.url,
+    timestamp: new Date().toISOString()
+  })
 
-    // Se for form-urlencoded, converter para JSON
-    if (contentType?.includes('application/x-www-form-urlencoded')) {
-      const formData = await request.formData()
-      const jsonData = {
-        email: formData.get('email'),
-        password: formData.get('password'),
-        redirect: formData.get('redirect'),
-        callbackUrl: formData.get('callbackUrl'),
-        json: true
-      }
-
-      console.log('[Auth] Converting form data to JSON:', {
-        hasEmail: !!jsonData.email,
-        hasPassword: !!jsonData.password,
-        timestamp: new Date().toISOString()
-      })
-
-      // Criar nova request com dados em JSON
-      const newRequest = new Request(request.url, {
-        method: request.method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(jsonData),
-        duplex: 'half'
-      } as ExtendedRequestInit)
-
-      return NextAuth(authOptions)(newRequest)
-    }
-
-    // Se já for JSON ou outro formato, passar direto
-    return NextAuth(authOptions)(request)
-  } catch (error) {
-    console.error('[Auth] Error processing request:', error)
-    return new Response(
-      JSON.stringify({ 
-        error: 'InternalServerError',
-        message: error instanceof Error ? error.message : 'An unexpected error occurred'
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
-  }
+  return handler(request)
 }
-
-export const GET = auth
-export const POST = auth

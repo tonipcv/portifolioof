@@ -32,43 +32,39 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
     });
 
     try {
-      const response = await fetch('/api/auth/callback/credentials', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: email.toLowerCase(),
-          password,
-          redirect: false,
-          callbackUrl: callbackUrl || '/portfolios',
-          json: true
-        })
+      const result = await signIn('credentials', {
+        email: email.toLowerCase(),
+        password,
+        redirect: false,
+        callbackUrl: callbackUrl || '/portfolios'
       });
 
-      const result = await response.json();
-
       console.log('[Login] Result:', {
-        ok: response.ok,
-        status: response.status,
+        ok: result?.ok,
+        error: result?.error,
+        url: result?.url,
+        status: result?.status,
         timestamp: new Date().toISOString()
       });
 
-      if (!response.ok) {
-        const errorMessage = result?.error || 'Unknown error';
+      if (!result?.ok) {
         console.error('[Login] Error details:', {
-          error: errorMessage,
-          status: response.status
+          error: result?.error,
+          status: result?.status,
+          url: result?.url
         });
         
         if (result?.error === 'CredentialsSignin') {
           setError('Email ou senha incorretos');
         } else {
-          setError(result?.message || errorMessage);
+          // Mostrar o erro específico
+          const errorMessage = result?.error || 'Erro desconhecido';
+          setError(`Falha na autenticação: ${errorMessage}`);
         }
         return;
       }
 
+      // Se o login foi bem sucedido
       if (result.url) {
         console.log('[Login] Redirecting to:', result.url);
         router.push(result.url);
@@ -83,7 +79,7 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
         stack: error?.stack,
         timestamp: new Date().toISOString()
       });
-      setError(errorMessage);
+      setError(`Erro no processo de login: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
