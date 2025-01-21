@@ -63,7 +63,7 @@ export function VerifyForm({ userId }: VerifyFormProps) {
         throw new Error(data.error || 'Código inválido');
       }
 
-      router.push('/portfolios');
+      router.push('/verify/success');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Erro ao verificar código');
     } finally {

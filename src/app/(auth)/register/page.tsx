@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/Logo'
 
-type Step = 'register' | 'verify' | 'email_pending'
+type Step = 'register' | 'verify'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,12 +35,36 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (data.success) {
+        setUserId(data.userId)
         setStep('verify')
       } else {
         setError(data.message)
       }
     } catch (error) {
       setError('Erro ao cadastrar usuário')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendCode = async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ whatsapp: formData.whatsapp, userId })
+      })
+
+      const data = await response.json()
+
+      if (!data.success) {
+        setError(data.error || 'Erro ao reenviar código')
+      }
+    } catch (error) {
+      setError('Erro ao reenviar código')
     } finally {
       setLoading(false)
     }
@@ -52,17 +77,21 @@ export default function RegisterPage() {
 
     try {
       const response = await fetch('/api/auth/verify', {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, whatsapp: formData.whatsapp })
+        body: JSON.stringify({ 
+          code, 
+          whatsapp: formData.whatsapp,
+          userId
+        })
       })
 
       const data = await response.json()
 
       if (data.success) {
-        setStep('email_pending')
+        router.push('/verify/success')
       } else {
-        setError(data.message)
+        setError(data.error || 'Código inválido')
       }
     } catch (error) {
       setError('Erro ao verificar código')
@@ -225,67 +254,13 @@ export default function RegisterPage() {
         Não recebeu o código?{" "}
         <button
           type="button"
-          onClick={() => setStep('register')}
+          onClick={handleResendCode}
           className="text-teal-400 hover:text-teal-300 font-medium focus:outline-none"
         >
           Tentar novamente
         </button>
       </p>
     </form>
-  )
-
-  const renderEmailPendingScreen = () => (
-    <div className="text-center space-y-8">
-      <div className="flex justify-center">
-        <div className="rounded-full bg-teal-400/10 p-4">
-          <svg 
-            className="w-16 h-16 text-teal-400"
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth="2" 
-              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-            />
-          </svg>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <h2 className="text-2xl font-normal text-teal-400">
-          Confirme seu email
-        </h2>
-        <p className="text-gray-400">
-          Enviamos um link de confirmação para {formData.email}
-        </p>
-        <p className="text-gray-600 text-sm">
-          Por favor, verifique sua caixa de entrada e clique no link para confirmar seu email.
-        </p>
-      </div>
-
-      <button
-        onClick={() => router.push('/login')}
-        className="inline-flex items-center px-5 py-3 border border-teal-400 text-sm font-medium rounded-lg text-teal-400 hover:bg-teal-400/10 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-colors"
-      >
-        <svg 
-          className="mr-2 h-4 w-4" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth="2" 
-            d="M10 19l-7-7m0 0l7-7m-7 7h18"
-          />
-        </svg>
-        Ir para login
-      </button>
-    </div>
   )
 
   return (
@@ -297,9 +272,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="mt-8">
-            {step === "register" ? renderRegisterForm() :
-             step === "verify" ? renderVerifyForm() :
-             renderEmailPendingScreen()}
+            {step === "register" ? renderRegisterForm() : renderVerifyForm()}
           </div>
         </div>
       </div>

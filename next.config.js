@@ -24,10 +24,27 @@ const nextConfig = {
   experimental: {
     serverActions: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/auth/:path*',
+        destination: '/api/auth/:path*',
+      },
+    ]
+  },
   async headers() {
     return [
       {
         source: '/api/webhooks/stripe',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/json',
+          },
+        ],
+      },
+      {
+        source: '/api/auth/:path*',
         headers: [
           {
             key: 'Content-Type',

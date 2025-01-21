@@ -12,7 +12,7 @@ model User {
   name                   String?
   email                  String?     @unique
   password               String?
-  whatsapp               String?     @unique
+  whatsapp               String?
   whatsappVerified       Boolean     @default(false)
   verificationCode       String?
   verificationCodeExpiry DateTime?

@@ -1,7 +1,0 @@
--- AlterTable
-ALTER TABLE "Crypto" ADD COLUMN IF NOT EXISTS "currentPrice" FLOAT NOT NULL DEFAULT 0,
-                     ADD COLUMN IF NOT EXISTS "profit" FLOAT NOT NULL DEFAULT 0;
-
--- AlterTable
-ALTER TABLE "Portfolio" ADD COLUMN IF NOT EXISTS "totalValue" FLOAT NOT NULL DEFAULT 0,
-                       ADD COLUMN IF NOT EXISTS "totalProfit" FLOAT NOT NULL DEFAULT 0; 
