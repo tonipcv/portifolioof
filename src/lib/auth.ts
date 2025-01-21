@@ -51,7 +51,7 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
-        if (!user || !user?.password || user.provider === 'google') {
+        if (!user || !user?.password) {
           throw new Error("Credenciais inválidas");
         }
 
