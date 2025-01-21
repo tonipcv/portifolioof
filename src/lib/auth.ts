@@ -6,12 +6,13 @@ import { prisma } from './prisma'
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
+      id: 'credentials',
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials): Promise<any> {
+      async authorize(credentials, req): Promise<any> {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email e senha são obrigatórios");
         }
@@ -58,6 +59,9 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 dias
+  },
+  jwt: {
     maxAge: 30 * 24 * 60 * 60, // 30 dias
   },
   pages: {
@@ -111,6 +115,21 @@ export const authOptions: NextAuthOptions = {
         session.user.whatsapp = token.whatsapp as string;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Permitir redirecionamentos apenas para URLs do mesmo domínio
+      if (url.startsWith(baseUrl)) return url;
+      // Permitir redirecionamentos para URLs relativas
+      else if (url.startsWith("/")) return `${baseUrl}${url}`;
+      return baseUrl;
+    }
+  },
+  events: {
+    async signIn({ user }) {
+      console.log('User signed in:', user.email);
+    },
+    async signOut({ token }) {
+      console.log('User signed out');
     }
   },
   debug: process.env.NODE_ENV === 'development'

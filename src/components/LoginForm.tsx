@@ -1,7 +1,7 @@
 'use client';
 
-import { signIn } from 'next-auth/react';
-import { useState } from 'react';
+import { signIn, getCsrfToken } from 'next-auth/react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface LoginFormProps {
@@ -16,11 +16,32 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCsrfToken = async () => {
+      try {
+        const token = await getCsrfToken();
+        if (token) {
+          setCsrfToken(token);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar token CSRF:', error);
+      }
+    };
+    loadCsrfToken();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+
+    if (!csrfToken) {
+      setError('Erro ao inicializar segurança. Recarregue a página.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       console.log('Iniciando tentativa de login:', { email });
@@ -30,6 +51,7 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
         email,
         password,
         callbackUrl,
+        csrfToken
       });
 
       console.log('Resultado do login:', {
@@ -59,9 +81,9 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
           // Se não for JSON, usar a mensagem como está
         }
         
-        if (errorMessage.includes("Email não encontrado")) {
+        if (errorMessage?.includes("Email não encontrado")) {
           throw new Error("Email não encontrado");
-        } else if (errorMessage.includes("Senha incorreta")) {
+        } else if (errorMessage?.includes("Senha incorreta")) {
           throw new Error("Senha incorreta");
         } else {
           throw new Error(errorMessage || "Erro ao fazer login");
@@ -92,9 +114,18 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
     }
   };
 
+  if (!csrfToken) {
+    return (
+      <div className="flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-100/20"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6">
+        <input name="csrfToken" type="hidden" defaultValue={csrfToken} />
         {error && (
           <div className="p-4 bg-red-900/50 border border-red-500 rounded-lg">
             <p className="text-sm text-red-500">{error}</p>
