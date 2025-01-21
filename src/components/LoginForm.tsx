@@ -44,7 +44,10 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
   };
 
   const handleGoogleLogin = () => {
-    signIn('google', { callbackUrl });
+    signIn('google', { 
+      callbackUrl,
+      redirect: true
+    });
   };
 
   return (

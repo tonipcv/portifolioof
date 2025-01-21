@@ -85,142 +85,141 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.provider === "google") {
-        const googleEmail = profile?.email;
-        
-        console.log('SignIn callback - Google data:', { 
-          googleEmail,
-          profileEmail: profile?.email,
-          userEmail: user?.email,
-          profile
-        });
+      try {
+        if (account?.provider === "google") {
+          const googleEmail = profile?.email;
+          
+          console.log('SignIn callback - Google data:', { 
+            googleEmail,
+            profileEmail: profile?.email,
+            userEmail: user?.email,
+            profile,
+            account
+          });
 
-        if (!googleEmail) {
+          if (!googleEmail) {
+            console.log('No Google email provided');
+            return false;
+          }
+
+          // Primeiro, tentar encontrar usuário pelo email do Google
+          let dbUser = await prisma.user.findUnique({
+            where: { email: googleEmail },
+            include: {
+              accounts: true
+            }
+          });
+
+          console.log('Found user by email:', dbUser);
+
+          // Se não encontrou pelo email, procurar pela conta Google
+          if (!dbUser) {
+            const googleAccount = await prisma.account.findFirst({
+              where: {
+                provider: 'google',
+                providerAccountId: account.providerAccountId
+              },
+              include: {
+                user: {
+                  include: {
+                    accounts: true
+                  }
+                }
+              }
+            });
+
+            console.log('Found Google account:', googleAccount);
+
+            if (googleAccount) {
+              dbUser = googleAccount.user;
+              // Atualizar email se diferente
+              if (dbUser.email !== googleEmail) {
+                await prisma.user.update({
+                  where: { id: dbUser.id },
+                  data: { email: googleEmail }
+                });
+              }
+            }
+          }
+
+          // Se o usuário não existe no banco, criar novo
+          if (!dbUser) {
+            console.log('Creating new user for Google account:', googleEmail);
+            const newUser = await prisma.user.create({
+              data: {
+                email: googleEmail,
+                name: profile?.name || user.name!,
+                whatsappVerified: false,
+                provider: "google"
+              }
+            });
+
+            // Criar conta Google separadamente
+            await prisma.account.create({
+              data: {
+                userId: newUser.id,
+                type: account.type!,
+                provider: account.provider!,
+                providerAccountId: account.providerAccountId!,
+                access_token: account.access_token!,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+              }
+            });
+
+            console.log('Created new user:', newUser);
+            return `/verify?userId=${newUser.id}`;
+          }
+
+          // Se o usuário existe mas WhatsApp não está verificado
+          if (!dbUser.whatsappVerified) {
+            console.log('User needs WhatsApp verification:', dbUser.email);
+            return `/verify?userId=${dbUser.id}`;
+          }
+
+          // Se ainda não tem conta Google vinculada, vincular
+          if (!dbUser.accounts.some(acc => acc.provider === "google")) {
+            console.log('Linking Google account to existing user:', dbUser.email);
+            await prisma.account.create({
+              data: {
+                userId: dbUser.id,
+                type: account.type!,
+                provider: account.provider!,
+                providerAccountId: account.providerAccountId!,
+                access_token: account.access_token!,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+              }
+            });
+          }
+
+          return true;
+        }
+
+        // Para login com credenciais
+        if (!user.email) {
           return false;
         }
 
-        // Primeiro, tentar encontrar usuário pelo email do Google
-        let dbUser = await prisma.user.findUnique({
-          where: { email: googleEmail },
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
           select: {
             id: true,
-            email: true,
-            whatsappVerified: true,
-            provider: true,
-            accounts: true
+            whatsappVerified: true
           }
         });
 
-        // Se não encontrou pelo email, procurar pela conta Google
-        if (!dbUser) {
-          const googleAccount = await prisma.account.findFirst({
-            where: {
-              provider: 'google',
-              providerAccountId: account.providerAccountId
-            },
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  email: true,
-                  whatsappVerified: true,
-                  provider: true,
-                  accounts: true
-                }
-              }
-            }
-          });
-
-          if (googleAccount) {
-            // Se encontrou a conta Google mas o email é diferente, atualizar o email
-            if (googleAccount.user.email !== googleEmail) {
-              await prisma.user.update({
-                where: { id: googleAccount.user.id },
-                data: { email: googleEmail }
-              });
-            }
-            dbUser = googleAccount.user;
-          }
+        if (!dbUser?.whatsappVerified) {
+          return `/verify?userId=${dbUser?.id}`;
         }
 
-        console.log('Found user in database:', dbUser);
-
-        // Se o usuário não existe no banco, permite criar
-        if (!dbUser) {
-          console.log('Creating new user for Google account:', googleEmail);
-          const newUser = await prisma.user.create({
-            data: {
-              email: googleEmail,
-              name: profile?.name || user.name!,
-              whatsappVerified: false,
-              provider: "google",
-              accounts: {
-                create: {
-                  type: account.type,
-                  provider: account.provider,
-                  providerAccountId: account.providerAccountId,
-                  access_token: account.access_token,
-                  token_type: account.token_type,
-                  scope: account.scope,
-                  id_token: account.id_token,
-                }
-              }
-            }
-          });
-          console.log('Created new user:', newUser);
-          return `/verify?userId=${newUser.id}`;
-        }
-
-        // Se o usuário existe mas WhatsApp não está verificado
-        if (!dbUser.whatsappVerified) {
-          console.log('User needs WhatsApp verification:', dbUser.email);
-          return `/verify?userId=${dbUser.id}`;
-        }
-
-        // Se já existe conta Google vinculada ou usuário existe com qualquer provedor, permite login
-        console.log('Existing user found for Google login:', dbUser.email);
-        // Se ainda não tem conta Google vinculada, vincula
-        if (!dbUser.accounts.some(acc => acc.provider === "google")) {
-          console.log('Linking Google account to existing user:', dbUser.email);
-          await prisma.user.update({
-            where: { id: dbUser.id },
-            data: { 
-              provider: dbUser.provider || "google",
-              accounts: {
-                create: {
-                  type: account.type,
-                  provider: account.provider,
-                  providerAccountId: account.providerAccountId,
-                  access_token: account.access_token,
-                  token_type: account.token_type,
-                  scope: account.scope,
-                  id_token: account.id_token,
-                }
-              }
-            }
-          });
-        }
         return true;
-      }
-
-      // Para login com credenciais
-      if (!user.email) {
+      } catch (error) {
+        console.error('Error in signIn callback:', error);
         return false;
       }
-
-      const dbUser = await prisma.user.findUnique({
-        where: { email: user.email },
-        select: {
-          id: true,
-          whatsappVerified: true
-        }
-      });
-
-      if (!dbUser?.whatsappVerified) {
-        return `/verify?userId=${dbUser?.id}`;
-      }
-
-      return true;
     },
     async jwt({ token, user, account }) {
       if (user) {

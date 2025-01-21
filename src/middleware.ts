@@ -9,10 +9,18 @@ const authRoutes = ['/portfolios', '/analises', '/ativos-recomendados', '/gpt']
 const premiumRoutes = ['/gpt']
 
 export async function middleware(request: NextRequest) {
-  const token = await getToken({ req: request })
+  console.log('Middleware - Request URL:', request.nextUrl.pathname);
+  
+  const token = await getToken({ 
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET 
+  });
+
+  console.log('Middleware - Token:', token ? 'exists' : 'not found');
 
   // Se não estiver autenticado e tentar acessar rota protegida
   if (!token && authRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
+    console.log('Middleware - Redirecting to login');
     const url = new URL('/login', request.url)
     url.searchParams.set('callbackUrl', request.nextUrl.pathname)
     return NextResponse.redirect(url)
@@ -20,6 +28,7 @@ export async function middleware(request: NextRequest) {
 
   // Se estiver autenticado e tentar acessar login/register
   if (token && ['/login', '/register'].includes(request.nextUrl.pathname)) {
+    console.log('Middleware - Redirecting to portfolios');
     return NextResponse.redirect(new URL('/portfolios', request.url))
   }
 
@@ -29,6 +38,7 @@ export async function middleware(request: NextRequest) {
     const isPremium = token.subscriptionStatus === 'premium'
     
     if (!isPremium) {
+      console.log('Middleware - Redirecting to pricing (not premium)');
       return NextResponse.redirect(new URL('/pricing', request.url))
     }
   }
@@ -42,6 +52,9 @@ export const config = {
     '/ativos-recomendados/:path*',
     '/analises/:path*',
     '/gpt/:path*',
-    '/profile/:path*'
+    '/profile/:path*',
+    '/api/auth/:path*',
+    '/login',
+    '/register'
   ]
 } 
