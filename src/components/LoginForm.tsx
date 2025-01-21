@@ -30,13 +30,20 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
       });
 
       if (!result?.ok) {
-        throw new Error('Credenciais inválidas');
+        console.log('Login error:', result?.error);
+        if (result?.error === "Email não encontrado") {
+          throw new Error("Email não encontrado");
+        } else if (result?.error === "Senha incorreta") {
+          throw new Error("Senha incorreta");
+        } else {
+          throw new Error("Erro ao fazer login");
+        }
       }
 
       router.push(callbackUrl);
       router.refresh();
-    } catch (error) {
-      setError('Email ou senha incorretos');
+    } catch (error: any) {
+      setError(error?.message || 'Erro ao fazer login');
     } finally {
       setIsLoading(false);
     }

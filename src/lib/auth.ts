@@ -19,47 +19,65 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials): Promise<any> {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Credenciais inválidas");
-        }
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            console.log('Missing credentials');
+            throw new Error("Email e senha são obrigatórios");
+          }
 
-        const user = await prisma.user.findUnique({
-          where: {
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials.email,
+            },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              password: true,
+              subscriptionStatus: true,
+              provider: true,
+              whatsappVerified: true,
+              whatsapp: true
+            },
+          });
+
+          console.log('Login attempt:', {
             email: credentials.email,
-          },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            password: true,
-            subscriptionStatus: true,
-            provider: true,
-            whatsappVerified: true,
-            whatsapp: true
-          },
-        });
+            userFound: !!user,
+            hasPassword: !!user?.password
+          });
 
-        if (!user || !user?.password) {
-          throw new Error("Credenciais inválidas");
+          if (!user || !user?.password) {
+            throw new Error("Email não encontrado");
+          }
+
+          const isCorrectPassword = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          console.log('Password check:', {
+            isCorrectPassword,
+            passwordLength: credentials.password.length,
+            hashedLength: user.password.length
+          });
+
+          if (!isCorrectPassword) {
+            throw new Error("Senha incorreta");
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            subscriptionStatus: user.subscriptionStatus,
+            whatsappVerified: user.whatsappVerified,
+            whatsapp: user.whatsapp
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
+          throw error;
         }
-
-        const isCorrectPassword = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isCorrectPassword) {
-          throw new Error("Credenciais inválidas");
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          subscriptionStatus: user.subscriptionStatus,
-          whatsappVerified: user.whatsappVerified,
-          whatsapp: user.whatsapp
-        };
       },
     }),
   ],
