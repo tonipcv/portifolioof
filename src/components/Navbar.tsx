@@ -13,6 +13,12 @@ import { signOut } from 'next-auth/react'
 import { MobileMenu } from './MobileMenu'
 import { usePathname } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Montserrat } from 'next/font/google'
+
+const montserrat = Montserrat({
+  weight: '300',
+  subsets: ['latin']
+})
 
 interface NavbarProps {
   session: Session | null
@@ -86,14 +92,7 @@ export function Navbar({ session }: NavbarProps) {
         <div className="flex-1">
           <div className="h-24 flex items-center px-6 mt-4">
             <Link href="/">
-              <Image
-                src="/logo.png"
-                alt="Logo"
-                width={120}
-                height={40}
-                className="object-contain brightness-0 invert"
-                priority
-              />
+              <h1 className={`text-2xl text-zinc-100 tracking-[0.3em] ${montserrat.className}`}>CRYPH</h1>
             </Link>
           </div>
           <div className="space-y-1 px-3 mt-6">

@@ -2,6 +2,12 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { LoginForm } from '@/components/login-form'
 import Image from 'next/image'
+import { Montserrat } from 'next/font/google'
+
+const montserrat = Montserrat({
+  weight: '300',
+  subsets: ['latin']
+})
 
 export const metadata: Metadata = {
   title: 'Login',
@@ -12,14 +18,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-black flex items-center justify-center font-helvetica">
       <div className="w-full max-w-sm px-8 py-10 bg-zinc-950/70 backdrop-blur-sm rounded-lg border border-zinc-600">
         <div className="text-center">
-          <Image
-            src="/logo.png"
-            alt="Logo"
-            width={120}
-            height={36}
-            className="mx-auto mb-8 brightness-0 invert"
-            priority
-          />
+          <h1 className={`text-4xl text-zinc-100 mb-8 tracking-[0.3em] ${montserrat.className}`}>CRYPH</h1>
         </div>
 
         <div className="mt-8 font-helvetica">

@@ -7,6 +7,12 @@ import { Session } from 'next-auth'
 import { LayoutDashboard, LineChart, BookOpen, MessageSquare, Lock, LogOut } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { signOut } from 'next-auth/react'
+import { Montserrat } from 'next/font/google'
+
+const montserrat = Montserrat({
+  weight: '300',
+  subsets: ['latin']
+})
 
 interface MobileMenuProps {
   session: Session & {
@@ -72,14 +78,7 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
       <div className="md:hidden fixed top-0 left-0 right-0 bg-[#161616] border-b border-[#222222] z-50">
         <div className="flex justify-between items-center h-14 px-4">
           <Link href="/portfolios">
-            <Image
-              src="/logo.png"
-              alt="Logo"
-              width={80}
-              height={24}
-              className="object-contain brightness-0 invert"
-              priority
-            />
+            <h1 className={`text-lg text-zinc-100 tracking-[0.3em] ${montserrat.className}`}>CRYPH</h1>
           </Link>
           
           <Link href="/profile">
