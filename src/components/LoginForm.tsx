@@ -32,33 +32,39 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
     });
 
     try {
-      const result = await signIn('credentials', {
-        email: email.toLowerCase(),
-        password,
-        redirect: false,
-        callbackUrl: callbackUrl || '/portfolios'
+      const response = await fetch('/api/auth/callback/credentials', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email.toLowerCase(),
+          password,
+          redirect: false,
+          callbackUrl: callbackUrl || '/portfolios',
+          json: true
+        })
       });
 
+      const result = await response.json();
+
       console.log('[Login] Result:', {
-        ok: result?.ok,
-        error: result?.error,
-        url: result?.url,
-        status: result?.status,
+        ok: response.ok,
+        status: response.status,
         timestamp: new Date().toISOString()
       });
 
-      if (!result?.ok) {
+      if (!response.ok) {
         const errorMessage = result?.error || 'Unknown error';
         console.error('[Login] Error details:', {
           error: errorMessage,
-          status: result?.status,
-          url: result?.url
+          status: response.status
         });
         
         if (result?.error === 'CredentialsSignin') {
           setError('Email ou senha incorretos');
         } else {
-          setError(`Erro ao fazer login: ${errorMessage}`);
+          setError(result?.message || errorMessage);
         }
         return;
       }
@@ -77,7 +83,7 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
         stack: error?.stack,
         timestamp: new Date().toISOString()
       });
-      setError(`Erro ao fazer login: ${errorMessage}`);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

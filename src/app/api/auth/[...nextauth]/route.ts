@@ -13,8 +13,66 @@ console.log('NextAuth route handler initialized with config:', {
   production: process.env.NODE_ENV === 'production'
 })
 
-// Criar o handler do NextAuth
-const handler = NextAuth(authOptions)
+interface ExtendedRequestInit extends RequestInit {
+  duplex?: 'half'
+}
 
-// Exportar diretamente as funções GET e POST
-export { handler as GET, handler as POST }
+async function auth(request: Request) {
+  try {
+    const contentType = request.headers.get('content-type')
+    
+    console.log('[Auth] Processing request:', {
+      method: request.method,
+      contentType,
+      url: request.url
+    })
+
+    // Se for form-urlencoded, converter para JSON
+    if (contentType?.includes('application/x-www-form-urlencoded')) {
+      const formData = await request.formData()
+      const jsonData = {
+        email: formData.get('email'),
+        password: formData.get('password'),
+        redirect: formData.get('redirect'),
+        callbackUrl: formData.get('callbackUrl'),
+        json: true
+      }
+
+      console.log('[Auth] Converting form data to JSON:', {
+        hasEmail: !!jsonData.email,
+        hasPassword: !!jsonData.password,
+        timestamp: new Date().toISOString()
+      })
+
+      // Criar nova request com dados em JSON
+      const newRequest = new Request(request.url, {
+        method: request.method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jsonData),
+        duplex: 'half'
+      } as ExtendedRequestInit)
+
+      return NextAuth(authOptions)(newRequest)
+    }
+
+    // Se já for JSON ou outro formato, passar direto
+    return NextAuth(authOptions)(request)
+  } catch (error) {
+    console.error('[Auth] Error processing request:', error)
+    return new Response(
+      JSON.stringify({ 
+        error: 'InternalServerError',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred'
+      }),
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
+  }
+}
+
+export const GET = auth
+export const POST = auth
