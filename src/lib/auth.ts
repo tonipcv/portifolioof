@@ -1,6 +1,7 @@
 import { NextAuthOptions, DefaultSession } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 
@@ -25,6 +26,7 @@ declare module 'next-auth/jwt' {
 }
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       id: 'credentials',
@@ -33,7 +35,12 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials): Promise<any> {
+      async authorize(credentials, req): Promise<any> {
+        if (!process.env.NEXTAUTH_SECRET) {
+          console.error('NEXTAUTH_SECRET is not defined');
+          throw new Error("Erro de configuração do servidor");
+        }
+
         try {
           if (!credentials?.email || !credentials?.password) {
             throw new Error("Email e senha são obrigatórios");
@@ -124,7 +131,6 @@ export const authOptions: NextAuthOptions = {
   events: {
     async signOut({ session, token }) {
       try {
-        // Limpar qualquer estado adicional se necessário
         console.log('User signed out:', session?.user?.email);
       } catch (error) {
         console.error('Error during signOut:', error);
