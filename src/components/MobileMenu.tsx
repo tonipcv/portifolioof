@@ -4,8 +4,9 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Session } from 'next-auth'
-import { LayoutDashboard, LineChart, BookOpen, MessageSquare, Lock } from 'lucide-react'
+import { LayoutDashboard, LineChart, BookOpen, MessageSquare, Lock, LogOut } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { signOut } from 'next-auth/react'
 
 interface MobileMenuProps {
   session: Session & {
@@ -19,6 +20,18 @@ interface MobileMenuProps {
 export function MobileMenu({ session, isPremium }: MobileMenuProps) {
   const pathname = usePathname()
   const userIsPremium = isPremium || session?.user?.subscriptionStatus === 'premium'
+
+  const handleLogout = async () => {
+    try {
+      await signOut({ 
+        callbackUrl: '/login',
+        redirect: true
+      })
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error)
+      window.location.href = '/login'
+    }
+  }
 
   const menuItems = [
     {
@@ -44,6 +57,13 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
       href: userIsPremium ? '/gpt' : '/pricing',
       icon: MessageSquare,
       premium: true
+    },
+    {
+      name: 'Sair',
+      href: '#',
+      icon: LogOut,
+      premium: false,
+      onClick: handleLogout
     }
   ]
 
@@ -81,9 +101,9 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
             const finalHref = item.premium && !userIsPremium ? '/pricing' : item.href
             
             return (
-              <Link
+              <button
                 key={item.name}
-                href={finalHref}
+                onClick={item.onClick || (() => {})}
                 className={`flex flex-col items-center justify-center w-full h-full ${
                   isActive ? 'text-white' : 'text-zinc-500'
                 }`}
@@ -95,7 +115,7 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
                   )}
                 </div>
                 <span className="text-[10px] mt-1 font-light tracking-wide">{item.name}</span>
-              </Link>
+              </button>
             )
           })}
         </div>

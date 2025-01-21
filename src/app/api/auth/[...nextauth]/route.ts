@@ -13,70 +13,7 @@ console.log('NextAuth route handler initialized with config:', {
   production: process.env.NODE_ENV === 'production'
 })
 
-// Criar o handler do NextAuth
-const handler = NextAuth(authOptions)
+const auth = NextAuth(authOptions)
 
-// Exportar as funções com o tipo correto para App Router
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url)
-  const nextauthParams = Object.fromEntries(searchParams.entries())
-  
-  console.log('[Auth] GET request:', {
-    url: req.url,
-    params: nextauthParams,
-    timestamp: new Date().toISOString()
-  })
-
-  try {
-    const response = await handler(req)
-    console.log('[Auth] GET response:', {
-      status: response.status,
-      timestamp: new Date().toISOString()
-    })
-    return response
-  } catch (error) {
-    console.error('[Auth] GET error:', error)
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
-  }
-}
-
-export async function POST(req: Request) {
-  const { searchParams } = new URL(req.url)
-  const nextauthParams = Object.fromEntries(searchParams.entries())
-  
-  console.log('[Auth] POST request:', {
-    url: req.url,
-    params: nextauthParams,
-    timestamp: new Date().toISOString()
-  })
-
-  try {
-    const response = await handler(req)
-    console.log('[Auth] POST response:', {
-      status: response.status,
-      timestamp: new Date().toISOString()
-    })
-    return response
-  } catch (error) {
-    console.error('[Auth] POST error:', error)
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal Server Error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
-  }
-}
+export const GET = auth
+export const POST = auth

@@ -8,24 +8,42 @@ const authRoutes = ['/portfolios', '/analises', '/ativos-recomendados', '/gpt']
 // Rotas que requerem premium
 const premiumRoutes = ['/gpt']
 
-export default withAuth(
-  async function middleware(request: NextRequest) {
-    console.log('Middleware - Request URL:', request.nextUrl.pathname);
+// Rotas públicas que não precisam de autenticação
+const publicRoutes = ['/login', '/register', '/forgot-password']
 
-    // Se estiver autenticado e tentar acessar login/register
-    if (['/login', '/register'].includes(request.nextUrl.pathname)) {
-      console.log('Middleware - Redirecting to portfolios');
-      return NextResponse.redirect(new URL('/portfolios', request.url))
+export default withAuth(
+  function middleware(req) {
+    const token = req.nextauth.token
+    const isPublicRoute = publicRoutes.some(route => req.nextUrl.pathname.startsWith(route))
+
+    console.log('Middleware - Token:', token ? 'exists' : 'not found', 'Environment:', process.env.NODE_ENV)
+    console.log('Middleware - Request URL:', req.nextUrl.pathname)
+    console.log('Middleware - Token Data:', {
+      subscriptionStatus: token?.subscriptionStatus,
+      user: token?.user,
+      email: token?.email
+    })
+
+    // Se não estiver autenticado e não for uma rota pública
+    if (!token && !isPublicRoute) {
+      console.log('Middleware - Redirecting to login')
+      return NextResponse.redirect(new URL('/login', req.url))
+    }
+
+    // Se estiver autenticado e tentar acessar uma rota pública
+    if (token && isPublicRoute) {
+      console.log('Middleware - Redirecting to portfolios')
+      return NextResponse.redirect(new URL('/portfolios', req.url))
     }
 
     // Verificar acesso premium
-    if (premiumRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
-      // @ts-ignore - o token tem a propriedade subscriptionStatus
-      const isPremium = request.nextauth?.token?.subscriptionStatus === 'premium'
+    if (premiumRoutes.some(route => req.nextUrl.pathname.startsWith(route))) {
+      const isPremium = token?.subscriptionStatus === 'premium'
+      console.log('Middleware - Premium check:', { isPremium, subscriptionStatus: token?.subscriptionStatus })
       
       if (!isPremium) {
-        console.log('Middleware - Redirecting to pricing (not premium)');
-        return NextResponse.redirect(new URL('/pricing', request.url))
+        console.log('Middleware - Redirecting to pricing (not premium)')
+        return NextResponse.redirect(new URL('/pricing', req.url))
       }
     }
 
@@ -33,32 +51,24 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token, req }) => {
-        console.log('Middleware - Token:', token ? 'exists' : 'not found', 'Environment:', process.env.NODE_ENV);
-        
-        // Se a rota requer autenticação, verifica o token
-        if (authRoutes.some(route => req.nextUrl.pathname.startsWith(route))) {
-          return !!token
-        }
-
-        // Para outras rotas, permite o acesso
-        return true
+      authorized: ({ token }) => {
+        return true // Deixar a lógica de autorização para o middleware
       }
-    },
-    pages: {
-      signIn: '/login'
     }
   }
 )
 
+// Configurar quais rotas o middleware deve proteger
 export const config = {
   matcher: [
-    '/portfolios/:path*',
-    '/ativos-recomendados/:path*',
-    '/analises/:path*',
-    '/gpt/:path*',
-    '/profile/:path*',
-    '/login',
-    '/register'
-  ]
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api/auth (auth API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - manifest
+     */
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|manifest).*)',
+  ],
 } 

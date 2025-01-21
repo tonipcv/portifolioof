@@ -136,7 +136,17 @@ export function Navbar({ session }: NavbarProps) {
             </Link>
             {session && (
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={async () => {
+                  try {
+                    await signOut({ 
+                      callbackUrl: '/login',
+                      redirect: true
+                    })
+                  } catch (error) {
+                    console.error('Erro ao fazer logout:', error)
+                    window.location.href = '/login'
+                  }
+                }}
                 className="flex items-center p-2 text-gray-400 hover:text-gray-200 transition-colors"
               >
                 <LogOut className="h-5 w-5" />

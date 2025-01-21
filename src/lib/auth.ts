@@ -169,6 +169,12 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async redirect({ url, baseUrl }) {
       console.log('[Auth] Redirect callback:', { url, baseUrl });
+      
+      // Se for uma URL de erro, redireciona para /login com a mensagem
+      if (url.includes('/api/auth/error')) {
+        return '/login?error=AuthenticationError';
+      }
+      
       // Se a URL for relativa, adiciona o baseUrl
       if (url.startsWith('/')) {
         return `${baseUrl}${url}`;
@@ -232,36 +238,39 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async jwt({ token, user }) {
-      try {
-        if (user) {
-          return {
-            ...token,
-            id: user.id,
-            whatsappVerified: user.whatsappVerified
+      if (user) {
+        // Buscar informações do usuário no banco
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: {
+            id: true,
+            subscriptionStatus: true,
+            whatsappVerified: true
           }
-        }
-        return token
-      } catch (error: any) {
-        logError('jwt', error, { tokenExists: !!token })
-        return token
+        })
+
+        // Log para debug
+        console.log('[Auth] JWT Callback - User Data:', {
+          dbUser,
+          token,
+          timestamp: new Date().toISOString()
+        })
+
+        // Atualizar o token com as informações do banco
+        token.subscriptionStatus = dbUser?.subscriptionStatus || 'free'
+        token.whatsappVerified = dbUser?.whatsappVerified || false
       }
+      return token
     },
     async session({ session, token }) {
-      try {
-        return {
-          ...session,
-          user: {
-            ...session.user,
-            id: token.id as string,
-            whatsappVerified: token.whatsappVerified as boolean
-          }
+      // Passar as informações do token para a sessão
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          subscriptionStatus: token.subscriptionStatus,
+          whatsappVerified: token.whatsappVerified
         }
-      } catch (error: any) {
-        logError('session', error, { 
-          sessionExists: !!session,
-          tokenExists: !!token
-        })
-        return session
       }
     }
   }
