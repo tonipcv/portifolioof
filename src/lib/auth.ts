@@ -55,16 +55,19 @@ export const authOptions: NextAuthOptions = {
           console.log('[Auth] Starting authorization:', { 
             email: credentials?.email,
             hasPassword: !!credentials?.password,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            production: process.env.NODE_ENV === 'production'
           })
 
           // Validação dos campos
           if (!credentials?.email || !credentials?.password) {
-            logError('authorize/validation', new Error('Missing credentials'), {
+            const error = new Error("Email e senha são obrigatórios");
+            logError('authorize/validation', error, {
               email: credentials?.email,
-              hasPassword: !!credentials?.password
-            })
-            throw new Error("Email e senha são obrigatórios")
+              hasPassword: !!credentials?.password,
+              timestamp: new Date().toISOString()
+            });
+            throw error;
           }
 
           // Buscar usuário
@@ -77,26 +80,44 @@ export const authOptions: NextAuthOptions = {
               password: true,
               whatsappVerified: true
             }
-          })
+          }).catch(error => {
+            logError('authorize/database', error, {
+              email: credentials?.email,
+              timestamp: new Date().toISOString()
+            });
+            throw new Error(`Erro ao buscar usuário: ${error.message}`);
+          });
 
           // Verificar se usuário existe
           if (!user || !user.password) {
-            logError('authorize/user-check', new Error('User not found or no password'), {
+            const error = new Error("Email ou senha incorretos");
+            logError('authorize/user-check', error, {
               email: credentials.email,
               userExists: !!user,
-              hasPassword: !!user?.password
-            })
-            throw new Error("Email ou senha incorretos")
+              hasPassword: !!user?.password,
+              timestamp: new Date().toISOString()
+            });
+            throw error;
           }
 
           // Verificar senha
           const isValid = await bcrypt.compare(credentials.password, user.password)
+            .catch(error => {
+              logError('authorize/bcrypt', error, {
+                email: user.email,
+                timestamp: new Date().toISOString()
+              });
+              throw new Error(`Erro ao verificar senha: ${error.message}`);
+            });
+
           if (!isValid) {
-            logError('authorize/password-check', new Error('Invalid password'), {
+            const error = new Error("Email ou senha incorretos");
+            logError('authorize/password-check', error, {
               email: user.email,
-              userId: user.id
-            })
-            throw new Error("Email ou senha incorretos")
+              userId: user.id,
+              timestamp: new Date().toISOString()
+            });
+            throw error;
           }
 
           // Log de sucesso
@@ -105,20 +126,23 @@ export const authOptions: NextAuthOptions = {
             userId: user.id,
             whatsappVerified: user.whatsappVerified,
             timestamp: new Date().toISOString()
-          })
+          });
 
           return {
             id: user.id,
             email: user.email,
             name: user.name,
             whatsappVerified: user.whatsappVerified
-          }
+          };
         } catch (error: any) {
           logError('authorize', error, {
             email: credentials?.email,
-            attemptTimestamp: new Date().toISOString()
-          })
-          throw error
+            errorMessage: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+          });
+          // Propagar o erro original em vez de criar um novo
+          throw error;
         }
       }
     })

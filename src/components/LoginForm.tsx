@@ -27,7 +27,8 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
       email,
       callbackUrl,
       timestamp: new Date().toISOString(),
-      currentUrl: window.location.href
+      currentUrl: window.location.href,
+      production: process.env.NODE_ENV === 'production'
     });
 
     try {
@@ -42,26 +43,41 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
         ok: result?.ok,
         error: result?.error,
         url: result?.url,
-        status: result?.status
+        status: result?.status,
+        timestamp: new Date().toISOString()
       });
 
       if (!result?.ok) {
+        const errorMessage = result?.error || 'Unknown error';
+        console.error('[Login] Error details:', {
+          error: errorMessage,
+          status: result?.status,
+          url: result?.url
+        });
+        
         if (result?.error === 'CredentialsSignin') {
           setError('Email ou senha incorretos');
         } else {
-          setError(`Erro ao fazer login: ${result?.error}`);
+          setError(`Erro ao fazer login: ${errorMessage}`);
         }
         return;
       }
 
       if (result.url) {
+        console.log('[Login] Redirecting to:', result.url);
         router.push(result.url);
       } else {
+        console.log('[Login] Redirecting to fallback:', callbackUrl || '/portfolios');
         router.push(callbackUrl || '/portfolios');
       }
     } catch (error: any) {
-      console.error('[Login] Error:', error);
-      setError(error?.message || 'Ocorreu um erro ao fazer login');
+      const errorMessage = error?.message || error?.toString() || 'Erro desconhecido';
+      console.error('[Login] Exception:', {
+        message: errorMessage,
+        stack: error?.stack,
+        timestamp: new Date().toISOString()
+      });
+      setError(`Erro ao fazer login: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
