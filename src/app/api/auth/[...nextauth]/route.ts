@@ -13,14 +13,64 @@ console.log('NextAuth route handler initialized with config:', {
   production: process.env.NODE_ENV === 'production'
 })
 
-let handler;
-
-try {
-  handler = NextAuth(authOptions)
-  console.log('NextAuth handler created successfully')
-} catch (error) {
-  console.error('Error creating NextAuth handler:', error)
-  throw error
+interface ExtendedRequestInit extends RequestInit {
+  duplex?: 'half'
 }
 
-export { handler as GET, handler as POST }
+async function auth(request: Request) {
+  const contentType = request.headers.get('content-type')
+  
+  console.log('[Auth] Processing request:', {
+    method: request.method,
+    contentType,
+    url: request.url
+  });
+  
+  if (contentType?.includes('application/x-www-form-urlencoded')) {
+    try {
+      // Criar uma cópia da request para não modificar a original
+      const clonedBody = await request.clone().text()
+      
+      // Converter form-urlencoded para objeto
+      const formData = new URLSearchParams(clonedBody)
+      const jsonData = {
+        email: formData.get('email'),
+        password: formData.get('password'),
+        redirect: formData.get('redirect'),
+        callbackUrl: formData.get('callbackUrl'),
+        csrfToken: formData.get('csrfToken'),
+        json: true
+      }
+
+      console.log('[Auth] Converted form data:', {
+        hasEmail: !!jsonData.email,
+        hasPassword: !!jsonData.password,
+        redirect: jsonData.redirect,
+        callbackUrl: jsonData.callbackUrl
+      });
+      
+      // Criar nova request com dados em JSON
+      const newRequest = new Request(request.url, {
+        method: request.method,
+        duplex: 'half',
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        }),
+        body: JSON.stringify(jsonData)
+      } as ExtendedRequestInit)
+      
+      return NextAuth(authOptions)(newRequest)
+    } catch (error) {
+      console.error('[Auth] Error processing form data:', error)
+      return new Response(
+        JSON.stringify({ error: 'Invalid request format' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+  
+  return NextAuth(authOptions)(request)
+}
+
+export const GET = auth
+export const POST = auth

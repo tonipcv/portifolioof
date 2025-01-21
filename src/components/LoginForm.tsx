@@ -23,16 +23,28 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
     setIsLoading(true);
     setError('');
 
+    console.log('Login attempt:', { 
+      email,
+      callbackUrl,
+      timestamp: new Date().toISOString()
+    });
+
     try {
       const result = await signIn('credentials', {
         email: email.toLowerCase(),
         password,
         redirect: false,
-        callbackUrl: '/portfolios'
+        callbackUrl
+      });
+
+      console.log('Login result:', {
+        ok: result?.ok,
+        error: result?.error,
+        url: result?.url
       });
 
       if (!result?.ok) {
-        setError('Email ou senha incorretos');
+        setError(result?.error || 'Email ou senha incorretos');
         return;
       }
 
