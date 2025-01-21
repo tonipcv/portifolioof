@@ -23,12 +23,10 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
     setError('');
 
     try {
-      const baseUrl = window.location.origin;
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false,
-        callbackUrl: baseUrl + callbackUrl
+        redirect: false
       });
 
       if (!result) {
@@ -39,11 +37,7 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
         throw new Error(result.error);
       }
 
-      if (result.url) {
-        router.push(callbackUrl);
-      } else {
-        router.push('/portfolios');
-      }
+      router.push(callbackUrl);
       router.refresh();
     } catch (error: any) {
       console.error('Login error:', error);

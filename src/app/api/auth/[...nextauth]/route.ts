@@ -1,10 +1,10 @@
 import NextAuth from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
-const auth = NextAuth(authOptions)
+const handler = NextAuth(authOptions)
 
-export const GET = auth
-export const POST = auth
+export const GET = handler
+export const POST = handler
 
 // Necessário para o App Router
 export const runtime = 'nodejs'
