@@ -6,6 +6,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
+interface SignInResponse {
+  error?: string;
+  status?: number;
+  ok?: boolean;
+  url?: string;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -19,18 +26,32 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const result = await signIn('credentials', {
+      // Adiciona um timeout para a requisição
+      const loginPromise = signIn('credentials', {
         email,
         password,
         redirect: false
       });
+
+      const timeoutPromise = new Promise<SignInResponse>((_, reject) => {
+        setTimeout(() => reject(new Error('Tempo limite excedido')), 15000);
+      });
+
+      const result = await Promise.race([loginPromise, timeoutPromise]) as SignInResponse;
 
       if (!result) {
         throw new Error('Não foi possível conectar ao servidor');
       }
 
       if (result.error) {
-        throw new Error(result.error);
+        // Tenta parsear o erro se for uma string JSON
+        try {
+          const parsedError = JSON.parse(result.error);
+          throw new Error(parsedError.message || parsedError.error || 'Erro desconhecido');
+        } catch {
+          // Se não for JSON, usa a mensagem de erro diretamente
+          throw new Error(result.error);
+        }
       }
 
       if (result.ok) {
@@ -38,6 +59,7 @@ export default function LoginPage() {
         router.refresh();
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       setError(error.message || 'Erro ao fazer login');
     } finally {
       setIsLoading(false);
