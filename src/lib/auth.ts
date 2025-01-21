@@ -7,7 +7,7 @@ import { prisma } from './prisma'
 import { User } from 'next-auth'
 
 const production = process.env.NODE_ENV === 'production'
-const baseUrl = 'https://app.cryph.ai'
+const baseUrl = production ? 'https://app.cryph.ai' : 'http://localhost:3000'
 
 // Log das variáveis de ambiente (sem expor valores sensíveis)
 console.log('Environment Config:', {
@@ -18,6 +18,7 @@ console.log('Environment Config:', {
   hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
   hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
   hasNextAuthSecret: !!process.env.NEXTAUTH_SECRET,
+  cookiePrefix: production ? '__Secure-' : '',
   cookieDomain: production ? '.cryph.ai' : undefined
 })
 
@@ -28,7 +29,7 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 dias
   },
-  debug: true,
+  debug: production, // Habilita debug em produção temporariamente
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -88,14 +89,36 @@ export const authOptions: NextAuthOptions = {
         secure: production,
         domain: production ? '.cryph.ai' : undefined
       }
+    },
+    callbackUrl: {
+      name: `${production ? '__Secure-' : ''}next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: production,
+        domain: production ? '.cryph.ai' : undefined
+      }
+    },
+    csrfToken: {
+      name: `${production ? '__Secure-' : ''}next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: production,
+        domain: production ? '.cryph.ai' : undefined
+      }
     }
   },
   callbacks: {
     async signIn({ user, account }) {
-      console.log('Callback signIn:', { 
+      console.log('SignIn Callback:', { 
         email: user?.email,
         provider: account?.provider,
-        whatsappVerified: user?.whatsappVerified
+        whatsappVerified: user?.whatsappVerified,
+        env: process.env.NODE_ENV,
+        production
       });
 
       if (!user?.email) {
