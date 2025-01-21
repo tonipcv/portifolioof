@@ -9,20 +9,15 @@ const errorMessages: { [key: string]: string } = {
   Default: 'Ocorreu um erro durante o login. Por favor, tente novamente.'
 };
 
-interface ErrorMessageProps {
-  message?: string;
-}
-
-export function ErrorMessage({ message }: ErrorMessageProps) {
+export function ErrorMessage() {
   const searchParams = useSearchParams();
-  const error = searchParams?.get('error');
-  const displayMessage = message || (error ? errorMessages[error as keyof typeof errorMessages] || errorMessages.Default : '');
+  const error = searchParams.get('error');
 
-  if (!displayMessage) return null;
-  
+  if (!error) return null;
+
   return (
     <div className="mb-6 p-4 text-sm text-red-400 bg-red-950/50 border border-red-900/50 rounded-lg" role="alert">
-      {displayMessage}
+      {errorMessages[error as keyof typeof errorMessages] || errorMessages.Default}
     </div>
   );
 } 

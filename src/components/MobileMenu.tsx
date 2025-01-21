@@ -4,15 +4,8 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Session } from 'next-auth'
-import { LayoutDashboard, LineChart, BookOpen, MessageSquare, Lock, LogOut } from 'lucide-react'
+import { LayoutDashboard, LineChart, BookOpen, MessageSquare, Lock } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { signOut } from 'next-auth/react'
-import { Montserrat } from 'next/font/google'
-
-const montserrat = Montserrat({
-  weight: '300',
-  subsets: ['latin']
-})
 
 interface MobileMenuProps {
   session: Session & {
@@ -26,18 +19,6 @@ interface MobileMenuProps {
 export function MobileMenu({ session, isPremium }: MobileMenuProps) {
   const pathname = usePathname()
   const userIsPremium = isPremium || session?.user?.subscriptionStatus === 'premium'
-
-  const handleLogout = async () => {
-    try {
-      await signOut({ 
-        callbackUrl: '/login',
-        redirect: true
-      })
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error)
-      window.location.href = '/login'
-    }
-  }
 
   const menuItems = [
     {
@@ -63,13 +44,6 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
       href: userIsPremium ? '/gpt' : '/pricing',
       icon: MessageSquare,
       premium: true
-    },
-    {
-      name: 'Sair',
-      href: '#',
-      icon: LogOut,
-      premium: false,
-      onClick: handleLogout
     }
   ]
 
@@ -78,7 +52,14 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
       <div className="md:hidden fixed top-0 left-0 right-0 bg-[#161616] border-b border-[#222222] z-50">
         <div className="flex justify-between items-center h-14 px-4">
           <Link href="/portfolios">
-            <h1 className={`text-lg text-zinc-100 tracking-[0.3em] ${montserrat.className}`}>CRYPH</h1>
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={80}
+              height={24}
+              className="object-contain brightness-0 invert"
+              priority
+            />
           </Link>
           
           <Link href="/profile">
@@ -100,9 +81,9 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
             const finalHref = item.premium && !userIsPremium ? '/pricing' : item.href
             
             return (
-              <button
+              <Link
                 key={item.name}
-                onClick={item.onClick || (() => {})}
+                href={finalHref}
                 className={`flex flex-col items-center justify-center w-full h-full ${
                   isActive ? 'text-white' : 'text-zinc-500'
                 }`}
@@ -114,7 +95,7 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
                   )}
                 </div>
                 <span className="text-[10px] mt-1 font-light tracking-wide">{item.name}</span>
-              </button>
+              </Link>
             )
           })}
         </div>

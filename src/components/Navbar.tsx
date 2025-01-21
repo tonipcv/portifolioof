@@ -13,12 +13,6 @@ import { signOut } from 'next-auth/react'
 import { MobileMenu } from './MobileMenu'
 import { usePathname } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Montserrat } from 'next/font/google'
-
-const montserrat = Montserrat({
-  weight: '300',
-  subsets: ['latin']
-})
 
 interface NavbarProps {
   session: Session | null
@@ -92,7 +86,14 @@ export function Navbar({ session }: NavbarProps) {
         <div className="flex-1">
           <div className="h-24 flex items-center px-6 mt-4">
             <Link href="/">
-              <h1 className={`text-2xl text-zinc-100 tracking-[0.3em] ${montserrat.className}`}>CRYPH</h1>
+              <Image
+                src="/logo.png"
+                alt="Logo"
+                width={120}
+                height={40}
+                className="object-contain brightness-0 invert"
+                priority
+              />
             </Link>
           </div>
           <div className="space-y-1 px-3 mt-6">
@@ -135,17 +136,7 @@ export function Navbar({ session }: NavbarProps) {
             </Link>
             {session && (
               <button
-                onClick={async () => {
-                  try {
-                    await signOut({ 
-                      callbackUrl: '/login',
-                      redirect: true
-                    })
-                  } catch (error) {
-                    console.error('Erro ao fazer logout:', error)
-                    window.location.href = '/login'
-                  }
-                }}
+                onClick={() => signOut({ callbackUrl: '/' })}
                 className="flex items-center p-2 text-gray-400 hover:text-gray-200 transition-colors"
               >
                 <LogOut className="h-5 w-5" />

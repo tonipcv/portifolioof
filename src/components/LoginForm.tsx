@@ -12,7 +12,7 @@ interface LoginFormProps {
 export function LoginForm({ buttonClassName }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/portfolios';
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -23,70 +23,27 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
     setIsLoading(true);
     setError('');
 
-    console.log('[Login] Attempt:', { 
-      email,
-      callbackUrl,
-      timestamp: new Date().toISOString(),
-      currentUrl: window.location.href,
-      production: process.env.NODE_ENV === 'production'
-    });
-
     try {
       const result = await signIn('credentials', {
-        email: email.toLowerCase(),
-        password,
         redirect: false,
-        callbackUrl: callbackUrl || '/portfolios'
-      });
-
-      console.log('[Login] Result:', {
-        ok: result?.ok,
-        error: result?.error,
-        url: result?.url,
-        status: result?.status,
-        timestamp: new Date().toISOString()
+        email,
+        password,
       });
 
       if (!result?.ok) {
-        console.error('[Login] Error details:', {
-          error: result?.error,
-          status: result?.status,
-          url: result?.url
-        });
-        
-        if (result?.error === 'CredentialsSignin') {
-          setError('Email ou senha incorretos');
-        } else {
-          // Mostrar o erro específico
-          const errorMessage = result?.error || 'Erro desconhecido';
-          setError(`Falha na autenticação: ${errorMessage}`);
-        }
-        return;
+        throw new Error('Credenciais inválidas');
       }
 
-      // Se o login foi bem sucedido
-      if (result.url) {
-        console.log('[Login] Redirecting to:', result.url);
-        router.push(result.url);
-      } else {
-        console.log('[Login] Redirecting to fallback:', callbackUrl || '/portfolios');
-        router.push(callbackUrl || '/portfolios');
-      }
-    } catch (error: any) {
-      const errorMessage = error?.message || error?.toString() || 'Erro desconhecido';
-      console.error('[Login] Exception:', {
-        message: errorMessage,
-        stack: error?.stack,
-        timestamp: new Date().toISOString()
-      });
-      setError(`Erro no processo de login: ${errorMessage}`);
+      router.push(callbackUrl);
+      router.refresh();
+    } catch (error) {
+      setError('Email ou senha incorretos');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
-    setIsLoading(true);
     signIn('google', { 
       callbackUrl,
       redirect: true
@@ -98,12 +55,11 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
       <button
         type="button"
         onClick={handleGoogleLogin}
-        disabled={isLoading}
         className="w-full flex items-center justify-center gap-2 py-2.5 bg-zinc-800/30 border border-green-100/20 
           text-zinc-100 rounded-lg transition-all duration-300 
           hover:bg-zinc-700/50 hover:border-green-100/40 
           focus:outline-none focus:ring-2 focus:ring-green-100/30
-          font-light tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+          font-light tracking-wide"
       >
         <Image 
           src="/google.svg" 
@@ -167,17 +123,19 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full py-2.5 bg-zinc-800/30 border border-green-100/20 
-            text-zinc-100 rounded-lg transition-all duration-300 
-            hover:bg-zinc-700/50 hover:border-green-100/40 
-            focus:outline-none focus:ring-2 focus:ring-green-100/30
-            font-light tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? 'Entrando...' : 'Entrar'}
-        </button>
+        <div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-2.5 bg-zinc-800/30 border border-green-100/20 
+              text-zinc-100 rounded-lg transition-all duration-300 
+              hover:bg-zinc-700/50 hover:border-green-100/40 
+              focus:outline-none focus:ring-2 focus:ring-green-100/30
+              font-light tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? 'Entrando...' : 'Entrar'}
+          </button>
+        </div>
       </form>
     </div>
   );

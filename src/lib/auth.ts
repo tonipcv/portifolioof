@@ -5,26 +5,6 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 
-const production = process.env.NODE_ENV === 'production'
-
-// Função auxiliar para logs detalhados
-const logError = (stage: string, error: any, context?: any) => {
-  console.error(`[${new Date().toISOString()}] Auth Error at ${stage}:`, {
-    error: {
-      message: error.message,
-      name: error.name,
-      stack: production ? error.stack : undefined
-    },
-    context,
-    environment: {
-      nodeEnv: process.env.NODE_ENV,
-      nextAuthUrl: process.env.NEXTAUTH_URL,
-      hasSecret: !!process.env.NEXTAUTH_SECRET,
-      production
-    }
-  })
-}
-
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   secret: process.env.NEXTAUTH_SECRET,
@@ -32,246 +12,251 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 dias
   },
-  debug: true, // Sempre habilitar logs para diagnóstico
-  useSecureCookies: process.env.NODE_ENV === 'production',
-  cookies: {
-    sessionToken: {
-      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production'
-      }
-    }
-  },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          prompt: "select_account"
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
         }
       }
     }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
-        try {
-          // Log do início da autorização
-          console.log('[Auth] Starting authorization:', { 
-            email: credentials?.email,
-            hasPassword: !!credentials?.password,
-            timestamp: new Date().toISOString(),
-            production: process.env.NODE_ENV === 'production'
-          })
-
-          // Validação dos campos
-          if (!credentials?.email || !credentials?.password) {
-            const error = new Error("Email e senha são obrigatórios");
-            logError('authorize/validation', error, {
-              email: credentials?.email,
-              hasPassword: !!credentials?.password,
-              timestamp: new Date().toISOString()
-            });
-            throw error;
-          }
-
-          // Buscar usuário
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email.toLowerCase() },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              password: true,
-              whatsappVerified: true
-            }
-          }).catch(error => {
-            logError('authorize/database', error, {
-              email: credentials?.email,
-              timestamp: new Date().toISOString()
-            });
-            throw new Error(`Erro ao buscar usuário: ${error.message}`);
-          });
-
-          // Verificar se usuário existe
-          if (!user || !user.password) {
-            const error = new Error("Email ou senha incorretos");
-            logError('authorize/user-check', error, {
-              email: credentials.email,
-              userExists: !!user,
-              hasPassword: !!user?.password,
-              timestamp: new Date().toISOString()
-            });
-            throw error;
-          }
-
-          // Verificar senha
-          const isValid = await bcrypt.compare(credentials.password, user.password)
-            .catch(error => {
-              logError('authorize/bcrypt', error, {
-                email: user.email,
-                timestamp: new Date().toISOString()
-              });
-              throw new Error(`Erro ao verificar senha: ${error.message}`);
-            });
-
-          if (!isValid) {
-            const error = new Error("Email ou senha incorretos");
-            logError('authorize/password-check', error, {
-              email: user.email,
-              userId: user.id,
-              timestamp: new Date().toISOString()
-            });
-            throw error;
-          }
-
-          // Log de sucesso
-          console.log('[Auth] Login successful:', { 
-            email: user.email,
-            userId: user.id,
-            whatsappVerified: user.whatsappVerified,
-            timestamp: new Date().toISOString()
-          });
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            whatsappVerified: user.whatsappVerified
-          };
-        } catch (error: any) {
-          logError('authorize', error, {
-            email: credentials?.email,
-            errorMessage: error.message,
-            stack: error.stack,
-            timestamp: new Date().toISOString()
-          });
-          // Propagar o erro original em vez de criar um novo
-          throw error;
+      async authorize(credentials): Promise<any> {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Credenciais inválidas");
         }
-      }
-    })
+
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.email,
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            subscriptionStatus: true,
+            provider: true,
+            whatsappVerified: true,
+            whatsapp: true
+          },
+        });
+
+        if (!user || !user?.password || user.provider === 'google') {
+          throw new Error("Credenciais inválidas");
+        }
+
+        const isCorrectPassword = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isCorrectPassword) {
+          throw new Error("Credenciais inválidas");
+        }
+
+        // Atualizar provedor se ainda não estiver definido
+        if (!user.provider) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { provider: 'credentials' }
+          });
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          subscriptionStatus: user.subscriptionStatus,
+          whatsappVerified: user.whatsappVerified,
+          whatsapp: user.whatsapp
+        };
+      },
+    }),
   ],
-  pages: {
-    signIn: '/login',
-    signOut: '/login',
-    error: '/login',
-    verifyRequest: '/login',
-    newUser: '/register'
-  },
   callbacks: {
-    async redirect({ url, baseUrl }) {
-      console.log('[Auth] Redirect callback:', { url, baseUrl });
-      
-      // Se for uma URL de erro, redireciona para /login com a mensagem
-      if (url.includes('/api/auth/error')) {
-        return '/login?error=AuthenticationError';
-      }
-      
-      // Se a URL for relativa, adiciona o baseUrl
-      if (url.startsWith('/')) {
-        return `${baseUrl}${url}`;
-      }
-      // Se a URL for do mesmo domínio, permite
-      else if (url.startsWith(baseUrl)) {
-        return url;
-      }
-      // Caso contrário, redireciona para a página inicial
-      return baseUrl;
-    },
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       try {
-        console.log('[Auth] SignIn callback started:', {
-          provider: account?.provider,
-          email: user?.email,
-          timestamp: new Date().toISOString()
-        })
-
-        if (!user?.email) {
-          logError('signIn/validation', new Error('No email provided'), {
-            provider: account?.provider
-          })
-          return false
-        }
-
-        // Login com credenciais (email/senha) não precisa de WhatsApp verificado
-        if (account?.provider === "credentials") {
-          console.log('[Auth] Credentials provider login successful')
-          return true
-        }
-
-        // Apenas login com Google precisa de WhatsApp verificado
         if (account?.provider === "google") {
-          console.log('[Auth] Processing Google login')
-          const dbUser = await prisma.user.findUnique({
-            where: { email: user.email },
-            select: { whatsappVerified: true }
-          })
+          const googleEmail = profile?.email;
+          
+          console.log('SignIn callback - Google data:', { 
+            googleEmail,
+            profileEmail: profile?.email,
+            userEmail: user?.email,
+            profile,
+            account
+          });
 
-          if (!dbUser?.whatsappVerified) {
-            logError('signIn/google', new Error('WhatsApp not verified'), {
-              email: user.email,
-              provider: 'google'
-            })
+          if (!googleEmail) {
+            console.log('No Google email provided');
+            return false;
           }
 
-          return dbUser?.whatsappVerified === true
+          // Primeiro, tentar encontrar usuário pelo email do Google
+          let dbUser = await prisma.user.findUnique({
+            where: { email: googleEmail },
+            include: {
+              accounts: true
+            }
+          });
+
+          console.log('Found user by email:', dbUser);
+
+          // Se não encontrou pelo email, procurar pela conta Google
+          if (!dbUser) {
+            const googleAccount = await prisma.account.findFirst({
+              where: {
+                provider: 'google',
+                providerAccountId: account.providerAccountId
+              },
+              include: {
+                user: {
+                  include: {
+                    accounts: true
+                  }
+                }
+              }
+            });
+
+            console.log('Found Google account:', googleAccount);
+
+            if (googleAccount) {
+              dbUser = googleAccount.user;
+              // Atualizar email se diferente
+              if (dbUser.email !== googleEmail) {
+                await prisma.user.update({
+                  where: { id: dbUser.id },
+                  data: { email: googleEmail }
+                });
+              }
+            }
+          }
+
+          // Se o usuário não existe no banco, criar novo
+          if (!dbUser) {
+            console.log('Creating new user for Google account:', googleEmail);
+            const newUser = await prisma.user.create({
+              data: {
+                email: googleEmail,
+                name: profile?.name || user.name!,
+                whatsappVerified: false,
+                provider: "google"
+              }
+            });
+
+            // Criar conta Google separadamente
+            await prisma.account.create({
+              data: {
+                userId: newUser.id,
+                type: account.type!,
+                provider: account.provider!,
+                providerAccountId: account.providerAccountId!,
+                access_token: account.access_token!,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+              }
+            });
+
+            console.log('Created new user:', newUser);
+            return `/verify?userId=${newUser.id}`;
+          }
+
+          // Se o usuário existe mas WhatsApp não está verificado
+          if (!dbUser.whatsappVerified) {
+            console.log('User needs WhatsApp verification:', dbUser.email);
+            return `/verify?userId=${dbUser.id}`;
+          }
+
+          // Se ainda não tem conta Google vinculada, vincular
+          if (!dbUser.accounts.some(acc => acc.provider === "google")) {
+            console.log('Linking Google account to existing user:', dbUser.email);
+            await prisma.account.create({
+              data: {
+                userId: dbUser.id,
+                type: account.type!,
+                provider: account.provider!,
+                providerAccountId: account.providerAccountId!,
+                access_token: account.access_token!,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+              }
+            });
+          }
+
+          return true;
         }
 
-        logError('signIn/provider', new Error('Unknown provider'), {
-          provider: account?.provider
-        })
-        return false
-      } catch (error: any) {
-        logError('signIn', error, {
-          email: user?.email,
-          provider: account?.provider
-        })
-        return false
+        // Para login com credenciais
+        if (!user.email) {
+          return false;
+        }
+
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
+          select: {
+            id: true,
+            whatsappVerified: true
+          }
+        });
+
+        if (!dbUser?.whatsappVerified) {
+          return `/verify?userId=${dbUser?.id}`;
+        }
+
+        return true;
+      } catch (error) {
+        console.error('Error in signIn callback:', error);
+        return false;
       }
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        // Buscar informações do usuário no banco
         const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
+          where: { email: user.email! },
           select: {
             id: true,
             subscriptionStatus: true,
-            whatsappVerified: true
+            emailVerified: true,
+            whatsappVerified: true,
+            whatsapp: true
           }
-        })
+        });
 
-        // Log para debug
-        console.log('[Auth] JWT Callback - User Data:', {
-          dbUser,
-          token,
-          timestamp: new Date().toISOString()
-        })
-
-        // Atualizar o token com as informações do banco
-        token.subscriptionStatus = dbUser?.subscriptionStatus || 'free'
-        token.whatsappVerified = dbUser?.whatsappVerified || false
+        token.id = dbUser?.id;
+        token.subscriptionStatus = dbUser?.subscriptionStatus;
+        token.emailVerified = dbUser?.emailVerified;
+        token.whatsappVerified = dbUser?.whatsappVerified;
+        token.whatsapp = dbUser?.whatsapp;
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
-      // Passar as informações do token para a sessão
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          subscriptionStatus: token.subscriptionStatus,
-          whatsappVerified: token.whatsappVerified
-        }
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.subscriptionStatus = token.subscriptionStatus as string;
+        session.user.emailVerified = token.emailVerified as Date | null;
+        session.user.whatsappVerified = token.whatsappVerified as boolean;
+        session.user.whatsapp = token.whatsapp as string;
       }
+      return session;
     }
-  }
+  },
+  pages: {
+    signIn: '/login',
+    error: '/login',
+    signOut: '/login'
+  },
+  debug: process.env.NODE_ENV === 'development'
 } 

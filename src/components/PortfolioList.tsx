@@ -43,22 +43,16 @@ export function PortfolioList() {
   const [portfolios, setPortfolios] = useState<Portfolio[]>([])
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [usdToBRL, setUsdToBRL] = useState(5.00) // Começar com valor padrão
+  const [usdToBRL, setUsdToBRL] = useState(5.00)
   const router = useRouter()
 
   const loadPortfolios = useCallback(async () => {
-    if (!session?.user?.id) return
-    
     try {
-      setIsRefreshing(true)
-      
-      // Carregar taxa de câmbio apenas se ainda não tiver sido carregada
-      if (usdToBRL === 5.00) {
-        const usdRate = await getUSDToBRL()
-        setUsdToBRL(usdRate)
-      }
+      setLoading(true)
+      const usdRate = await getUSDToBRL()
+      setUsdToBRL(usdRate)
 
-      const response = await fetch(`/api/portfolios?userId=${session.user.id}`)
+      const response = await fetch('/api/portfolios')
       if (!response.ok) throw new Error('Failed to fetch portfolios')
       
       const data = await response.json()
@@ -66,26 +60,25 @@ export function PortfolioList() {
     } catch (error) {
       console.error('Error loading portfolios:', error)
     } finally {
-      setIsRefreshing(false)
       setLoading(false)
     }
-  }, [session?.user?.id, usdToBRL])
+  }, [])
 
   useEffect(() => {
-    // Carregar apenas quando a sessão estiver pronta e não tivermos portfolios
-    if (status === 'authenticated' && session?.user?.id && portfolios.length === 0) {
+    if (status === 'authenticated' && session?.user?.id) {
+      console.log('Session authenticated, loading portfolios')
       loadPortfolios()
-    } else if (status !== 'loading') {
-      setLoading(false)
+    } else {
+      setLoading(false) // Definir loading como false se não houver sessão
     }
-  }, [status, session, loadPortfolios, portfolios.length])
+  }, [status, session, loadPortfolios])
 
-  if (loading && status === 'loading') {
+  if (loading) {
     return (
       <div className="min-h-[200px] flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <p className="text-gray-400">Carregando...</p>
+          <p className="text-gray-400">Carregando portfolios...</p>
         </div>
       </div>
     )
@@ -95,7 +88,7 @@ export function PortfolioList() {
     <div className="space-y-6">
       <div className="flex justify-end">
         <button
-          onClick={() => loadPortfolios()}
+          onClick={loadPortfolios}
           disabled={isRefreshing}
           className="inline-flex items-center justify-center w-8 h-8 bg-transparent border border-white/20 rounded-md hover:bg-white/5 transition-colors disabled:opacity-50"
           title="Atualizar portfolios"

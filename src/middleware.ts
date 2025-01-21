@@ -1,5 +1,5 @@
-import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 import type { NextRequest } from 'next/server'
 
 // Rotas que requerem autenticação
@@ -8,67 +8,53 @@ const authRoutes = ['/portfolios', '/analises', '/ativos-recomendados', '/gpt']
 // Rotas que requerem premium
 const premiumRoutes = ['/gpt']
 
-// Rotas públicas que não precisam de autenticação
-const publicRoutes = ['/login', '/register', '/forgot-password']
+export async function middleware(request: NextRequest) {
+  console.log('Middleware - Request URL:', request.nextUrl.pathname);
+  
+  const token = await getToken({ 
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET 
+  });
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token
-    const isPublicRoute = publicRoutes.some(route => req.nextUrl.pathname.startsWith(route))
+  console.log('Middleware - Token:', token ? 'exists' : 'not found');
 
-    console.log('Middleware - Token:', token ? 'exists' : 'not found', 'Environment:', process.env.NODE_ENV)
-    console.log('Middleware - Request URL:', req.nextUrl.pathname)
-    console.log('Middleware - Token Data:', {
-      subscriptionStatus: token?.subscriptionStatus,
-      user: token?.user,
-      email: token?.email
-    })
+  // Se não estiver autenticado e tentar acessar rota protegida
+  if (!token && authRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
+    console.log('Middleware - Redirecting to login');
+    const url = new URL('/login', request.url)
+    url.searchParams.set('callbackUrl', request.nextUrl.pathname)
+    return NextResponse.redirect(url)
+  }
 
-    // Se não estiver autenticado e não for uma rota pública
-    if (!token && !isPublicRoute) {
-      console.log('Middleware - Redirecting to login')
-      return NextResponse.redirect(new URL('/login', req.url))
-    }
+  // Se estiver autenticado e tentar acessar login/register
+  if (token && ['/login', '/register'].includes(request.nextUrl.pathname)) {
+    console.log('Middleware - Redirecting to portfolios');
+    return NextResponse.redirect(new URL('/portfolios', request.url))
+  }
 
-    // Se estiver autenticado e tentar acessar uma rota pública
-    if (token && isPublicRoute) {
-      console.log('Middleware - Redirecting to portfolios')
-      return NextResponse.redirect(new URL('/portfolios', req.url))
-    }
-
-    // Verificar acesso premium
-    if (premiumRoutes.some(route => req.nextUrl.pathname.startsWith(route))) {
-      const isPremium = token?.subscriptionStatus === 'premium'
-      console.log('Middleware - Premium check:', { isPremium, subscriptionStatus: token?.subscriptionStatus })
-      
-      if (!isPremium) {
-        console.log('Middleware - Redirecting to pricing (not premium)')
-        return NextResponse.redirect(new URL('/pricing', req.url))
-      }
-    }
-
-    return NextResponse.next()
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => {
-        return true // Deixar a lógica de autorização para o middleware
-      }
+  // Verificar acesso premium
+  if (token && premiumRoutes.some(route => request.nextUrl.pathname.startsWith(route))) {
+    // @ts-ignore - o token tem a propriedade subscriptionStatus
+    const isPremium = token.subscriptionStatus === 'premium'
+    
+    if (!isPremium) {
+      console.log('Middleware - Redirecting to pricing (not premium)');
+      return NextResponse.redirect(new URL('/pricing', request.url))
     }
   }
-)
 
-// Configurar quais rotas o middleware deve proteger
+  return NextResponse.next()
+}
+
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api/auth (auth API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - manifest
-     */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico|manifest).*)',
-  ],
+    '/portfolios/:path*',
+    '/ativos-recomendados/:path*',
+    '/analises/:path*',
+    '/gpt/:path*',
+    '/profile/:path*',
+    '/api/auth/:path*',
+    '/login',
+    '/register'
+  ]
 } 
