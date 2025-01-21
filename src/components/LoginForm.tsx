@@ -23,10 +23,11 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
     setIsLoading(true);
     setError('');
 
-    console.log('Login attempt:', { 
+    console.log('[Login] Attempt:', { 
       email,
       callbackUrl,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      currentUrl: window.location.href
     });
 
     try {
@@ -34,24 +35,33 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
         email: email.toLowerCase(),
         password,
         redirect: false,
-        callbackUrl
+        callbackUrl: callbackUrl || '/portfolios'
       });
 
-      console.log('Login result:', {
+      console.log('[Login] Result:', {
         ok: result?.ok,
         error: result?.error,
-        url: result?.url
+        url: result?.url,
+        status: result?.status
       });
 
       if (!result?.ok) {
-        setError(result?.error || 'Email ou senha incorretos');
+        if (result?.error === 'CredentialsSignin') {
+          setError('Email ou senha incorretos');
+        } else {
+          setError(`Erro ao fazer login: ${result?.error}`);
+        }
         return;
       }
 
-      router.push(callbackUrl);
-    } catch (error) {
-      console.error('Erro ao fazer login:', error);
-      setError('Ocorreu um erro ao fazer login');
+      if (result.url) {
+        router.push(result.url);
+      } else {
+        router.push(callbackUrl || '/portfolios');
+      }
+    } catch (error: any) {
+      console.error('[Login] Error:', error);
+      setError(error?.message || 'Ocorreu um erro ao fazer login');
     } finally {
       setIsLoading(false);
     }
