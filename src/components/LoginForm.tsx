@@ -11,7 +11,7 @@ interface LoginFormProps {
 export function LoginForm({ buttonClassName }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const callbackUrl = searchParams.get('callbackUrl') || '/portfolios';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -23,45 +23,31 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
     setError('');
 
     try {
+      const baseUrl = window.location.origin;
       const result = await signIn('credentials', {
-        redirect: false,
         email,
         password,
-        callbackUrl,
+        redirect: false,
+        callbackUrl: baseUrl + callbackUrl
       });
 
       if (!result) {
-        throw new Error("Não foi possível conectar ao servidor. Tente novamente.");
+        throw new Error('Não foi possível conectar ao servidor');
       }
 
-      if (!result.ok) {
-        let errorMessage = result.error;
-        try {
-          const errorObj = JSON.parse(result.error || '{}');
-          errorMessage = errorObj.error || errorObj.message || result.error;
-        } catch (e) {
-          // Se não for JSON, usar a mensagem como está
-        }
-        
-        if (errorMessage?.includes("Email não encontrado")) {
-          throw new Error("Email não encontrado");
-        } else if (errorMessage?.includes("Senha incorreta")) {
-          throw new Error("Senha incorreta");
-        } else {
-          throw new Error(errorMessage || "Erro ao fazer login");
-        }
+      if (result.error) {
+        throw new Error(result.error);
       }
 
-      router.push(callbackUrl);
+      if (result.url) {
+        router.push(callbackUrl);
+      } else {
+        router.push('/portfolios');
+      }
       router.refresh();
     } catch (error: any) {
-      let errorMessage = error?.message || 'Erro ao fazer login. Tente novamente.';
-      
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
-      }
-      
-      setError(errorMessage);
+      console.error('Login error:', error);
+      setError(error.message || 'Erro ao fazer login');
     } finally {
       setIsLoading(false);
     }

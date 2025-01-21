@@ -9,9 +9,9 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { MobileMenu } from './MobileMenu'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface NavbarProps {
@@ -20,27 +20,14 @@ interface NavbarProps {
 
 export function Navbar({ session }: NavbarProps) {
   const { theme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const isPremium = session?.user?.subscriptionStatus === 'premium'
   const pathname = usePathname()
+  const router = useRouter()
 
   useEffect(() => {
-    setMounted(true)
+    setIsMounted(true)
   }, [])
-
-  if (!mounted) {
-    return (
-      <nav className="hidden md:flex flex-col h-full w-64 fixed left-0 top-0 bg-[#121214] text-white border-r border-white/10">
-        <div className="animate-pulse">
-          <div className="h-24 bg-gray-800"></div>
-        </div>
-      </nav>
-    )
-  }
-
-  if (pathname?.includes('login') || pathname?.includes('register')) {
-    return null
-  }
 
   const routes = [
     {
@@ -69,6 +56,27 @@ export function Navbar({ session }: NavbarProps) {
     }
   ]
 
+  if (!isMounted) {
+    return null
+  }
+
+  if (pathname?.includes('login') || pathname?.includes('register')) {
+    return null
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut({ 
+        redirect: false 
+      })
+      router.push('/login')
+      router.refresh()
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error)
+      router.push('/login')
+    }
+  }
+
   return (
     <>
       {/* Mobile Menu */}
@@ -76,7 +84,7 @@ export function Navbar({ session }: NavbarProps) {
         {session && (
           <MobileMenu 
             session={session} 
-            isPremium={session?.user?.subscriptionStatus === 'premium'} 
+            isPremium={isPremium} 
           />
         )}
       </div>
@@ -136,8 +144,9 @@ export function Navbar({ session }: NavbarProps) {
             </Link>
             {session && (
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={handleSignOut}
                 className="flex items-center p-2 text-gray-400 hover:text-gray-200 transition-colors"
+                type="button"
               >
                 <LogOut className="h-5 w-5" />
               </button>
