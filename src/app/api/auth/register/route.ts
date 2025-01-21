@@ -17,12 +17,9 @@ export async function POST(request: Request) {
     }
 
     // Verificar se o usuário já existe
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await prisma.user.findUnique({
       where: {
-        OR: [
-          { email },
-          { whatsapp }
-        ]
+        email
       }
     })
 
@@ -30,7 +27,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { 
           success: false, 
-          message: existingUser.email === email ? 'Email já cadastrado' : 'WhatsApp já cadastrado' 
+          message: 'Email já cadastrado'
         },
         { status: 400 }
       )
