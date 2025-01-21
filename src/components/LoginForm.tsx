@@ -25,18 +25,17 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
 
     try {
       const result = await signIn('credentials', {
-        email,
+        email: email.toLowerCase(),
         password,
         redirect: false,
       });
 
-      if (result?.error) {
+      if (!result?.ok) {
         setError('Email ou senha incorretos');
-      } else {
-        router.refresh();
-        router.push(callbackUrl);
-        router.refresh();
+        return;
       }
+
+      router.push(callbackUrl);
     } catch (error) {
       setError('Ocorreu um erro ao fazer login');
     } finally {

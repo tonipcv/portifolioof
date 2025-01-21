@@ -41,28 +41,37 @@ export const authOptions: NextAuthOptions = {
       }
     }),
     CredentialsProvider({
+      id: "credentials",
       name: "credentials",
+      type: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Credenciais inválidas")
+          throw new Error("Credenciais inválidas");
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() }
-        })
+          where: { email: credentials.email.toLowerCase() },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            whatsappVerified: true
+          }
+        });
 
         if (!user || !user.password) {
-          throw new Error("Credenciais inválidas")
+          throw new Error("Credenciais inválidas");
         }
 
-        const isValid = await bcrypt.compare(credentials.password, user.password)
+        const isValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isValid) {
-          throw new Error("Credenciais inválidas")
+          throw new Error("Credenciais inválidas");
         }
 
         return {
@@ -70,7 +79,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           whatsappVerified: user.whatsappVerified
-        }
+        };
       }
     })
   ],
