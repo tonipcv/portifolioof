@@ -44,6 +44,9 @@ export default withAuth(
         // Para outras rotas, permite o acesso
         return true
       }
+    },
+    pages: {
+      signIn: '/login'
     }
   }
 )
@@ -55,7 +58,6 @@ export const config = {
     '/analises/:path*',
     '/gpt/:path*',
     '/profile/:path*',
-    '/api/auth/:path*',
     '/login',
     '/register'
   ]
