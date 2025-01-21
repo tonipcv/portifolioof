@@ -23,27 +23,58 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
     setError('');
 
     try {
+      console.log('Iniciando tentativa de login:', { email });
+
+      // Enviar dados como application/x-www-form-urlencoded
+      const formData = new URLSearchParams();
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('redirect', 'false');
+      formData.append('callbackUrl', callbackUrl);
+
       const result = await signIn('credentials', {
         redirect: false,
         email,
         password,
+        callbackUrl,
       });
 
-      if (!result?.ok) {
-        console.log('Login error:', result?.error);
-        if (result?.error === "Email não encontrado") {
+      console.log('Resultado do login:', {
+        ok: result?.ok,
+        error: result?.error,
+        status: result?.status,
+        url: result?.url
+      });
+
+      if (!result) {
+        throw new Error("Não foi possível conectar ao servidor");
+      }
+
+      if (!result.ok) {
+        console.error('Erro no login:', {
+          error: result.error,
+          status: result.status
+        });
+        
+        if (result.error === "Email não encontrado") {
           throw new Error("Email não encontrado");
-        } else if (result?.error === "Senha incorreta") {
+        } else if (result.error === "Senha incorreta") {
           throw new Error("Senha incorreta");
         } else {
-          throw new Error("Erro ao fazer login");
+          throw new Error(result.error || "Erro ao fazer login");
         }
       }
 
+      console.log('Login bem-sucedido, redirecionando para:', callbackUrl);
       router.push(callbackUrl);
       router.refresh();
     } catch (error: any) {
-      setError(error?.message || 'Erro ao fazer login');
+      console.error('Erro capturado no formulário:', {
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name
+      });
+      setError(error?.message || 'Erro ao fazer login. Tente novamente.');
     } finally {
       setIsLoading(false);
     }

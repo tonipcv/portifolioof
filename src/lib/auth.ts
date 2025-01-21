@@ -20,11 +20,14 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials): Promise<any> {
         try {
+          console.log('Starting authorization attempt');
+          
           if (!credentials?.email || !credentials?.password) {
-            console.log('Missing credentials');
+            console.log('Missing credentials:', { email: !!credentials?.email, password: !!credentials?.password });
             throw new Error("Email e senha são obrigatórios");
           }
 
+          console.log('Finding user in database');
           const user = await prisma.user.findUnique({
             where: {
               email: credentials.email,
@@ -41,22 +44,23 @@ export const authOptions: NextAuthOptions = {
             },
           });
 
-          console.log('Login attempt:', {
-            email: credentials.email,
+          console.log('Database query result:', {
             userFound: !!user,
-            hasPassword: !!user?.password
+            hasPassword: !!user?.password,
+            email: credentials.email
           });
 
           if (!user || !user?.password) {
             throw new Error("Email não encontrado");
           }
 
+          console.log('Comparing passwords');
           const isCorrectPassword = await bcrypt.compare(
             credentials.password,
             user.password
           );
 
-          console.log('Password check:', {
+          console.log('Password verification result:', {
             isCorrectPassword,
             passwordLength: credentials.password.length,
             hashedLength: user.password.length
@@ -66,6 +70,7 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Senha incorreta");
           }
 
+          console.log('Authorization successful, returning user data');
           return {
             id: user.id,
             email: user.email,
@@ -75,7 +80,10 @@ export const authOptions: NextAuthOptions = {
             whatsapp: user.whatsapp
           };
         } catch (error) {
-          console.error('Auth error:', error);
+          console.error('Authorization error:', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined
+          });
           throw error;
         }
       },
