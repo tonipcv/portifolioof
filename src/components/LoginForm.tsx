@@ -28,6 +28,7 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
         email: email.toLowerCase(),
         password,
         redirect: false,
+        callbackUrl: '/portfolios'
       });
 
       if (!result?.ok) {
@@ -37,6 +38,7 @@ export function LoginForm({ buttonClassName }: LoginFormProps) {
 
       router.push(callbackUrl);
     } catch (error) {
+      console.error('Erro ao fazer login:', error);
       setError('Ocorreu um erro ao fazer login');
     } finally {
       setIsLoading(false);

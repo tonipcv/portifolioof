@@ -11,15 +11,7 @@ console.log('NextAuth route handler initialized with config:', {
   baseUrl: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.NEXTAUTH_URL
 });
 
-let handler;
+const handler = NextAuth(authOptions)
 
-try {
-  console.log('Creating NextAuth handler...');
-  handler = NextAuth(authOptions);
-  console.log('NextAuth handler created successfully');
-} catch (error) {
-  console.error('Error creating NextAuth handler:', error);
-  throw error;
-}
-
+// Usando o handler diretamente para GET e POST
 export { handler as GET, handler as POST }
