@@ -130,16 +130,16 @@ export function VerifyForm() {
   }
 
   const labelClasses = "block text-sm font-medium text-gray-400"
-  const buttonClasses = "w-full px-5 py-4 border border-teal-400 rounded-lg text-sm font-semibold text-teal-400 bg-teal-400/10 hover:bg-teal-400 hover:text-black focus:outline-none focus:ring-2 focus:ring-teal-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed tracking-wide"
-  const inputClasses = "!w-full !h-[60px] !pl-[70px] !pr-4 !bg-black/20 !border !border-gray-800 !rounded-lg !text-white !text-base placeholder:!text-gray-600 focus:!outline-none focus:!ring-2 focus:!ring-teal-400 focus:!border-transparent !transition-colors"
-  const codeInputClasses = "w-14 h-14 text-center text-2xl bg-black/20 border border-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-colors"
+  const buttonClasses = "w-full px-5 py-4 border border-white/20 rounded-lg text-sm font-semibold text-white bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed tracking-wide"
+  const inputClasses = "!w-full !h-[60px] !pl-[70px] !pr-4 !bg-black/20 !border !border-white/10 !rounded-lg !text-white !text-base placeholder:!text-gray-600 focus:!outline-none focus:!ring-2 focus:!ring-white/20 focus:!border-transparent !transition-colors"
+  const codeInputClasses = "w-10 h-10 text-center text-xl bg-black/20 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent transition-colors"
 
   return (
     <div className="mt-8">
       {!codeSent ? (
         <form onSubmit={(e) => { e.preventDefault(); onSendCode(); }} className="space-y-8" autoComplete="off">
           <div className="text-center">
-            <h1 className="text-2xl font-normal text-teal-400">
+            <h1 className="text-2xl font-normal text-white">
               Verificar WhatsApp
             </h1>
           </div>
@@ -194,13 +194,13 @@ export function VerifyForm() {
       ) : (
         <form onSubmit={onVerifyCode} className="space-y-8" autoComplete="off">
           <div className="text-center">
-            <h1 className="text-2xl font-normal text-teal-400">
+            <h1 className="text-2xl font-normal text-white">
               Confirme seu número
             </h1>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex justify-center gap-2">
+          <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-lg p-8 max-w-[320px] mx-auto">
+            <div className="flex justify-between">
               {code.map((digit, index) => (
                 <input
                   key={index}
@@ -218,7 +218,7 @@ export function VerifyForm() {
                 />
               ))}
             </div>
-            <p className="text-sm text-gray-600 text-center">
+            <p className="text-sm text-gray-600 text-center mt-6">
               Digite o código de 6 dígitos enviado para seu WhatsApp
             </p>
           </div>
@@ -252,7 +252,7 @@ export function VerifyForm() {
             <button
               type="button"
               onClick={handleTryAgain}
-              className="text-teal-400 hover:text-teal-300 font-medium focus:outline-none"
+              className="text-white hover:text-gray-300 font-medium focus:outline-none"
             >
               Tentar novamente
             </button>
