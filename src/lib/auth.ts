@@ -13,22 +13,38 @@ declare module 'next-auth' {
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+  debug: true,
   providers: [
     CredentialsProvider({
       name: 'Credentials',
-      credentials: {},
-      async authorize(credentials: any) {
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
+      },
+      async authorize(credentials) {
+        if (!process.env.DATABASE_URL) {
+          console.error('DATABASE_URL não está definida')
+          return null
+        }
+
+        if (!credentials?.email || !credentials?.password) {
+          console.error('Credenciais não fornecidas')
+          return null
+        }
+
         try {
           const user = await prisma.user.findUnique({
             where: { email: credentials.email }
           })
 
           if (!user || !user.password) {
+            console.error('Usuário não encontrado')
             return null
           }
 
           const isValid = await bcrypt.compare(credentials.password, user.password)
           if (!isValid) {
+            console.error('Senha inválida')
             return null
           }
 
@@ -38,13 +54,17 @@ export const authOptions: NextAuthOptions = {
             name: user.name
           }
         } catch (error) {
-          console.error('Auth error:', error)
+          console.error('Erro de autenticação:', error)
           return null
         }
       }
     })
   ],
+  session: {
+    strategy: 'jwt'
+  },
   pages: {
-    signIn: '/login'
+    signIn: '/login',
+    error: '/login'
   }
 } 
