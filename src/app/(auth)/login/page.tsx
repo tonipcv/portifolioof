@@ -29,8 +29,7 @@ export default function LoginPage() {
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false,
-        callbackUrl: 'https://app.cryph.ai/portfolios'
+        redirect: false
       });
 
       if (!result) {

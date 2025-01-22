@@ -94,7 +94,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60 // 30 dias
+    maxAge: 30 * 24 * 60 * 60, // 30 dias
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -116,35 +116,36 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      const productionDomain = 'https://app.cryph.ai';
+      try {
+        // Garantir que temos uma URL base válida
+        const productionUrl = 'https://app.cryph.ai';
+        const base = process.env.NODE_ENV === 'production' ? productionUrl : baseUrl;
 
-      // Se estiver em produção, usar o domínio de produção
-      if (process.env.NODE_ENV === 'production') {
+        // Se a URL começa com /, adicionar à base
         if (url.startsWith('/')) {
-          return `${productionDomain}${url}`;
+          return `${base}${url}`;
         }
-        if (url.startsWith(productionDomain)) {
+
+        // Se a URL é do mesmo domínio que a base, permitir
+        if (url.startsWith(base)) {
           return url;
         }
-        return productionDomain;
-      }
 
-      // Em desenvolvimento, usar o baseUrl normal
-      if (url.startsWith('/')) {
-        return `${baseUrl}${url}`;
-      }
-      if (url.startsWith(baseUrl)) {
-        return url;
-      }
-      return baseUrl;
-    }
-  },
-  events: {
-    async signOut({ session, token }) {
-      try {
-        console.log('User signed out:', session?.user?.email);
+        // Se a URL é absoluta mas não é do nosso domínio, verificar se é segura
+        try {
+          new URL(url);
+          // Se é uma URL válida mas não é do nosso domínio, redirecionar para a home
+          return base;
+        } catch {
+          // Se não é uma URL válida, redirecionar para a home
+          return base;
+        }
       } catch (error) {
-        console.error('Error during signOut:', error);
+        // Em caso de qualquer erro, redirecionar para a home
+        console.error('Redirect error:', error);
+        return process.env.NODE_ENV === 'production' 
+          ? 'https://app.cryph.ai' 
+          : baseUrl;
       }
     }
   },
