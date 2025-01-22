@@ -88,10 +88,13 @@ export function CreatePortfolioButton() {
   return (
     <div>
       <button
-        onClick={() => setIsOpen(true)}
-        className="inline-flex items-center justify-center w-8 h-8 bg-transparent border border-white/20 rounded-md hover:bg-white/5 transition-colors"
+        onClick={() => router.push('/portfolios/new')}
+        className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 
+          text-white rounded-lg transition-colors hover:bg-white/10 
+          focus:outline-none focus:ring-1 focus:ring-white/20 text-sm"
       >
         <Plus className="w-4 h-4" />
+        Criar portfólio
       </button>
 
       {isOpen && (
