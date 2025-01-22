@@ -29,6 +29,13 @@ const nextConfig = {
       allowedOrigins: ['localhost:3000', 'app.cryph.ai']
     }
   },
+  swcMinify: true,
+  compress: true,
+  poweredByHeader: false,
+  reactStrictMode: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
   async rewrites() {
     return [
       {
