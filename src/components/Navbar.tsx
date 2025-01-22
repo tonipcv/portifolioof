@@ -29,6 +29,19 @@ export function Navbar({ session }: NavbarProps) {
     setIsMounted(true)
   }, [])
 
+  if (!isMounted) {
+    return null
+  }
+
+  const isAuthPage = pathname?.includes('login') || 
+                    pathname?.includes('register') || 
+                    pathname?.includes('reset-password') ||
+                    pathname === '/'
+
+  if (isAuthPage) {
+    return null
+  }
+
   const routes = [
     {
       label: 'Portfólio',
@@ -56,14 +69,6 @@ export function Navbar({ session }: NavbarProps) {
     }
   ]
 
-  if (!isMounted) {
-    return null
-  }
-
-  if (pathname?.includes('login') || pathname?.includes('register')) {
-    return null
-  }
-
   const handleSignOut = async () => {
     try {
       await signOut({ 
@@ -81,19 +86,17 @@ export function Navbar({ session }: NavbarProps) {
     <>
       {/* Mobile Menu */}
       <div className="fixed top-4 right-4 z-50 md:hidden">
-        {session && (
-          <MobileMenu 
-            session={session} 
-            isPremium={isPremium} 
-          />
-        )}
+        <MobileMenu 
+          session={session} 
+          isPremium={isPremium} 
+        />
       </div>
 
       {/* Desktop Sidebar */}
       <nav className="hidden md:flex flex-col h-full w-64 fixed left-0 top-0 bg-[#121214] text-white border-r border-white/10">
         <div className="flex-1">
           <div className="h-24 flex items-center px-6 mt-4">
-            <Link href="/">
+            <Link href="/portfolios">
               <Image
                 src="/logo.png"
                 alt="Logo"
@@ -142,15 +145,13 @@ export function Navbar({ session }: NavbarProps) {
                 {session?.user?.name || 'Usuário'}
               </span>
             </Link>
-            {session && (
-              <button
-                onClick={handleSignOut}
-                className="flex items-center p-2 text-gray-400 hover:text-gray-200 transition-colors"
-                type="button"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
-            )}
+            <button
+              onClick={handleSignOut}
+              className="flex items-center p-2 text-gray-400 hover:text-gray-200 transition-colors"
+              type="button"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </nav>

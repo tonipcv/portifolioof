@@ -52,7 +52,7 @@ export function PortfolioList() {
       const usdRate = await getUSDToBRL()
       setUsdToBRL(usdRate)
 
-      const response = await fetch('/api/portfolios')
+      const response = await fetch('/api/portfolio')
       if (!response.ok) throw new Error('Failed to fetch portfolios')
       
       const data = await response.json()

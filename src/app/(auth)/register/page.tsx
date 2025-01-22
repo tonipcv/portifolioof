@@ -1,35 +1,67 @@
 'use client'
 
+import * as React from 'react'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Logo } from '@/components/Logo'
-
-type Step = 'register' | 'verify'
+import { Mail, Lock, User, Phone } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
 
 export default function RegisterPage() {
-  const router = useRouter()
-  const [step, setStep] = useState<Step>('register')
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    whatsapp: '',
-    password: ''
-  })
-  const [code, setCode] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [step, setStep] = useState<'register' | 'verify'>('register')
   const [userId, setUserId] = useState<string | null>(null)
+  const [code, setCode] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const validateForm = () => {
+    if (name.length < 3) {
+      setError('Nome deve ter pelo menos 3 caracteres')
+      return false
+    }
+    
+    if (!email.includes('@')) {
+      setError('Email inválido')
+      return false
+    }
+
+    if (whatsapp.length < 11) {
+      setError('WhatsApp deve ter pelo menos 11 dígitos')
+      return false
+    }
+
+    if (password.length < 6) {
+      setError('Senha deve ter pelo menos 6 caracteres')
+      return false
+    }
+
+    return true
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setLoading(true)
     setError(null)
 
+    if (!validateForm()) {
+      return
+    }
+
+    setIsLoading(true)
+
     try {
+      const formattedWhatsapp = `+55${whatsapp}`
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ 
+          name, 
+          email, 
+          whatsapp: formattedWhatsapp, 
+          password 
+        })
       })
 
       const data = await response.json()
@@ -38,24 +70,55 @@ export default function RegisterPage() {
         setUserId(data.userId)
         setStep('verify')
       } else {
-        setError(data.message)
+        setError(data.message || 'Erro ao cadastrar usuário')
       }
     } catch (error) {
-      setError('Erro ao cadastrar usuário')
+      console.error('Erro ao registrar:', error)
+      setError(error instanceof Error ? error.message : 'Falha ao criar conta')
     } finally {
-      setLoading(false)
+      setIsLoading(false)
+    }
+  }
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/auth/verify', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          code, 
+          whatsapp: `+55${whatsapp}`,
+          userId
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        window.location.href = '/login'
+      } else {
+        setError(data.error || 'Código inválido')
+      }
+    } catch (error) {
+      setError('Erro ao verificar código')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleResendCode = async () => {
-    setLoading(true)
+    setIsLoading(true)
     setError(null)
 
     try {
       const response = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ whatsapp: formData.whatsapp, userId })
+        body: JSON.stringify({ whatsapp: `+55${whatsapp}`, userId })
       })
 
       const data = await response.json()
@@ -66,134 +129,147 @@ export default function RegisterPage() {
     } catch (error) {
       setError('Erro ao reenviar código')
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
-
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch('/api/auth/verify', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          code, 
-          whatsapp: formData.whatsapp,
-          userId
-        })
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        router.push('/verify/success')
-      } else {
-        setError(data.error || 'Código inválido')
-      }
-    } catch (error) {
-      setError('Erro ao verificar código')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const labelClasses = "block text-sm font-medium text-gray-400"
-  const inputClasses = "mt-1 block w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/20 focus:border-transparent transition-colors text-white placeholder-gray-600 text-sm"
-  const buttonClasses = "w-full px-4 py-3 border border-white/10 rounded-lg text-sm font-medium text-white bg-white/5 hover:bg-white/10 focus:outline-none focus:ring-1 focus:ring-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 
   const renderRegisterForm = () => (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="text-center">
-        <h1 className="text-xl font-normal text-white">
-          Crie sua conta
-        </h1>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <label htmlFor="name" className="block text-sm font-light text-zinc-300 mb-1">
+          Nome
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <User className="h-5 w-5 text-zinc-500" />
+          </div>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="block w-full pl-10 bg-zinc-800/30 border border-green-100/20 
+              rounded-lg py-2 text-zinc-100 placeholder-zinc-500 
+              focus:outline-none focus:ring-2 focus:ring-green-100/30 focus:border-green-100/30 
+              transition-all duration-300 font-light text-sm"
+            placeholder="Seu nome completo"
+          />
+        </div>
+        <p className="mt-1 text-xs text-zinc-500 font-light">Mínimo de 3 caracteres</p>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className={labelClasses}>Nome</label>
+      <div>
+        <label htmlFor="email" className="block text-sm font-light text-zinc-300 mb-1">
+          Email
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Mail className="h-5 w-5 text-zinc-500" />
+          </div>
           <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className={inputClasses}
-            required
-            autoComplete="off"
-            spellCheck="false"
-          />
-        </div>
-
-        <div>
-          <label className={labelClasses}>Email</label>
-          <input
+            id="email"
+            name="email"
             type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className={inputClasses}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
-            autoComplete="off"
-            spellCheck="false"
+            className="block w-full pl-10 bg-zinc-800/30 border border-green-100/20 
+              rounded-lg py-2 text-zinc-100 placeholder-zinc-500 
+              focus:outline-none focus:ring-2 focus:ring-green-100/30 focus:border-green-100/30 
+              transition-all duration-300 font-light text-sm"
+            placeholder="seu@email.com"
           />
         </div>
+        <p className="mt-1 text-xs text-zinc-500 font-light">Será usado para login</p>
+      </div>
 
-        <div>
-          <label className={labelClasses}>WhatsApp</label>
+      <div>
+        <label htmlFor="whatsapp" className="block text-sm font-light text-zinc-300 mb-1">
+          WhatsApp
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Phone className="h-5 w-5 text-zinc-500" />
+          </div>
+          <div className="absolute inset-y-0 left-8 pl-3 flex items-center pointer-events-none">
+            <span className="text-zinc-500 text-sm">+55</span>
+          </div>
           <input
-            type="text"
-            value={formData.whatsapp}
-            onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-            className={inputClasses}
+            id="whatsapp"
+            name="whatsapp"
+            type="tel"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, ''))}
             required
-            autoComplete="off"
-            spellCheck="false"
+            className="block w-full pl-20 bg-zinc-800/30 border border-green-100/20 
+              rounded-lg py-2 text-zinc-100 placeholder-zinc-500 
+              focus:outline-none focus:ring-2 focus:ring-green-100/30 focus:border-green-100/30 
+              transition-all duration-300 font-light text-sm"
+            placeholder="11999999999"
+            maxLength={11}
           />
-          <p className="mt-1 text-xs text-gray-600">
-            Digite o número com código do país (+55) e DDD
-          </p>
         </div>
+        <p className="mt-1 text-xs text-zinc-500 font-light">DDD + número (apenas números)</p>
+      </div>
 
-        <div>
-          <label className={labelClasses}>Senha</label>
+      <div>
+        <label htmlFor="password" className="block text-sm font-light text-zinc-300 mb-1">
+          Senha
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Lock className="h-5 w-5 text-zinc-500" />
+          </div>
           <input
+            id="password"
+            name="password"
             type="password"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            className={inputClasses}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
-            autoComplete="new-password"
+            className="block w-full pl-10 bg-zinc-800/30 border border-green-100/20 
+              rounded-lg py-2 text-zinc-100 placeholder-zinc-500 
+              focus:outline-none focus:ring-2 focus:ring-green-100/30 focus:border-green-100/30 
+              transition-all duration-300 font-light text-sm"
+            placeholder="••••••••"
           />
-          <p className="mt-1 text-xs text-gray-600">
-            Use letras, números e caracteres especiais
-          </p>
         </div>
+        <p className="mt-1 text-xs text-zinc-500 font-light">Mínimo de 6 caracteres</p>
       </div>
 
       {error && (
-        <div className="bg-red-950/20 border border-red-900/30 rounded-lg px-4 py-3 text-red-400 text-xs">
+        <div className="bg-red-900/20 text-red-400 p-3 rounded-md text-sm font-light">
           {error}
         </div>
       )}
 
       <button
         type="submit"
-        disabled={loading}
-        className={buttonClasses}
+        disabled={isLoading}
+        className="w-full py-2.5 bg-zinc-800/30 border border-green-100/20 
+          text-zinc-100 rounded-lg transition-all duration-300 
+          hover:bg-zinc-700/50 hover:border-green-100/40 
+          focus:outline-none focus:ring-2 focus:ring-green-100/30
+          font-light tracking-wide flex items-center justify-center
+          disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? (
-          <div className="flex items-center justify-center">
-            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Cadastrando...</span>
-          </div>
+        {isLoading ? (
+          <div className="w-5 h-5 border-2 border-zinc-300 border-t-transparent rounded-full animate-spin" />
         ) : (
-          "Cadastrar"
+          'Criar Conta'
         )}
       </button>
+
+      <div className="text-center">
+        <Link 
+          href="/login"
+          className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors duration-300 font-light"
+        >
+          Já tem uma conta? Faça login
+        </Link>
+      </div>
     </form>
   )
 
@@ -211,46 +287,48 @@ export default function RegisterPage() {
           value={code}
           onChange={(e) => setCode(e.target.value)}
           maxLength={6}
-          className={`${inputClasses} text-center text-xl tracking-[0.5em] h-14`}
+          className="block w-full text-center text-xl tracking-[0.5em] bg-zinc-800/30 border border-green-100/20 
+            rounded-lg py-2 text-zinc-100 placeholder-zinc-500 
+            focus:outline-none focus:ring-2 focus:ring-green-100/30 focus:border-green-100/30 
+            transition-all duration-300 font-light h-14"
           required
           autoComplete="off"
           spellCheck="false"
         />
-        <p className="text-xs text-gray-600 text-center">
+        <p className="text-xs text-zinc-500 text-center">
           Digite o código de 6 dígitos enviado para seu WhatsApp
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-950/20 border border-red-900/30 rounded-lg px-4 py-3 text-red-400 text-xs">
+        <div className="bg-red-900/20 text-red-400 p-3 rounded-md text-sm font-light">
           {error}
         </div>
       )}
 
       <button
         type="submit"
-        disabled={loading}
-        className={buttonClasses}
+        disabled={isLoading}
+        className="w-full py-2.5 bg-zinc-800/30 border border-green-100/20 
+          text-zinc-100 rounded-lg transition-all duration-300 
+          hover:bg-zinc-700/50 hover:border-green-100/40 
+          focus:outline-none focus:ring-2 focus:ring-green-100/30
+          font-light tracking-wide flex items-center justify-center
+          disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? (
-          <div className="flex items-center justify-center">
-            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Verificando...</span>
-          </div>
+        {isLoading ? (
+          <div className="w-5 h-5 border-2 border-zinc-300 border-t-transparent rounded-full animate-spin" />
         ) : (
-          "Verificar código"
+          'Verificar código'
         )}
       </button>
 
-      <p className="text-center text-xs text-gray-600">
+      <p className="text-center text-xs text-zinc-500">
         Não recebeu o código?{" "}
         <button
           type="button"
           onClick={handleResendCode}
-          className="text-white hover:text-gray-300 font-medium focus:outline-none"
+          className="text-white hover:text-zinc-300 font-medium focus:outline-none"
         >
           Tentar novamente
         </button>
@@ -259,19 +337,29 @@ export default function RegisterPage() {
   )
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center font-helvetica px-4 py-8 pb-20 sm:pb-8">
-      <div className="w-full max-w-sm bg-zinc-950/50 backdrop-blur-sm rounded-lg border border-white/5 p-6">
-        <div className="text-center mb-8">
-          <Logo />
+    <div className="fixed inset-0 bg-zinc-950 flex items-center justify-center font-helvetica px-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center">
+          <Image
+            src="/logo.png" 
+            alt="Logo"
+            width={120}
+            height={36}
+            priority
+            className="mx-auto mb-8 brightness-0 invert"
+          />
         </div>
 
-        {step === 'register' ? renderRegisterForm() : renderVerifyForm()}
-      </div>
+        <div className="bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-green-100/20 py-8 px-8">
+          <div className="text-center mb-6">
+            <h2 className="text-zinc-100 text-xl font-light mb-2">Criar Conta</h2>
+            <p className="text-zinc-400 text-sm font-light">
+              Preencha os dados abaixo para criar sua conta
+            </p>
+          </div>
 
-      <div className="mt-6 text-center">
-        <p className="text-xs text-gray-500">
-          Desenvolvido por XASE
-        </p>
+          {step === 'register' ? renderRegisterForm() : renderVerifyForm()}
+        </div>
       </div>
     </div>
   )
