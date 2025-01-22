@@ -6,51 +6,29 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
-interface SignInResponse {
-  error?: string;
-  status?: number;
-  ok?: boolean;
-  url?: string;
-}
-
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function handleSubmit(formData: FormData) {
+    if (isLoading) return;
     setIsLoading(true);
-    setError('');
 
     try {
       const result = await signIn('credentials', {
-        email,
-        password,
+        email: formData.get('email'),
+        password: formData.get('password'),
         redirect: false
       });
 
-      if (!result) {
-        throw new Error('Não foi possível conectar ao servidor');
-      }
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      if (result.ok) {
+      if (result?.ok) {
         router.push('/portfolios');
         router.refresh();
       }
-    } catch (error: any) {
-      console.error('Login error:', error);
-      setError(error.message || 'Erro ao fazer login');
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center font-helvetica">
@@ -65,13 +43,7 @@ export default function LoginPage() {
           />
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-900/50 border border-red-500 rounded-lg">
-            <p className="text-sm text-red-500">{error}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form action={handleSubmit} className="space-y-6">
           <div>
             <input
               id="email"
@@ -80,8 +52,6 @@ export default function LoginPage() {
               autoComplete="email"
               required
               placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3 py-2 bg-zinc-800/30 border border-zinc-600 rounded-lg 
                 placeholder:text-zinc-400 text-zinc-100
                 focus:outline-none focus:ring-2 focus:ring-green-100/30 focus:border-green-100/40"
@@ -97,8 +67,6 @@ export default function LoginPage() {
               autoComplete="current-password"
               required
               placeholder="Senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2 bg-zinc-800/30 border border-zinc-600 rounded-lg 
                 placeholder:text-zinc-400 text-zinc-100
                 focus:outline-none focus:ring-2 focus:ring-green-100/30 focus:border-green-100/40"

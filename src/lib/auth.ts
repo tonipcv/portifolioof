@@ -1,154 +1,59 @@
-import { NextAuthOptions, DefaultSession } from 'next-auth'
-import { JWT } from 'next-auth/jwt'
+import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 
 declare module 'next-auth' {
-  interface Session extends DefaultSession {
-    user: {
-      id: string
-      subscriptionStatus?: string
-      whatsappVerified?: boolean
-      whatsapp?: string | null
-    } & DefaultSession['user']
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
+  interface User {
     id: string
-    subscriptionStatus?: string
-    whatsappVerified?: boolean
-    whatsapp?: string | null
+    email: string | null
+    name: string | null
   }
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      id: 'credentials',
-      name: 'credentials',
       credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" }
+        email: { type: "text" },
+        password: { type: "password" }
       },
-      async authorize(credentials, req): Promise<any> {
-        if (!process.env.NEXTAUTH_SECRET) {
-          console.error('NEXTAUTH_SECRET is not defined');
-          throw new Error("Erro de configuração do servidor");
+      async authorize(credentials, req) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
         }
 
-        try {
-          if (!credentials?.email || !credentials?.password) {
-            throw new Error("Email e senha são obrigatórios");
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true
           }
+        })
 
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              password: true,
-              subscriptionStatus: true,
-              whatsappVerified: true,
-              whatsapp: true
-            }
-          });
+        if (!user?.password) {
+          return null
+        }
 
-          if (!user || !user?.password) {
-            throw new Error("Email não encontrado");
-          }
+        const isValid = await bcrypt.compare(credentials.password, user.password)
+        if (!isValid) {
+          return null
+        }
 
-          const isCorrectPassword = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
-
-          if (!isCorrectPassword) {
-            throw new Error("Senha incorreta");
-          }
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            subscriptionStatus: user.subscriptionStatus || 'free',
-            whatsappVerified: user.whatsappVerified || false,
-            whatsapp: user.whatsapp || null
-          };
-        } catch (error: any) {
-          console.error('Authorize error:', error);
-          throw new Error(error.message || "Erro ao autenticar usuário");
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name
         }
       }
     })
   ],
   pages: {
-    signIn: '/login',
-    error: '/login',
-    signOut: '/login'
+    signIn: '/login'
   },
   session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 dias
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.subscriptionStatus = user.subscriptionStatus || 'free';
-        token.whatsappVerified = user.whatsappVerified || false;
-        token.whatsapp = user.whatsapp || null;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id;
-        session.user.subscriptionStatus = token.subscriptionStatus || 'free';
-        session.user.whatsappVerified = token.whatsappVerified || false;
-        session.user.whatsapp = token.whatsapp || null;
-      }
-      return session;
-    },
-    async redirect({ url, baseUrl }) {
-      try {
-        // Garantir que temos uma URL base válida
-        const productionUrl = 'https://app.cryph.ai';
-        const base = process.env.NODE_ENV === 'production' ? productionUrl : baseUrl;
-
-        // Se a URL começa com /, adicionar à base
-        if (url.startsWith('/')) {
-          return `${base}${url}`;
-        }
-
-        // Se a URL é do mesmo domínio que a base, permitir
-        if (url.startsWith(base)) {
-          return url;
-        }
-
-        // Se a URL é absoluta mas não é do nosso domínio, verificar se é segura
-        try {
-          new URL(url);
-          // Se é uma URL válida mas não é do nosso domínio, redirecionar para a home
-          return base;
-        } catch {
-          // Se não é uma URL válida, redirecionar para a home
-          return base;
-        }
-      } catch (error) {
-        // Em caso de qualquer erro, redirecionar para a home
-        console.error('Redirect error:', error);
-        return process.env.NODE_ENV === 'production' 
-          ? 'https://app.cryph.ai' 
-          : baseUrl;
-      }
-    }
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development'
+    strategy: 'jwt'
+  }
 } 
