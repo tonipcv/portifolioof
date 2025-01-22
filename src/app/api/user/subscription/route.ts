@@ -17,8 +17,7 @@ export async function GET() {
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: {
-        subscriptionStatus: true,
-        subscriptionEndDate: true
+        subscriptionStatus: true
       }
     })
 
@@ -29,8 +28,7 @@ export async function GET() {
       )
     }
 
-    const isActive = user.subscriptionStatus === 'active' && 
-      (!user.subscriptionEndDate || new Date(user.subscriptionEndDate) > new Date())
+    const isActive = user.subscriptionStatus === 'premium'
 
     return NextResponse.json({ isActive })
   } catch (error) {

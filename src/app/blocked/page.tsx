@@ -1,56 +1,48 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
-import { Phone } from 'lucide-react'
-import Image from 'next/image'
+import Link from 'next/link'
+import { Lock } from 'lucide-react'
 
 export default function BlockedPage() {
-  const router = useRouter()
-  const { data: session } = useSession()
-
-  if (!session) {
-    router.push('/login')
-    return null
-  }
-
   return (
-    <div className="fixed inset-0 bg-zinc-950 flex items-center justify-center font-helvetica px-4">
-      <div className="w-full max-w-md text-center space-y-8">
-        <Image
-          src="/logo.png" 
-          alt="Logo"
-          width={120}
-          height={36}
-          priority
-          className="mx-auto brightness-0 invert"
-        />
-
-        <div className="bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-green-100/20 p-8 space-y-6">
-          <div className="mx-auto w-16 h-16 bg-zinc-800/50 rounded-full flex items-center justify-center">
-            <Phone className="w-8 h-8 text-zinc-400" />
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 text-center">
+        <div>
+          <div className="mx-auto h-12 w-12 bg-red-500/10 rounded-full flex items-center justify-center">
+            <Lock className="h-6 w-6 text-red-500" />
           </div>
-
-          <div className="space-y-3">
-            <h1 className="text-2xl font-light text-zinc-100">
-              Verifique seu WhatsApp
-            </h1>
-            <p className="text-zinc-400 text-sm">
-              Para acessar esta área, você precisa verificar seu número de WhatsApp.
-              Por favor, complete o processo de verificação.
-            </p>
+          <h2 className="mt-6 text-3xl font-extrabold text-white">
+            Conteúdo Exclusivo
+          </h2>
+          <p className="mt-2 text-sm text-gray-400">
+            Esta área é exclusiva para membros premium. Faça upgrade agora para ter acesso a todos os recursos.
+          </p>
+        </div>
+        <div className="mt-8 space-y-4">
+          <div className="bg-[#222222] rounded-lg p-4 border border-white/10">
+            <h3 className="text-lg font-medium text-white mb-2">
+              Benefícios Premium
+            </h3>
+            <ul className="space-y-2 text-sm text-gray-400 text-left">
+              <li>✓ Acesso a análises técnicas detalhadas</li>
+              <li>✓ Recomendações de ativos em tempo real</li>
+              <li>✓ Assistente AI especializado em criptomoedas</li>
+              <li>✓ Portfólios ilimitados</li>
+              <li>✓ Cursos exclusivos</li>
+            </ul>
           </div>
-
-          <button
-            onClick={() => router.push('/register')}
-            className="w-full py-2.5 bg-zinc-800/30 border border-green-100/20 
-              text-zinc-100 rounded-lg transition-all duration-300 
-              hover:bg-zinc-700/50 hover:border-green-100/40 
-              focus:outline-none focus:ring-2 focus:ring-green-100/30
-              font-light tracking-wide"
+          <Link
+            href="/pricing"
+            className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            Verificar WhatsApp
-          </button>
+            Fazer Upgrade Agora
+          </Link>
+          <Link
+            href="/"
+            className="w-full flex items-center justify-center px-4 py-2 border border-white/10 text-sm font-medium rounded-md text-white bg-transparent hover:bg-white/5"
+          >
+            Voltar para Home
+          </Link>
         </div>
       </div>
     </div>

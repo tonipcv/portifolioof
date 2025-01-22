@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 import { TrendingUp, TrendingDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Crypto {
@@ -23,12 +25,22 @@ interface Crypto {
 }
 
 export default function AnalisesPage() {
+  const { data: session, status } = useSession()
+  const isPremium = session?.user?.subscriptionStatus === 'premium'
   const [cryptos, setCryptos] = useState<Crypto[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+
+  if (status === 'loading') {
+    return <div>Loading...</div>
+  }
+
+  if (!session || !isPremium) {
+    redirect('/blocked')
+  }
 
   useEffect(() => {
     const fetchCryptos = async () => {

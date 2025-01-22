@@ -3,61 +3,64 @@
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { TrendingUp, Lock } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+interface Asset {
+  name: string;
+  price: string;
+  change: string;
+  prediction: string;
+  target: string;
+  analysis: string;
+}
 
 export default function RecommendedAssetsPage() {
   const { data: session } = useSession();
   const isPremium = session?.user?.subscriptionStatus === 'premium';
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const recommendedAssets = [
-    {
-      name: 'Bitcoin (BTC)',
-      price: '$43,567.89',
-      change: '+5.67%',
-      prediction: 'Forte tendência de alta',
-      target: '$48,000',
-      analysis: 'Suporte em $42k, resistência em $45k. Momento técnico favorável.',
-    },
-    {
-      name: 'Ethereum (ETH)',
-      price: '$2,345.67',
-      change: '+3.45%',
-      prediction: 'Acumulação',
-      target: '$2,800',
-      analysis: 'Formação de bandeira bullish no gráfico diário.',
-    },
-    {
-      name: 'Solana (SOL)',
-      price: '$98.76',
-      change: '+8.90%',
-      prediction: 'Compra',
-      target: '$120',
-      analysis: 'Rompimento de resistência importante com volume.',
-    },
-    {
-      name: 'Cardano (ADA)',
-      price: '$0.58',
-      change: '+4.20%',
-      prediction: 'Acumulação',
-      target: '$0.75',
-      analysis: 'Formação de suporte forte em $0.55, volume crescente.',
-    },
-    {
-      name: 'Polkadot (DOT)',
-      price: '$7.89',
-      change: '+6.15%',
-      prediction: 'Compra',
-      target: '$9.50',
-      analysis: 'Padrão de reversão formado, momentum positivo.',
-    },
-    {
-      name: 'Chainlink (LINK)',
-      price: '$15.34',
-      change: '+7.80%',
-      prediction: 'Forte tendência de alta',
-      target: '$18.00',
-      analysis: 'Quebra de resistência com alto volume, tendência de alta confirmada.',
-    }
-  ];
+  useEffect(() => {
+    const fetchAssets = async () => {
+      try {
+        const response = await fetch('/api/ativos-recomendados');
+        if (!response.ok) {
+          throw new Error('Failed to fetch assets');
+        }
+        const data = await response.json();
+        setAssets(data);
+      } catch (error) {
+        console.error('Error fetching assets:', error);
+        setError('Failed to load assets. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAssets();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-12 bg-gray-700 rounded w-1/4"></div>
+          <div className="h-96 bg-gray-700 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div className="bg-red-900/20 border border-red-500 rounded-lg p-4">
+          <p className="text-red-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 font-['Helvetica']">
@@ -75,7 +78,7 @@ export default function RecommendedAssetsPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {recommendedAssets.map((asset, index) => (
+          {assets.map((asset, index) => (
             <div
               key={index}
               className="relative bg-[#222222] rounded-lg p-4 overflow-hidden border border-white/10"
