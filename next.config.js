@@ -22,7 +22,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    serverActions: true,
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'app.cryph.ai']
+    }
   },
   async rewrites() {
     return [
