@@ -12,64 +12,39 @@ declare module 'next-auth' {
 }
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
-      id: 'credentials',
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email e senha são obrigatórios')
-        }
+      name: 'Credentials',
+      credentials: {},
+      async authorize(credentials: any) {
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          })
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        })
+          if (!user || !user.password) {
+            return null
+          }
 
-        if (!user || !user.password) {
-          throw new Error('Email ou senha inválidos')
-        }
+          const isValid = await bcrypt.compare(credentials.password, user.password)
+          if (!isValid) {
+            return null
+          }
 
-        const isValid = await bcrypt.compare(credentials.password, user.password)
-        if (!isValid) {
-          throw new Error('Email ou senha inválidos')
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name
+          }
+        } catch (error) {
+          console.error('Auth error:', error)
+          return null
         }
       }
     })
   ],
   pages: {
-    signIn: '/login',
-    error: '/login'
-  },
-  session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60 // 30 dias
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-        token.email = user.email
-        token.name = user.name
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
-        session.user.email = token.email
-        session.user.name = token.name
-      }
-      return session
-    }
+    signIn: '/login'
   }
 } 
