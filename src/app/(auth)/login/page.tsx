@@ -2,33 +2,50 @@
 
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  async function handleSubmit(formData: FormData) {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (isLoading) return;
+
     setIsLoading(true);
+    setError('');
 
     try {
+      const formData = new FormData(e.currentTarget);
+      const email = formData.get('email') as string;
+      const password = formData.get('password') as string;
+
+      const callbackUrl = searchParams.get('callbackUrl') || '/portfolios';
+      
       const result = await signIn('credentials', {
-        email: formData.get('email'),
-        password: formData.get('password'),
-        redirect: false
+        email,
+        password,
+        redirect: false,
+        callbackUrl,
       });
 
-      if (result?.ok) {
-        router.push('/portfolios');
-        router.refresh();
+      if (result?.error) {
+        setError(result.error);
+        return;
       }
+
+      router.push(callbackUrl);
+      router.refresh();
+    } catch (error) {
+      setError('Ocorreu um erro ao fazer login');
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center font-helvetica">
@@ -43,7 +60,13 @@ export default function LoginPage() {
           />
         </div>
 
-        <form action={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="mb-6 p-4 bg-red-900/50 border border-red-500 rounded-lg">
+            <p className="text-sm text-red-500">{error}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <input
               id="email"

@@ -14,32 +14,28 @@ declare module 'next-auth' {
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
+      id: 'credentials',
+      name: 'credentials',
       credentials: {
-        email: { type: "text" },
-        password: { type: "password" }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null
+          throw new Error('Email e senha são obrigatórios')
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            password: true
-          }
+          where: { email: credentials.email }
         })
 
-        if (!user?.password) {
-          return null
+        if (!user || !user.password) {
+          throw new Error('Email ou senha inválidos')
         }
 
         const isValid = await bcrypt.compare(credentials.password, user.password)
         if (!isValid) {
-          return null
+          throw new Error('Email ou senha inválidos')
         }
 
         return {
@@ -51,9 +47,29 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   pages: {
-    signIn: '/login'
+    signIn: '/login',
+    error: '/login'
   },
   session: {
-    strategy: 'jwt'
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60 // 30 dias
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+        token.email = user.email
+        token.name = user.name
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.id as string
+        session.user.email = token.email
+        session.user.name = token.name
+      }
+      return session
+    }
   }
 } 
