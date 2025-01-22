@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CreatePortfolioModal } from './CreatePortfolioModal';
 
 export function CreatePortfolioButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,7 +45,7 @@ export function CreatePortfolioButton() {
         href="/pricing"
         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-transparent border border-white/20 rounded-md hover:bg-white/5 transition-colors"
       >
-        Fazer Upgrade
+        Upgrade
       </Link>
     );
   }
@@ -86,82 +88,20 @@ export function CreatePortfolioButton() {
   };
 
   return (
-    <div>
-      <button
-        onClick={() => router.push('/portfolios/new')}
-        className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 
-          text-white rounded-lg transition-colors hover:bg-white/10 
-          focus:outline-none focus:ring-1 focus:ring-white/20 text-sm"
+    <>
+      <Button
+        onClick={() => setIsOpen(true)}
+        className="bg-transparent hover:bg-white/5"
+        size="icon"
+        variant="ghost"
       >
-        <Plus className="w-4 h-4" />
-        Criar portfólio
-      </button>
+        <Plus className="h-4 w-4 text-white" />
+      </Button>
 
-      {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-[#222222] rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Criar Novo Portfólio</h2>
-            
-            {error && (
-              <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg">
-                <p className="text-red-500 text-sm">{error}</p>
-                {!isPremium && (
-                  <Link 
-                    href="/pricing" 
-                    className="text-blue-400 hover:text-blue-300 text-sm mt-2 block"
-                  >
-                    Fazer upgrade para Premium →
-                  </Link>
-                )}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">
-                  Nome do Portfólio
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full p-2 bg-[#333333] rounded border border-[#444444] focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">
-                  Descrição (opcional)
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full p-2 bg-[#333333] rounded border border-[#444444] focus:outline-none focus:border-blue-500"
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex justify-end gap-4">
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors disabled:opacity-50"
-                >
-                  {isLoading ? 'Criando...' : 'Criar'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+      <CreatePortfolioModal 
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+      />
+    </>
   );
 } 

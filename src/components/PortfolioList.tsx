@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { DeletePortfolioButton } from './DeletePortfolioButton'
 import { RefreshCw, TrendingUp, TrendingDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { CreatePortfolioButton } from './CreatePortfolioButton'
 
 interface Portfolio {
   id: string
@@ -86,18 +89,19 @@ export function PortfolioList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <button
-          onClick={loadPortfolios}
-          disabled={isRefreshing}
-          className="inline-flex items-center justify-center w-8 h-8 bg-transparent border border-white/20 rounded-md hover:bg-white/5 transition-colors disabled:opacity-50"
-          title="Atualizar portfolios"
-        >
-          <RefreshCw 
-            className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-            aria-hidden="true"
-          />
-        </button>
+      <div className="flex items-center justify-between mb-6 mt-8 md:mt-0">
+        <h2 className="text-xl font-semibold">Meus Portfólios</h2>
+        <div className="flex items-center gap-1 md:gap-2">
+          <CreatePortfolioButton />
+          <Button
+            onClick={loadPortfolios}
+            size="icon"
+            variant="ghost"
+            className="bg-transparent hover:bg-white/5"
+          >
+            <RefreshCw className={cn("h-4 w-4 text-white", { "animate-spin": isRefreshing })} />
+          </Button>
+        </div>
       </div>
 
       {portfolios.length === 0 ? (
@@ -132,7 +136,7 @@ export function PortfolioList() {
                     : 'bg-red-900/20 border border-red-800'
                 }`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-400">Lucro/Prejuízo</span>
+                    <span className="text-sm text-gray-400">L/P</span>
                     <div className="flex items-center">
                       {portfolio.totalProfit >= 0 ? (
                         <TrendingUp className="mr-2 h-5 w-5 text-green-100" />
