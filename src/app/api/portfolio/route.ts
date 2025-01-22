@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     
     if (!session?.user?.id) {
       console.log('API - No user ID in session')
-      return new NextResponse('Unauthorized', { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const portfolios = await prisma.portfolio.findMany({
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
     return NextResponse.json(enrichedPortfolios)
   } catch (error) {
     console.error('API - Error:', error)
-    return new NextResponse('Internal Server Error', { status: 500 })
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
 
@@ -74,19 +74,19 @@ export async function POST(request: Request) {
     const session = await getServerSession(authOptions)
     
     if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const userId = session.user.id
     if (!userId) {
-      return new NextResponse('User ID not found', { status: 400 })
+      return NextResponse.json({ error: 'User ID not found' }, { status: 400 })
     }
 
     const body = await request.json()
     const { name, description } = body
 
     if (!name) {
-      return new NextResponse('Nome é obrigatório', { status: 400 })
+      return NextResponse.json({ error: 'Nome é obrigatório' }, { status: 400 })
     }
 
     const portfolio = await prisma.portfolio.create({
@@ -102,13 +102,10 @@ export async function POST(request: Request) {
     return NextResponse.json(portfolio)
   } catch (error) {
     console.error('Error creating portfolio:', error)
-    return new NextResponse(
-      JSON.stringify({ 
-        error: 'Internal Server Error', 
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }), 
-      { status: 500 }
-    )
+    return NextResponse.json({ 
+      error: 'Internal Server Error', 
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 

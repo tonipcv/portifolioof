@@ -66,7 +66,7 @@ export function CreatePortfolioButton() {
 
       if (!response.ok) {
         if (response.status === 403) {
-          setError(data.message || 'Limite de portfólios atingido');
+          setError(data.error || 'Limite de portfólios atingido');
           return;
         }
         throw new Error(data.error || 'Erro ao criar portfólio');
@@ -78,7 +78,8 @@ export function CreatePortfolioButton() {
       setName('');
       setDescription('');
     } catch (error) {
-      setError('Erro ao criar portfólio');
+      console.error('Error creating portfolio:', error);
+      setError(error instanceof Error ? error.message : 'Erro ao criar portfólio');
     } finally {
       setIsLoading(false);
     }

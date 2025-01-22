@@ -4,6 +4,7 @@ import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -65,11 +66,26 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full p-2 bg-zinc-800/30 border border-green-100/20 rounded"
+            className="w-full p-2 bg-zinc-800/30 border border-green-100/20 rounded text-zinc-100"
           >
             {isLoading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
+
+        <div className="mt-6 flex justify-between text-sm">
+          <Link
+            href="/register"
+            className="text-zinc-400 hover:text-green-100/90 transition-colors"
+          >
+            Criar conta
+          </Link>
+          <Link
+            href="/forgot-password"
+            className="text-zinc-400 hover:text-green-100/90 transition-colors"
+          >
+            Esqueceu sua senha?
+          </Link>
+        </div>
       </div>
     </div>
   );
