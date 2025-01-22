@@ -18,7 +18,11 @@ export default function PricingPage() {
       return;
     }
 
-    router.push('/carrinho');
+    const checkoutUrl = selectedPlan === 'annual' 
+      ? 'https://checkout.k17.com.br/subscribe/anual-cryph'
+      : 'https://checkout.k17.com.br/subscribe/semestral-cryph';
+    
+    window.location.href = checkoutUrl;
   };
 
   const handleManageSubscription = async () => {
@@ -106,9 +110,20 @@ export default function PricingPage() {
                   <p className="text-zinc-400 text-sm mt-1">Acesso completo</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-zinc-100">
-                    R${selectedPlan === 'annual' ? '147' : '247'}
-                  </p>
+                  {selectedPlan === 'annual' ? (
+                    <>
+                      <div className="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full mb-1">
+                        52% OFF
+                      </div>
+                      <p className="text-2xl font-bold text-zinc-100">
+                        R$197
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-2xl font-bold text-zinc-100">
+                      R$400
+                    </p>
+                  )}
                   <p className="text-sm text-zinc-400">por mês</p>
                 </div>
               </div>
