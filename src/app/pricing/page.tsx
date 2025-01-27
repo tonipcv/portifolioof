@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { Check } from 'lucide-react';
 
 export default function PricingPage() {
   const { data: session } = useSession();
@@ -63,11 +64,11 @@ export default function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState('annual');
 
   return (
-    <div className="min-h-screen bg-[#121214]">
-      <div className="py-24 sm:py-32">
+    <div className="min-h-screen bg-[#121214] px-4">
+      <div className="py-12 sm:py-16">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-zinc-100">
+          <div className="text-center mb-8">
+            <h2 className="text-xl font-light text-zinc-100">
               Escolha seu plano
             </h2>
             {isPremium && (
@@ -82,69 +83,63 @@ export default function PricingPage() {
             )}
           </div>
 
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {/* Plano Gratuito */}
-            <div className="bg-zinc-900/50 rounded-lg p-6 border border-zinc-800/50">
-              <div className="flex justify-between items-start mb-4">
+            <div className="bg-[#161616] rounded-lg p-6 border border-white/10">
+              <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h3 className="text-lg font-medium text-zinc-100">Gratuito</h3>
+                  <h3 className="text-lg font-light text-zinc-100">Gratuito</h3>
                   <p className="text-zinc-400 text-sm mt-1">Acesso básico</p>
                 </div>
-                <p className="text-2xl font-bold text-zinc-100">R$0</p>
+                <p className="text-xl font-light text-zinc-100">R$0</p>
               </div>
               <ul className="space-y-3 mb-6">
                 {freeFeatures.map((feature, index) => (
                   <li key={`free-${index}`} className="flex items-center text-sm">
-                    <span className="text-zinc-400 mr-2">✓</span>
-                    <span className="text-zinc-300">{feature}</span>
+                    <Check className="h-4 w-4 text-zinc-400 mr-2 flex-shrink-0" />
+                    <span className="text-zinc-300 font-light">{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
             {/* Plano Premium */}
-            <div className={`bg-zinc-900/50 rounded-lg p-6 border border-zinc-800/50 ${isPremium ? 'ring-1 ring-zinc-700' : ''}`}>
-              <div className="flex justify-between items-start mb-4">
+            <div className="bg-[#161616] rounded-lg p-6 border border-white/10">
+              <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h3 className="text-lg font-medium text-zinc-100">Premium</h3>
+                  <h3 className="text-lg font-light text-zinc-100">Premium</h3>
                   <p className="text-zinc-400 text-sm mt-1">Acesso completo</p>
                 </div>
                 <div className="text-right">
                   {selectedPlan === 'annual' ? (
                     <>
-                      <div className="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full mb-1">
-                        52% OFF
-                      </div>
-                      <p className="text-2xl font-bold text-zinc-100">
-                        R$197
-                      </p>
+                      <div className="text-[10px] text-green-400 mb-1">52% OFF</div>
+                      <p className="text-xl font-light text-zinc-100">R$197</p>
                     </>
                   ) : (
-                    <p className="text-2xl font-bold text-zinc-100">
-                      R$400
-                    </p>
+                    <p className="text-xl font-light text-zinc-100">R$400</p>
                   )}
-                  <p className="text-sm text-zinc-400">por mês</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">por mês</p>
                 </div>
               </div>
               
               <div className="flex gap-2 mb-6">
                 <button
                   onClick={() => setSelectedPlan('annual')}
-                  className={`flex-1 py-1 px-3 rounded text-sm transition-colors ${
+                  className={`flex-1 py-1.5 px-3 rounded text-xs transition-colors ${
                     selectedPlan === 'annual'
-                      ? 'bg-zinc-800 text-zinc-100'
-                      : 'bg-zinc-900 text-zinc-400'
+                      ? 'bg-white/10 text-zinc-100'
+                      : 'bg-transparent text-zinc-400 hover:text-zinc-300'
                   }`}
                 >
                   Anual
                 </button>
                 <button
                   onClick={() => setSelectedPlan('semiannual')}
-                  className={`flex-1 py-1 px-3 rounded text-sm transition-colors ${
+                  className={`flex-1 py-1.5 px-3 rounded text-xs transition-colors ${
                     selectedPlan === 'semiannual'
-                      ? 'bg-zinc-800 text-zinc-100'
-                      : 'bg-zinc-900 text-zinc-400'
+                      ? 'bg-white/10 text-zinc-100'
+                      : 'bg-transparent text-zinc-400 hover:text-zinc-300'
                   }`}
                 >
                   Semestral
@@ -154,8 +149,8 @@ export default function PricingPage() {
               <ul className="space-y-3 mb-6">
                 {premiumFeatures.map((feature, index) => (
                   <li key={`premium-${index}`} className="flex items-center text-sm">
-                    <span className="text-zinc-400 mr-2">✓</span>
-                    <span className="text-zinc-300">{feature}</span>
+                    <Check className="h-4 w-4 text-zinc-400 mr-2 flex-shrink-0" />
+                    <span className="text-zinc-300 font-light">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -163,7 +158,7 @@ export default function PricingPage() {
                 <button
                   onClick={handleManageSubscription}
                   disabled={isLoading}
-                  className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 py-2 px-4 rounded text-sm transition-colors"
+                  className="w-full bg-white/5 hover:bg-white/10 text-zinc-100 py-2 px-4 rounded text-sm transition-colors font-light"
                 >
                   {isLoading ? 'Processando...' : 'Gerenciar Assinatura'}
                 </button>
@@ -171,7 +166,7 @@ export default function PricingPage() {
                 <button
                   onClick={handleSubscribe}
                   disabled={isLoading}
-                  className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 py-2 px-4 rounded text-sm transition-colors"
+                  className="w-full bg-white/5 hover:bg-white/10 text-zinc-100 py-2 px-4 rounded text-sm transition-colors font-light"
                 >
                   {isLoading ? 'Processando...' : session ? 'Assinar Premium' : 'Fazer Login para Assinar'}
                 </button>

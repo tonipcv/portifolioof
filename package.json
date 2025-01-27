@@ -43,6 +43,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.49.2",
     "react-phone-input-2": "^2.15.1",
+    "recharts": "2.15.0",
     "stripe": "^14.8.0",
     "tailwind-merge": "^2.1.0",
     "zod": "^3.22.4"

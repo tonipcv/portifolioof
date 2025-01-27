@@ -3,6 +3,23 @@ import { notFound } from 'next/navigation';
 import AssetsList from '@/components/AssetsList';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const MyPortfolio = dynamic(() => import('@/components/MyPortfolio'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center p-8">
+      <div className="animate-pulse space-y-8 w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-[#161616] rounded-lg p-4 h-24" />
+          ))}
+        </div>
+        <div className="h-[300px] bg-[#161616] rounded-lg" />
+      </div>
+    </div>
+  ),
+});
 
 interface PageProps {
   params: {
@@ -111,7 +128,17 @@ export default async function PortfolioPage({ params }: PageProps) {
         </div>
       </div>
 
-      <AssetsList portfolioId={portfolioId} />
+      <div className="space-y-8">
+        {/* Portfolio Chart */}
+        <div className="bg-[#161616] rounded-lg border border-[#222222] overflow-hidden">
+          <MyPortfolio portfolioId={portfolioId} />
+        </div>
+
+        {/* Assets List */}
+        <div className="bg-[#161616] rounded-lg border border-[#222222] overflow-hidden">
+          <AssetsList portfolioId={portfolioId} />
+        </div>
+      </div>
     </div>
   );
 } 

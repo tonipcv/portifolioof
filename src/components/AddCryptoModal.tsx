@@ -285,7 +285,7 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-[#111111]/80 transition-opacity" />
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" />
         </Transition.Child>
 
         <div className="fixed inset-0 z-10 overflow-y-auto">
@@ -300,45 +300,42 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-[#161616] px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-                <div className="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
+                <div className="absolute right-0 top-0 pr-4 pt-4">
                   <button
                     type="button"
-                    className="rounded-md bg-gray-800 text-gray-400 hover:text-gray-300"
+                    className="text-zinc-400 hover:text-zinc-300 transition-colors"
                     onClick={onClose}
                   >
                     <span className="sr-only">Fechar</span>
-                    <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                    <XMarkIcon className="h-5 w-5" aria-hidden="true" />
                   </button>
                 </div>
 
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <CurrencyDollarIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
-                  </div>
-                  <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                    <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-white">
+                <div>
+                  <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                    <Dialog.Title as="h3" className="text-lg font-light text-zinc-100 mb-6">
                       Adicionar Crypto
                     </Dialog.Title>
                     {error ? (
-                      <div className="mt-2 text-red-400">{error}</div>
+                      <div className="mt-2 text-red-400 text-sm">{error}</div>
                     ) : (
-                      <form onSubmit={handleSubmit} className="mt-4 space-y-6">
+                      <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
-                          <label className="block text-sm font-medium text-gray-300">
+                          <label className="block text-sm font-light text-zinc-300">
                             Buscar Criptomoeda
                           </label>
                           <Combobox value={selectedCrypto} onChange={setSelectedCrypto}>
                             <div className="relative">
-                              <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-gray-700 text-left focus:outline-none sm:text-sm">
+                              <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white/5 text-left focus:outline-none sm:text-sm">
                                 <Combobox.Input
-                                  className="w-full border-none bg-gray-700 py-2.5 pl-3 pr-10 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-600 rounded-lg"
+                                  className="w-full border-0 bg-transparent py-2.5 pl-3 pr-10 text-zinc-100 placeholder-zinc-500 focus:ring-1 focus:ring-white/20 rounded-lg text-sm font-light"
                                   displayValue={(crypto: CryptoPrice) => crypto?.name || ''}
                                   onChange={(event) => setQuery(event.target.value)}
                                   placeholder="Digite para buscar..."
                                 />
                                 <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
                                   <ChevronUpDownIcon
-                                    className="h-5 w-5 text-gray-400"
+                                    className="h-4 w-4 text-zinc-400"
                                     aria-hidden="true"
                                   />
                                 </Combobox.Button>
@@ -350,13 +347,13 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                                 leaveTo="opacity-0"
                                 afterLeave={() => setQuery('')}
                               >
-                                <Combobox.Options className="absolute mt-1 max-h-[400px] w-full overflow-auto rounded-md bg-gray-700 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-50">
+                                <Combobox.Options className="absolute mt-1 max-h-[400px] w-full overflow-auto rounded-lg bg-[#161616] py-1 text-base shadow-lg ring-1 ring-white/10 focus:outline-none sm:text-sm z-50">
                                   {isLoading ? (
-                                    <div key="loading" className="relative cursor-default select-none px-4 py-2 text-gray-300">
+                                    <div className="relative cursor-default select-none px-4 py-2 text-zinc-400 text-sm">
                                       Carregando...
                                     </div>
                                   ) : filteredCryptos.length === 0 ? (
-                                    <div key="not-found" className="relative cursor-default select-none px-4 py-2 text-gray-300">
+                                    <div className="relative cursor-default select-none px-4 py-2 text-zinc-400 text-sm">
                                       Nada encontrado.
                                     </div>
                                   ) : (
@@ -364,56 +361,40 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                                       <Combobox.Option
                                         key={crypto.id}
                                         className={({ active }) =>
-                                          `relative cursor-default select-none py-3 pl-10 pr-4 ${
-                                            active ? 'bg-blue-600 text-white' : 'text-gray-300'
+                                          `relative cursor-default select-none py-3 pl-3 pr-4 ${
+                                            active ? 'bg-white/5' : ''
                                           }`
                                         }
                                         value={crypto}
                                       >
                                         {({ selected, active }) => (
-                                          <>
-                                            <div className="flex items-center justify-between">
-                                              <div className="flex items-center">
-                                                <div className="w-6 h-6 bg-gray-600 rounded-full mr-3 flex items-center justify-center">
-                                                  <span className="text-xs text-gray-300">
-                                                    {crypto.symbol.slice(0, 2).toUpperCase()}
-                                                  </span>
-                                                </div>
-                                                <div>
-                                                  <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
-                                                    {crypto.name}
-                                                  </span>
-                                                  <span className="text-sm text-gray-400">
-                                                    {crypto.symbol.toUpperCase()}
-                                                  </span>
-                                                </div>
+                                          <div className="flex items-center justify-between">
+                                            <div className="flex items-center">
+                                              <div className="w-6 h-6 bg-white/5 rounded-full mr-3 flex items-center justify-center">
+                                                <span className="text-xs text-zinc-400">
+                                                  {crypto.symbol.slice(0, 2).toUpperCase()}
+                                                </span>
                                               </div>
-                                              <div className="flex items-center gap-4">
-                                                <div className="text-right">
-                                                  <div className="text-sm text-gray-400">
-                                                    {formatUSD(crypto.current_price)}
-                                                  </div>
-                                                  <div className="flex items-center gap-2 text-xs">
-                                                    <span className={crypto.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}>
-                                                      {crypto.price_change_percentage_24h?.toFixed(2)}% (24h)
-                                                    </span>
-                                                    <span className={crypto.price_change_percentage_7d >= 0 ? 'text-green-400' : 'text-red-400'}>
-                                                      {crypto.price_change_percentage_7d?.toFixed(2)}% (7d)
-                                                    </span>
-                                                  </div>
-                                                </div>
+                                              <div>
+                                                <span className={`block text-sm text-zinc-100 font-light`}>
+                                                  {crypto.name}
+                                                </span>
+                                                <span className="text-xs text-zinc-500">
+                                                  {crypto.symbol.toUpperCase()}
+                                                </span>
                                               </div>
                                             </div>
-                                            {selected ? (
-                                              <span
-                                                className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                                  active ? 'text-white' : 'text-blue-600'
-                                                }`}
-                                              >
-                                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                                              </span>
-                                            ) : null}
-                                          </>
+                                            <div className="text-right">
+                                              <div className="text-sm text-zinc-400 font-light">
+                                                {formatUSD(crypto.current_price)}
+                                              </div>
+                                              <div className="flex items-center gap-2 text-xs">
+                                                <span className={crypto.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                                  {crypto.price_change_percentage_24h?.toFixed(2)}%
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </div>
                                         )}
                                       </Combobox.Option>
                                     ))
@@ -425,15 +406,15 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                         </div>
 
                         {selectedCrypto && (
-                          <div className="bg-[#222222] rounded-lg p-4 flex items-center gap-4">
-                            <div className="w-6 h-6 bg-gray-600 rounded-full mr-2 flex items-center justify-center">
-                              <span className="text-xs text-gray-300">
+                          <div className="bg-white/5 rounded-lg p-4 flex items-center gap-4">
+                            <div className="w-6 h-6 bg-white/5 rounded-full flex items-center justify-center">
+                              <span className="text-xs text-zinc-400">
                                 {selectedCrypto.symbol.slice(0, 2).toUpperCase()}
                               </span>
                             </div>
                             <div>
-                              <h4 className="text-white font-medium">{selectedCrypto.name}</h4>
-                              <p className="text-gray-400">
+                              <h4 className="text-zinc-100 text-sm font-light">{selectedCrypto.name}</h4>
+                              <p className="text-zinc-400 text-xs">
                                 {formatUSD(selectedCrypto.current_price)}
                               </p>
                             </div>
@@ -442,17 +423,17 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label htmlFor="investedValue" className="block text-sm font-medium text-gray-300">
+                            <label htmlFor="investedValue" className="block text-sm font-light text-zinc-300">
                               Valor Investido
                             </label>
-                            <div className="relative mt-2 rounded-md shadow-sm">
+                            <div className="relative mt-2 rounded-md">
                               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                <span className="text-gray-400 sm:text-sm">$</span>
+                                <span className="text-zinc-500 sm:text-sm">$</span>
                               </div>
                               <input
                                 type="text"
                                 id="investedValue"
-                                className="block w-full rounded-md border-0 bg-gray-700 py-2.5 pl-10 text-white placeholder-gray-400 shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-600 sm:text-sm"
+                                className="block w-full rounded-lg border-0 bg-white/5 py-2 pl-8 text-zinc-100 placeholder-zinc-500 focus:ring-1 focus:ring-white/20 text-sm font-light"
                                 value={formatInvestedValue(investedValue)}
                                 onChange={(e) => handleValueChange(e.target.value)}
                                 placeholder="0.00"
@@ -462,14 +443,14 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                           </div>
 
                           <div>
-                            <label htmlFor="amount" className="block text-sm font-medium text-gray-300">
+                            <label htmlFor="amount" className="block text-sm font-light text-zinc-300">
                               Quantidade
                             </label>
                             <input
                               type="number"
                               id="amount"
                               step="any"
-                              className="mt-2 block w-full rounded-md border-0 bg-gray-700 py-2.5 px-3 text-white placeholder-gray-400 shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-blue-600 sm:text-sm"
+                              className="mt-2 block w-full rounded-lg border-0 bg-white/5 py-2 px-3 text-zinc-100 placeholder-zinc-500 focus:ring-1 focus:ring-white/20 text-sm font-light"
                               value={amount}
                               onChange={(e) => setAmount(e.target.value)}
                               placeholder="0.00"
@@ -478,20 +459,20 @@ export default function AddCryptoModal({ isOpen, onClose, portfolioId, onSuccess
                           </div>
                         </div>
 
-                        <div className="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
-                          <button
-                            type="submit"
-                            className="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={isLoading || !selectedCrypto}
-                          >
-                            {isLoading ? 'Carregando...' : 'Adicionar'}
-                          </button>
+                        <div className="flex gap-3 justify-end">
                           <button
                             type="button"
-                            className="mt-3 inline-flex w-full justify-center rounded-md bg-gray-700 px-3 py-2.5 text-sm font-semibold text-gray-300 shadow-sm ring-1 ring-inset ring-gray-600 hover:bg-gray-600 sm:mt-0 sm:w-auto"
+                            className="px-4 py-2 text-sm font-light text-zinc-300 hover:text-zinc-100 transition-colors"
                             onClick={onClose}
                           >
                             Cancelar
+                          </button>
+                          <button
+                            type="submit"
+                            className="bg-white/5 hover:bg-white/10 px-4 py-2 rounded-lg text-sm text-zinc-100 transition-colors font-light disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isLoading || !selectedCrypto}
+                          >
+                            {isLoading ? 'Carregando...' : 'Adicionar'}
                           </button>
                         </div>
                       </form>

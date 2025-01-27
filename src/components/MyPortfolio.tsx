@@ -4,7 +4,7 @@ import React from 'react'
 import { useEffect, useState } from 'react'
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js'
 import { Line } from 'react-chartjs-2'
-import { ArrowTrendingUpIcon, ArrowTrendingDownIcon, SparklesIcon, BanknotesIcon, ScaleIcon, ChartBarIcon } from '@heroicons/react/24/outline'
+import { ChartBarIcon } from '@heroicons/react/24/outline'
 
 ChartJS.register(
   CategoryScale,
@@ -30,12 +30,29 @@ interface PortfolioData {
 const formatBRL = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: 'BRL'
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   }).format(value)
 }
 
-const formatPercentage = (value: number) => {
-  return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  
+  if (isToday) {
+    return date.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit'
+  })
 }
 
 interface MyPortfolioProps {
@@ -59,30 +76,52 @@ export default function MyPortfolio({ portfolioId }: MyPortfolioProps) {
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
-        const response = await fetch(`/api/portfolio?portfolioId=${portfolioId}&period=${selectedPeriod}`)
+        console.log('Fetching portfolio data...', {
+          portfolioId,
+          selectedPeriod,
+          url: `/api/portfolio/${portfolioId}/history?period=${selectedPeriod}`
+        });
+
+        const response = await fetch(`/api/portfolio/${portfolioId}/history?period=${selectedPeriod}`);
+        
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          const errorText = await response.text();
+          console.error('Portfolio API Error:', {
+            status: response.status,
+            statusText: response.statusText,
+            responseBody: errorText,
+            url: response.url
+          });
+          throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
         }
-        const jsonData = await response.json()
+
+        const jsonData = await response.json();
+        console.log('Portfolio data received:', jsonData);
         
         if (!jsonData.labels || !jsonData.values || 
             !Array.isArray(jsonData.labels) || !Array.isArray(jsonData.values)) {
-          throw new Error('Invalid data structure received from API')
+          console.error('Invalid data structure:', jsonData);
+          throw new Error('Invalid data structure received from API');
         }
 
-        setData(jsonData)
-        setError(null)
+        setData(jsonData);
+        setError(null);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
-        setError(errorMessage)
-        console.error('Error fetching portfolio:', errorMessage)
+        const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+        console.error('Portfolio fetch error:', {
+          error,
+          message: errorMessage,
+          portfolioId,
+          selectedPeriod
+        });
+        setError(errorMessage);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchPortfolio()
-  }, [portfolioId, selectedPeriod])
+    fetchPortfolio();
+  }, [portfolioId, selectedPeriod]);
 
   if (isLoading) {
     return (
@@ -124,32 +163,27 @@ export default function MyPortfolio({ portfolioId }: MyPortfolioProps) {
   }
 
   const chartData = {
-    labels: data.labels,
+    labels: data.labels.map(formatDate),
     datasets: [
       {
         label: 'Valor do Portfólio',
         data: data.values,
-        borderColor: data.profitLoss >= 0 ? 'rgba(34, 197, 94, 1)' : 'rgba(239, 68, 68, 1)',
+        borderColor: 'rgba(34, 197, 94, 1)',
         backgroundColor: (context: any) => {
           const ctx = context.chart.ctx
-          const gradient = ctx.createLinearGradient(0, 0, 0, 300)
-          if (data.profitLoss >= 0) {
-            gradient.addColorStop(0, 'rgba(34, 197, 94, 0.5)')
-            gradient.addColorStop(1, 'rgba(34, 197, 94, 0)')
-          } else {
-            gradient.addColorStop(0, 'rgba(239, 68, 68, 0.5)')
-            gradient.addColorStop(1, 'rgba(239, 68, 68, 0)')
-          }
+          const gradient = ctx.createLinearGradient(0, 0, 0, 400)
+          gradient.addColorStop(0, 'rgba(34, 197, 94, 0.2)')
+          gradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)')
           return gradient
         },
         borderWidth: 2,
         fill: true,
-        tension: 0.4,
+        tension: 0.3,
         pointRadius: 0,
-        pointHitRadius: 10,
+        pointHitRadius: 20,
         pointHoverRadius: 5,
-        pointHoverBackgroundColor: data.profitLoss >= 0 ? 'rgba(34, 197, 94, 1)' : 'rgba(239, 68, 68, 1)',
-        pointHoverBorderColor: 'rgba(255, 255, 255, 0.8)',
+        pointHoverBackgroundColor: 'rgba(34, 197, 94, 1)',
+        pointHoverBorderColor: '#fff',
         pointHoverBorderWidth: 2,
       }
     ]
@@ -170,20 +204,35 @@ export default function MyPortfolio({ portfolioId }: MyPortfolioProps) {
         display: false,
       },
       tooltip: {
-        backgroundColor: 'rgba(17, 24, 39, 0.9)',
+        backgroundColor: 'rgba(17, 17, 17, 0.95)',
         titleColor: 'rgba(255, 255, 255, 0.9)',
         bodyColor: 'rgba(255, 255, 255, 0.9)',
-        padding: 12,
-        borderColor: 'rgba(55, 65, 81, 0.9)',
+        padding: {
+          top: 12,
+          right: 16,
+          bottom: 12,
+          left: 16
+        },
+        borderColor: 'rgba(255, 255, 255, 0.1)',
         borderWidth: 1,
         displayColors: false,
         cornerRadius: 8,
+        bodyFont: {
+          family: 'Helvetica, Arial, sans-serif',
+          size: 14,
+          weight: '600'
+        },
+        titleFont: {
+          family: 'Helvetica, Arial, sans-serif',
+          size: 12,
+          weight: '400'
+        },
         callbacks: {
-          title: function() {
-            return 'Valor do Portfólio'
+          title: function(tooltipItems: any) {
+            return tooltipItems[0].label
           },
           label: function(context: any) {
-            return formatBRL(context.parsed.y)
+            return `Valor: ${formatBRL(context.parsed.y)}`
           }
         }
       }
@@ -192,20 +241,27 @@ export default function MyPortfolio({ portfolioId }: MyPortfolioProps) {
       y: {
         type: 'linear' as const,
         grid: {
-          color: 'rgba(75, 85, 99, 0.15)',
+          color: 'rgba(255, 255, 255, 0.06)',
           drawBorder: false,
+          lineWidth: 0.5
         },
         ticks: {
-          color: 'rgb(156, 163, 175)',
+          color: 'rgb(161, 161, 170)',
           font: {
             size: 11,
-            family: 'Inter var',
+            family: 'Helvetica, Arial, sans-serif',
+            weight: '500'
           },
           callback: function(value: any) {
-            return formatBRL(value)
+            const formattedValue = formatBRL(value)
+            // Em telas menores, mostra valor abreviado
+            if (window.innerWidth < 768) {
+              return formattedValue.replace(',00', '').replace('R$', '')
+            }
+            return formattedValue
           },
           padding: 8,
-          maxTicksLimit: 5,
+          maxTicksLimit: 6,
         },
         border: {
           display: false,
@@ -214,17 +270,22 @@ export default function MyPortfolio({ portfolioId }: MyPortfolioProps) {
       x: {
         type: 'category' as const,
         grid: {
-          display: false,
+          color: 'rgba(255, 255, 255, 0.06)',
+          drawBorder: false,
+          lineWidth: 0.5,
+          display: true
         },
         ticks: {
-          color: 'rgb(156, 163, 175)',
+          color: 'rgb(161, 161, 170)',
           font: {
             size: 11,
-            family: 'Inter var',
+            family: 'Helvetica, Arial, sans-serif',
+            weight: '500'
           },
           maxRotation: 0,
+          minRotation: 0,
           padding: 8,
-          maxTicksLimit: 8,
+          maxTicksLimit: 6,
           autoSkip: true,
         },
         border: {
@@ -234,84 +295,23 @@ export default function MyPortfolio({ portfolioId }: MyPortfolioProps) {
     }
   }
 
-  const stats = [
-    {
-      name: 'Valor Total',
-      value: formatBRL(data.totalValue),
-      change: data.change24h,
-      icon: SparklesIcon,
-      changeLabel: '24h'
-    },
-    {
-      name: 'Total Investido',
-      value: formatBRL(data.totalInvested),
-      icon: BanknotesIcon
-    },
-    {
-      name: 'Lucro/Prejuízo',
-      value: formatBRL(data.profitLoss),
-      change: data.profitLossPercentage,
-      icon: ScaleIcon
-    }
-  ]
-
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.name}
-            className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 ring-1 ring-white/5"
-          >
-            <div className="flex items-center gap-4">
-              <stat.icon className="h-6 w-6 text-gray-400" />
-              <div>
-                <p className="text-sm text-gray-400">{stat.name}</p>
-                <p className={`text-xl font-semibold mt-1 ${
-                  stat.name === 'Lucro/Prejuízo' 
-                    ? (data.profitLoss >= 0 ? 'text-green-400' : 'text-red-400')
-                    : 'text-white'
-                }`}>
-                  {stat.value}
-                </p>
-                {stat.change !== undefined && (
-                  <div className="flex items-center gap-1 mt-1">
-                    {stat.change >= 0 ? (
-                      <ArrowTrendingUpIcon className="h-4 w-4 text-green-400" />
-                    ) : (
-                      <ArrowTrendingDownIcon className="h-4 w-4 text-red-400" />
-                    )}
-                    <span className={`text-sm ${
-                      stat.change >= 0 ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      {formatPercentage(stat.change)}
-                    </span>
-                    {stat.changeLabel && (
-                      <span className="text-gray-500 text-sm">{stat.changeLabel}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 ring-1 ring-white/5">
-        <div className="flex justify-end mb-4">
-          <div className="inline-flex rounded-lg bg-gray-900 p-1">
+    <div className="space-y-4 font-['Helvetica']">
+      <div className="bg-[#111111] rounded-lg p-3 sm:p-6 ring-1 ring-white/10">
+        <div className="flex justify-end mb-4 sm:mb-6 overflow-x-auto pb-2 sm:pb-0 -mx-3 sm:mx-0 px-3 sm:px-0">
+          <div className="inline-flex rounded-lg bg-black/40 p-0.5 sm:p-1">
             {PERIODS.map((period) => (
               <button
                 key={period.value}
                 onClick={() => setSelectedPeriod(period.value)}
-                className={`group relative px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                className={`group relative px-2.5 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
                   selectedPeriod === period.value
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-green-500/20 text-green-400'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 {period.label}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs text-white bg-black/90 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap font-medium">
                   {period.description}
                 </div>
               </button>
@@ -319,7 +319,7 @@ export default function MyPortfolio({ portfolioId }: MyPortfolioProps) {
           </div>
         </div>
         
-        <div className="h-[300px] w-full">
+        <div className="h-[250px] sm:h-[400px] w-full">
           <Line data={chartData} options={options} />
         </div>
       </div>
