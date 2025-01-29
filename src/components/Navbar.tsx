@@ -62,6 +62,12 @@ export function Navbar({ session }: NavbarProps) {
       premium: false,
     },
     {
+      label: 'Relatórios',
+      icon: BookOpen,
+      href: isPremium ? '/news' : '/pricing',
+      premium: true,
+    },
+    {
       label: 'AI Assistant',
       icon: MessageSquare,
       href: isPremium ? '/gpt' : '/pricing',

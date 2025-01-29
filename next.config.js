@@ -16,6 +16,7 @@ const nextConfig = {
     domains: [
       'assets.themembers.com.br',
       'assets.coingecko.com',
+      'minios3-minio.dpbdp1.easypanel.host'
     ],
   },
   typescript: {
