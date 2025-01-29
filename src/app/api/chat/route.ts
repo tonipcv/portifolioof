@@ -2,9 +2,15 @@ import OpenAI from 'openai'
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 
-const prisma = new PrismaClient()
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error('OPENAI_API_KEY is not defined')
+}
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+})
 
 interface CryptoData {
   name: string
@@ -36,10 +42,6 @@ interface UserPortfolio {
   }[]
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
 async function getCryptoData(): Promise<CryptoData[]> {
   try {
     const response = await fetch(
@@ -61,18 +63,34 @@ async function getCryptoData(): Promise<CryptoData[]> {
 
 async function getCryptoNews(): Promise<CryptoNews[]> {
   try {
+    // Retornar um array vazio por enquanto, já que o endpoint de notícias está instável
+    return []
+    
+    // Quando o endpoint estiver estável, podemos voltar com este código:
+    /*
     const response = await fetch(
-      'https://api.coingecko.com/api/v3/news'
+      'https://api.coingecko.com/api/v3/news',
+      {
+        headers: {
+          'accept': 'application/json'
+        }
+      }
     )
     const data = await response.json()
     
-    return data.slice(0, 5).map((news: CryptoNews) => ({
+    if (!Array.isArray(data)) {
+      console.log('Formato de resposta inválido:', data)
+      return []
+    }
+
+    return data.slice(0, 5).map((news: any) => ({
       title: news.title,
       description: news.description,
       url: news.url,
       date: new Date(news.published_at).toLocaleString(),
       published_at: news.published_at
     }))
+    */
   } catch (error) {
     console.error('Erro ao buscar notícias da CoinGecko:', error)
     return []
@@ -112,11 +130,34 @@ async function getUserPortfolios(userId: string): Promise<UserPortfolio[]> {
   }
 }
 
+// Função para buscar cotação do dólar
+async function getUSDToBRL(): Promise<number> {
+  try {
+    const response = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL')
+    const data = await response.json()
+    return parseFloat(data.USDBRL.bid)
+  } catch (error) {
+    console.error('Error fetching USD to BRL rate:', error)
+    return 5.00 // Valor fallback caso a API falhe
+  }
+}
+
+// Função para formatar valores em BRL
+function formatBRL(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value)
+}
+
 async function createMarketContext(userId: string): Promise<string> {
-  const [cryptoData, newsData, userPortfolios] = await Promise.all([
+  const [cryptoData, newsData, userPortfolios, usdToBRL] = await Promise.all([
     getCryptoData(),
     getCryptoNews(),
-    getUserPortfolios(userId)
+    getUserPortfolios(userId),
+    getUSDToBRL()
   ])
 
   const priceContext = cryptoData.length ? `
@@ -124,9 +165,9 @@ Dados atuais do mercado (${new Date().toLocaleString()}):
 
 ${cryptoData.map(coin => `
 ${coin.name.toUpperCase()}:
-- Preço: **$${coin.price.toLocaleString()}**
+- Preço: **${formatBRL(coin.price * usdToBRL)}**
 - Variação 24h: **${coin.change_24h.toFixed(2)}%**
-- Market Cap: **$${(coin.market_cap / 1e9).toFixed(2)}B**
+- Market Cap: **${formatBRL((coin.market_cap * usdToBRL) / 1e9)}B**
 `).join('\n')}
 ` : ''
 
@@ -145,16 +186,16 @@ Portfólios do usuário:
 
 ${userPortfolios.map(portfolio => `
 📊 ${portfolio.name}
-- Valor Total: **$${portfolio.totalValue.toLocaleString()}**
-- Lucro/Prejuízo: **$${portfolio.totalProfit.toLocaleString()}**
+- Valor Total: **${formatBRL(portfolio.totalValue * usdToBRL)}**
+- Lucro/Prejuízo: **${formatBRL(portfolio.totalProfit * usdToBRL)}**
 
 Ativos:
 ${portfolio.cryptos.map(crypto => `
 ${crypto.name} (${crypto.symbol.toUpperCase()})
 - Quantidade: **${crypto.amount.toFixed(4)}**
-- Preço Médio: **$${crypto.averagePrice.toLocaleString()}**
-- Preço Atual: **$${crypto.currentPrice.toLocaleString()}**
-- Lucro/Prejuízo: **$${crypto.profit.toLocaleString()}**
+- Preço Médio: **${formatBRL(crypto.averagePrice * usdToBRL)}**
+- Preço Atual: **${formatBRL(crypto.currentPrice * usdToBRL)}**
+- Lucro/Prejuízo: **${formatBRL(crypto.profit * usdToBRL)}**
 `).join('\n')}
 `).join('\n')}
 ` : 'O usuário ainda não possui portfólios.'
@@ -163,8 +204,7 @@ ${crypto.name} (${crypto.symbol.toUpperCase()})
 ${portfolioContext}
 
 ${priceContext}
-
-${newsContext}
+${newsData.length ? `\n${newsContext}` : ''}
 
 Use estas informações de mercado, portfólios do usuário e notícias quando relevante para a conversa, mantendo um tom analítico e profissional.
 `)
@@ -208,7 +248,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { messages } = await req.json()
+    const { messages, conversationId } = await req.json()
 
     if (!messages) {
       return NextResponse.json({ error: 'Messages are required' }, { status: 400 })
@@ -216,27 +256,75 @@ export async function POST(req: Request) {
 
     const marketContext = await createMarketContext(session.user.id)
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: `${systemPrompt}\n\n${marketContext}`
-        },
-        ...messages
-      ],
-      temperature: 0.7,
-      max_tokens: 150,
-      presence_penalty: -0.5,
-      frequency_penalty: 0.3
-    })
+    // Recupera ou cria uma nova conversa
+    let conversation
+    try {
+      if (conversationId) {
+        conversation = await prisma.conversation.findUnique({
+          where: { id: conversationId },
+          include: { messages: true }
+        })
 
-    const content = response.choices[0].message.content || 'Desculpe, não consegui processar sua mensagem.'
+        if (!conversation || conversation.userId !== session.user.id) {
+          return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
+        }
+      } else {
+        // Cria uma nova conversa
+        conversation = await prisma.conversation.create({
+          data: {
+            userId: session.user.id,
+            title: messages[0]?.content?.slice(0, 100) || 'Nova conversa',
+          }
+        })
+      }
+    } catch (error) {
+      console.error('[CONVERSATION_ERROR]', error)
+      return NextResponse.json({ error: 'Error managing conversation' }, { status: 500 })
+    }
 
-    return NextResponse.json({
-      role: 'assistant',
-      content: formatBoldText(content)
-    })
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: `${systemPrompt}\n\n${marketContext}`
+          },
+          ...messages
+        ],
+        temperature: 0.7,
+        max_tokens: 150,
+        presence_penalty: -0.5,
+        frequency_penalty: 0.3
+      })
+
+      const assistantMessage = response.choices[0].message.content || 'Desculpe, não consegui processar sua mensagem.'
+
+      // Salva as mensagens no banco de dados
+      await prisma.message.createMany({
+        data: [
+          {
+            conversationId: conversation.id,
+            role: 'user',
+            content: messages[messages.length - 1].content
+          },
+          {
+            conversationId: conversation.id,
+            role: 'assistant',
+            content: assistantMessage
+          }
+        ]
+      })
+
+      return NextResponse.json({
+        role: 'assistant',
+        content: formatBoldText(assistantMessage),
+        conversationId: conversation.id
+      })
+    } catch (error) {
+      console.error('[OPENAI_ERROR]', error)
+      return NextResponse.json({ error: 'Error generating response' }, { status: 500 })
+    }
   } catch (error) {
     console.error('[CHAT_ERROR]', error)
     return NextResponse.json(

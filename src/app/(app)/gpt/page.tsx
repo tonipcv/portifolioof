@@ -29,6 +29,7 @@ export default function GPTPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -38,6 +39,42 @@ export default function GPTPage() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Carregar mensagens da conversa atual
+  const loadMessages = async (conversationId: string) => {
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}/messages`)
+      if (response.ok) {
+        const data = await response.json()
+        setMessages(data)
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error)
+    }
+  }
+
+  // Carregar última conversa ao iniciar
+  useEffect(() => {
+    const loadLastConversation = async () => {
+      try {
+        const response = await fetch('/api/conversations')
+        if (response.ok) {
+          const conversations = await response.json()
+          if (conversations.length > 0) {
+            const lastConversation = conversations[0]
+            setCurrentConversationId(lastConversation.id)
+            await loadMessages(lastConversation.id)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading conversations:', error)
+      }
+    }
+
+    if (session?.user) {
+      loadLastConversation()
+    }
+  }, [session])
 
   if (status === 'loading') {
     return <div>Loading...</div>
@@ -63,7 +100,8 @@ export default function GPTPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [...messages, userMessage]
+          messages: [...messages, userMessage],
+          conversationId: currentConversationId
         }),
       })
 
@@ -73,6 +111,7 @@ export default function GPTPage() {
 
       const data = await response.json()
       setMessages(prev => [...prev, data])
+      setCurrentConversationId(data.conversationId)
     } catch (error) {
       console.error('Error sending message:', error)
     } finally {
@@ -91,7 +130,7 @@ export default function GPTPage() {
             </Avatar>
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 max-w-[85%] border border-white/10">
               <p className="text-white text-xs md:text-sm">
-                👋 Olá! Eu sou o Alex, seu assistente especialista em criptomoedas e investimentos.
+                👋 Olá{session.user?.name ? `, ${session.user.name}` : ''}! Eu sou o Alex, seu assistente especialista em criptomoedas e investimentos.
                 Como posso ajudar você hoje?
               </p>
             </div>
