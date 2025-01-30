@@ -14,6 +14,25 @@ interface Asset {
   analysis: string;
 }
 
+const RECOMMENDED_ASSETS = [
+  'UBXS',
+  'RIO',
+  'POLYTRADE',
+  'CENTRIGUGE (CFG)',
+  'GOLDFINCH FINANCE (GFI)',
+  'MANTRA DAO (OM)',
+  'POPCAT',
+  'WEN',
+  'MEW',
+  'SLERF',
+  'ETHENA',
+  'ANKR',
+  'LIDO',
+  'CORE',
+  'SEAL',
+  'KANGAMON'
+];
+
 export default function RecommendedAssetsPage() {
   const { data: session } = useSession();
   const isPremium = session?.user?.subscriptionStatus === 'premium';
@@ -24,15 +43,40 @@ export default function RecommendedAssetsPage() {
   useEffect(() => {
     const fetchAssets = async () => {
       try {
+        // Simulating API response with the recommended assets
+        const mockAssets = RECOMMENDED_ASSETS.map(name => ({
+          name,
+          price: 'Carregando...',
+          change: 'Carregando...',
+          prediction: 'Em análise',
+          target: 'Em análise',
+          analysis: 'Análise em andamento. Aguarde a atualização.'
+        }));
+        setAssets(mockAssets);
+
+        // Try to fetch real data from API
         const response = await fetch('/api/ativos-recomendados');
         if (!response.ok) {
           throw new Error('Failed to fetch assets');
         }
         const data = await response.json();
-        setAssets(data);
+        
+        // Update assets with real data if available
+        const updatedAssets = RECOMMENDED_ASSETS.map(name => {
+          const realData = data.find((item: any) => item.name === name);
+          return realData || {
+            name,
+            price: 'Indisponível',
+            change: 'Indisponível',
+            prediction: 'Em análise',
+            target: 'Em análise',
+            analysis: 'Análise em andamento. Aguarde a atualização.'
+          };
+        });
+        setAssets(updatedAssets);
       } catch (error) {
         console.error('Error fetching assets:', error);
-        setError('Failed to load assets. Please try again later.');
+        // Keep the mock data if API fails
       } finally {
         setLoading(false);
       }
@@ -66,7 +110,12 @@ export default function RecommendedAssetsPage() {
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 font-['Helvetica']">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-xl font-light text-white">Ativos Recomendados</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-light text-white">Ativos Recomendados</h1>
+            <span className="bg-[#0099ff]/20 text-[#0099ff] text-[8px] px-1.5 py-0.5 rounded-full border border-[#0099ff]/20">
+              BETA
+            </span>
+          </div>
           {!isPremium && (
             <Link
               href="/pricing"
@@ -128,11 +177,11 @@ export default function RecommendedAssetsPage() {
 
                   <div className="pt-3 border-t border-gray-700">
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-400">Confiança</span>
-                      <span className="text-blue-400">Alta</span>
+                      <span className="text-gray-400">Status</span>
+                      <span className="text-blue-400">Em análise</span>
                     </div>
                     <div className="mt-1.5 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500 rounded-full" style={{ width: '85%' }} />
+                      <div className="h-full bg-blue-500 rounded-full animate-pulse" style={{ width: '100%' }} />
                     </div>
                   </div>
                 </div>
