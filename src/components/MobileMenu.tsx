@@ -4,7 +4,15 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Session } from 'next-auth'
-import { LayoutDashboard, LineChart, BookOpen, MessageSquare, Lock } from 'lucide-react'
+import { 
+  LayoutDashboard, 
+  TrendingUp, 
+  Bitcoin, 
+  GraduationCap,
+  Newspaper, 
+  MessageSquare, 
+  Lock 
+} from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface MobileMenuProps {
@@ -30,19 +38,25 @@ export function MobileMenu({ session, isPremium }: MobileMenuProps) {
     {
       name: 'Análises',
       href: '/analises',
-      icon: LineChart,
+      icon: TrendingUp,
       premium: false,
     },
     {
       name: 'Ativos',
       href: '/ativos-recomendados',
-      icon: LineChart,
+      icon: Bitcoin,
       premium: false,
+    },
+    {
+      name: 'Cursos',
+      href: userIsPremium ? '/courses' : '/pricing',
+      icon: GraduationCap,
+      premium: true,
     },
     {
       name: 'Relatórios',
       href: userIsPremium ? '/news' : '/pricing',
-      icon: BookOpen,
+      icon: Newspaper,
       premium: true,
     },
     {

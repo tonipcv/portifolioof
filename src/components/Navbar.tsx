@@ -3,7 +3,20 @@
 import { Session } from 'next-auth'
 import Link from 'next/link'
 import Image from 'next/image'
-import { LayoutDashboard, BookOpen, LineChart, Menu, LogOut, User, MessageSquare, Lock } from 'lucide-react'
+import { 
+  LayoutDashboard, 
+  BookOpen, 
+  LineChart, 
+  Menu, 
+  LogOut, 
+  User, 
+  MessageSquare, 
+  Lock,
+  GraduationCap,
+  TrendingUp,
+  Newspaper,
+  Bitcoin
+} from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -51,19 +64,25 @@ export function Navbar({ session }: NavbarProps) {
     },
     {
       label: 'Análises',
-      icon: LineChart,
+      icon: TrendingUp,
       href: '/analises',
       premium: false,
     },
     {
       label: 'Ativos Recomendados',
-      icon: LineChart,
+      icon: Bitcoin,
       href: '/ativos-recomendados',
       premium: false,
     },
     {
+      label: 'Cursos',
+      icon: GraduationCap,
+      href: isPremium ? '/courses' : '/pricing',
+      premium: true,
+    },
+    {
       label: 'Relatórios',
-      icon: BookOpen,
+      icon: Newspaper,
       href: isPremium ? '/news' : '/pricing',
       premium: true,
     },
