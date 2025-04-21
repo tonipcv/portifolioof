@@ -26,6 +26,7 @@ import { signOut, useSession } from 'next-auth/react'
 import { MobileMenu } from './MobileMenu'
 import { usePathname, useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { WhatsAppButton } from './WhatsAppButton'
 
 interface NavbarProps {
   session: Session | null
@@ -116,6 +117,9 @@ export function Navbar({ session }: NavbarProps) {
           isPremium={isPremium} 
         />
       </div>
+
+      {/* WhatsApp Button */}
+      {session && <WhatsAppButton />}
 
       {/* Desktop Sidebar */}
       <nav className="hidden md:flex flex-col h-full w-64 fixed left-0 top-0 bg-[#121214] text-white border-r border-white/10">

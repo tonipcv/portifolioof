@@ -168,7 +168,7 @@ export default function CoursesPage() {
             </div>
           ) : courses.length > 0 ? (
             <div>
-              <div className="grid grid-cols-1 gap-6">
+              <div className={`grid gap-6 ${courses.length > 1 ? 'md:grid-cols-2' : ''} max-w-2xl`}>
                 {courses.map((course) => (
                   <div key={course.id} className="relative bg-zinc-800/50 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-white/5 hover:border-white/10 transition-all duration-300">
                     {!isPremium && course.isPro && (
@@ -195,7 +195,7 @@ export default function CoursesPage() {
                     </div>
 
                     {course.thumbnailUrl && (
-                      <div className="relative w-full h-40 mt-4 rounded-xl overflow-hidden">
+                      <div className="relative w-full h-40 md:h-52 mt-4 rounded-xl overflow-hidden">
                         <Image
                           src={course.thumbnailUrl}
                           alt={course.title}

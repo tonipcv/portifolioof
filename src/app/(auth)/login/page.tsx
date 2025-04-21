@@ -144,7 +144,7 @@ export default function LoginPage() {
 
             <div className="text-center">
               <Link 
-                href="/register"
+                href="https://s.cryph.ai/cadastro"
                 className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors duration-300 font-light"
               >
                 Não tem uma conta? Cadastre-se
